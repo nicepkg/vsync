@@ -4,6 +4,25 @@
  */
 
 /**
+ * Command configuration
+ * Represents a reusable command/script
+ */
+export interface Command {
+  /** Command name (directory or file name) */
+  name: string;
+  /** Short description (optional, from frontmatter) */
+  description?: string;
+  /** Main content from COMMAND.md or script file */
+  content: string;
+  /** Frontmatter metadata */
+  metadata?: Record<string, unknown>;
+  /** Support files (relative path -> content) */
+  supportFiles?: Record<string, string>;
+  /** SHA256 hash of command content + metadata */
+  hash: string;
+}
+
+/**
  * MCP server transport type
  * - stdio: Standard I/O communication
  * - http: HTTP/HTTPS remote server

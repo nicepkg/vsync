@@ -7,7 +7,7 @@
 import { mkdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
-import type { MCPServer, Skill, Agent } from "@src/types/models.js";
+import type { MCPServer, Skill, Agent, Command } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 import type {
   AdapterConfig,
@@ -278,6 +278,72 @@ export class CursorAdapter implements ToolAdapter {
   }
 
   /**
+   * Write commands to .cursor/commands/
+   * Each command is a directory with COMMAND.md and optional support files
+   */
+  async writeCommands(commands: Command[]): Promise<WriteResult> {
+    const commandsDir = join(this.config.baseDir, ".cursor", "commands");
+
+    try {
+      // Ensure commands directory exists
+      await mkdir(commandsDir, { recursive: true });
+
+      for (const command of commands) {
+        const commandDir = join(commandsDir, command.name);
+        await mkdir(commandDir, { recursive: true });
+
+        // Generate COMMAND.md content
+        let commandContent = command.content;
+
+        // Add frontmatter if metadata or description exists
+        if (command.metadata || command.description) {
+          const frontmatter: Record<string, unknown> = {
+            ...(command.metadata || {}),
+          };
+
+          // Add description to frontmatter if present
+          if (command.description) {
+            frontmatter.description = command.description;
+          }
+
+          // Add name to frontmatter
+          frontmatter.name = command.name;
+
+          commandContent = matter.stringify(command.content, frontmatter);
+        }
+
+        // Write COMMAND.md
+        const commandMdPath = join(commandDir, "COMMAND.md");
+        await atomicWrite(commandMdPath, commandContent);
+
+        // Write support files
+        if (command.supportFiles) {
+          for (const [fileName, fileContent] of Object.entries(
+            command.supportFiles,
+          )) {
+            const filePath = join(commandDir, fileName);
+            await atomicWrite(filePath, fileContent);
+          }
+        }
+      }
+
+      return {
+        success: true,
+        count: commands.length,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        count: 0,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error writing commands",
+      };
+    }
+  }
+
+  /**
    * Delete an agent from .cursor/agents/
    */
   async deleteAgent(name: string): Promise<void> {
@@ -349,6 +415,32 @@ export class CursorAdapter implements ToolAdapter {
   }
 
   async readAgents(): Promise<Agent[]> {
+    throw new Error(
+      "Cursor adapter is write-only (target tool). Use as target_tool only.",
+    );
+  }
+
+  /**
+   * Delete a command from .cursor/commands/
+   */
+  async deleteCommand(name: string): Promise<void> {
+    const commandDir = join(this.config.baseDir, ".cursor", "commands", name);
+
+    try {
+      await rm(commandDir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore errors for non-existent commands
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code !== "ENOENT"
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  async readCommands(): Promise<Command[]> {
     throw new Error(
       "Cursor adapter is write-only (target tool). Use as target_tool only.",
     );

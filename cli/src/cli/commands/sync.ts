@@ -26,7 +26,12 @@ import {
 import type { BackupInfo } from "@src/core/rollback.js";
 import type { SyncMode, ToolName, VibeConfig } from "@src/types/config.js";
 import type { Manifest, ItemType } from "@src/types/manifest.js";
-import type { MCPServer, Skill, Agent } from "@src/types/models.js";
+import type {
+  MCPServer,
+  Skill,
+  Agent,
+  Command as VibeCommand,
+} from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
 
 /**
@@ -36,6 +41,7 @@ export interface SourceData {
   skills: Skill[];
   mcpServers: MCPServer[];
   agents: Agent[];
+  commands: VibeCommand[];
 }
 
 /**
@@ -96,11 +102,13 @@ export async function readSourceConfig(
   const skills = await adapter.readSkills();
   const mcpServers = await adapter.readMCPServers();
   const agents = await adapter.readAgents();
+  const commands = await adapter.readCommands();
 
   return {
     skills,
     mcpServers,
     agents,
+    commands,
   };
 }
 
@@ -119,6 +127,7 @@ export async function readTargetConfigs(targetTools: ToolName[]): Promise<
         skills: Skill[];
         mcpServers: MCPServer[];
         agents: Agent[];
+        commands: VibeCommand[];
       }
     >
   >
@@ -130,6 +139,7 @@ export async function readTargetConfigs(targetTools: ToolName[]): Promise<
         skills: Skill[];
         mcpServers: MCPServer[];
         agents: Agent[];
+        commands: VibeCommand[];
       }
     >
   > = {};
@@ -143,6 +153,7 @@ export async function readTargetConfigs(targetTools: ToolName[]): Promise<
       skills: [],
       mcpServers: [],
       agents: [],
+      commands: [],
     };
   }
 
@@ -171,6 +182,7 @@ export async function calculateSyncDiff(
     sourceSkills: sourceData.skills,
     sourceMCPServers: sourceData.mcpServers,
     sourceAgents: sourceData.agents,
+    sourceCommands: sourceData.commands,
     targetSkills: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.skills]),
     ),
@@ -179,6 +191,9 @@ export async function calculateSyncDiff(
     ),
     targetAgents: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.agents]),
+    ),
+    targetCommands: Object.fromEntries(
+      Object.entries(targetData).map(([tool, data]) => [tool, data.commands]),
     ),
     manifest,
     mode,
@@ -289,6 +304,18 @@ export async function executeSyncPlan(
           .map((op) => sourceData.agents.find((a) => a.name === op.name))
           .filter((a): a is NonNullable<typeof a> => a !== undefined);
 
+        // Collect commands to CREATE
+        const commandsToCreate = diff.toCreate
+          .filter((op) => op.itemType === "command")
+          .map((op) => sourceData.commands.find((c) => c.name === op.name))
+          .filter((c): c is NonNullable<typeof c> => c !== undefined);
+
+        // Collect commands to UPDATE
+        const commandsToUpdate = diff.toUpdate
+          .filter((op) => op.itemType === "command")
+          .map((op) => sourceData.commands.find((c) => c.name === op.name))
+          .filter((c): c is NonNullable<typeof c> => c !== undefined);
+
         // Write skills (CREATE + UPDATE combined)
         const allSkills = [...skillsToCreate, ...skillsToUpdate];
         if (allSkills.length > 0) {
@@ -357,6 +384,30 @@ export async function executeSyncPlan(
           }
         }
 
+        // Write commands (CREATE + UPDATE combined)
+        const allCommands = [...commandsToCreate, ...commandsToUpdate];
+        if (allCommands.length > 0) {
+          try {
+            const writeResult = await adapter.writeCommands(allCommands);
+            if (writeResult.success) {
+              result.created += commandsToCreate.length;
+              result.updated += commandsToUpdate.length;
+            } else {
+              result.errors.push(
+                writeResult.error || "Failed to write commands",
+              );
+              result.success = false;
+              throw new Error("Command write failed - initiating rollback");
+            }
+          } catch (error) {
+            result.errors.push(
+              `Failed to write commands: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            result.success = false;
+            throw error;
+          }
+        }
+
         // Execute DELETE operations (one at a time)
         for (const op of diff.toDelete) {
           try {
@@ -368,6 +419,9 @@ export async function executeSyncPlan(
               result.deleted++;
             } else if (op.itemType === "agent") {
               await adapter.deleteAgent(op.name);
+              result.deleted++;
+            } else if (op.itemType === "command") {
+              await adapter.deleteCommand(op.name);
               result.deleted++;
             }
           } catch (error) {
@@ -475,7 +529,7 @@ export async function syncCommand(options: {
     ).start();
     const sourceData = await readSourceConfig(config.source_tool, projectDir);
     readSpinner.succeed(
-      `Read ${sourceData.skills.length} skills, ${sourceData.mcpServers.length} MCP servers, ${sourceData.agents.length} agents`,
+      `Read ${sourceData.skills.length} skills, ${sourceData.mcpServers.length} MCP servers, ${sourceData.agents.length} agents, ${sourceData.commands.length} commands`,
     );
 
     // Load manifest

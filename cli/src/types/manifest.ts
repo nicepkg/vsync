@@ -9,7 +9,7 @@ import type { ToolName } from "./config.js";
 /**
  * Type of configuration item
  */
-export type ItemType = "skill" | "mcp" | "agent";
+export type ItemType = "skill" | "mcp" | "agent" | "command";
 
 /**
  * Sync status for a specific target tool

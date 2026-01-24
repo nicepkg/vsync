@@ -32,6 +32,8 @@ export interface SyncConfig {
   mcp: boolean;
   /** Synchronize agents (optional, v1.1+) */
   agents?: boolean;
+  /** Synchronize commands (optional, v1.1+) */
+  commands?: boolean;
 }
 
 /**

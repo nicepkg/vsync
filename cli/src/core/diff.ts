@@ -5,7 +5,7 @@
 
 import type { SyncMode, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
-import type { Skill, MCPServer, Agent } from "@src/types/models.js";
+import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { DiffResult, Operation, OperationType } from "@src/types/plan.js";
 
 /**
@@ -24,6 +24,10 @@ export interface DiffInput {
   sourceAgents: Agent[];
   /** Agents from target tool */
   targetAgents: Agent[];
+  /** Commands from source tool */
+  sourceCommands: Command[];
+  /** Commands from target tool */
+  targetCommands: Command[];
   /** Current manifest */
   manifest: Manifest;
   /** Sync mode */
@@ -124,6 +128,8 @@ export function calculateDiff(input: DiffInput): DiffResult {
     targetMCPServers,
     sourceAgents,
     targetAgents,
+    sourceCommands,
+    targetCommands,
     manifest,
     mode,
     targetTool,
@@ -141,6 +147,8 @@ export function calculateDiff(input: DiffInput): DiffResult {
   const sourceMCPMap = new Map(sourceMCPServers.map((m) => [m.name, m]));
   const targetAgentMap = new Map(targetAgents.map((a) => [a.name, a]));
   const sourceAgentMap = new Map(sourceAgents.map((a) => [a.name, a]));
+  const targetCommandMap = new Map(targetCommands.map((c) => [c.name, c]));
+  const sourceCommandMap = new Map(sourceCommands.map((c) => [c.name, c]));
 
   // Process skills from source
   for (const sourceSkill of sourceSkills) {
@@ -346,6 +354,74 @@ export function calculateDiff(input: DiffInput): DiffResult {
     }
   }
 
+  // Process commands from source
+  for (const sourceCommand of sourceCommands) {
+    const targetCommand = targetCommandMap.get(sourceCommand.name);
+    const manifestItem = manifest.items[sourceCommand.name];
+
+    const comparison = compareHashes(
+      sourceCommand.hash,
+      targetCommand?.hash ?? null,
+      manifestItem?.hash ?? null,
+      mode,
+    );
+
+    const operation: Operation = {
+      type: comparison.operation,
+      itemType: "command",
+      name: sourceCommand.name,
+      description: comparison.reason,
+      reason: comparison.reason,
+    };
+
+    // Add newHash
+    if (sourceCommand.hash) {
+      operation.newHash = sourceCommand.hash;
+    }
+
+    // Add oldHash if exists
+    if (targetCommand?.hash) {
+      operation.oldHash = targetCommand.hash;
+    }
+
+    switch (comparison.operation) {
+      case "create":
+        toCreate.push(operation);
+        break;
+      case "update":
+        toUpdate.push(operation);
+        break;
+      case "skip":
+        toSkip.push(operation);
+        break;
+    }
+  }
+
+  // Process commands in target but not in source (potential deletes)
+  for (const targetCommand of targetCommands) {
+    if (!sourceCommandMap.has(targetCommand.name)) {
+      const manifestItem = manifest.items[targetCommand.name];
+
+      const comparison = compareHashes(
+        null,
+        targetCommand.hash,
+        manifestItem?.hash ?? null,
+        mode,
+      );
+
+      if (comparison.operation === "delete") {
+        toDelete.push({
+          type: "delete",
+          itemType: "command",
+          name: targetCommand.name,
+          description: comparison.reason,
+          oldHash: targetCommand.hash,
+          reason: comparison.reason,
+        });
+      }
+    }
+  }
+
   // Process manifest items for this target that are not in source or target
   // This handles delete detection for write-only targets where we can't read
   for (const item of Object.values(manifest.items)) {
@@ -367,6 +443,9 @@ export function calculateDiff(input: DiffInput): DiffResult {
     } else if (item.type === "agent") {
       inSource = sourceAgentMap.has(item.name);
       inTarget = targetAgentMap.has(item.name);
+    } else if (item.type === "command") {
+      inSource = sourceCommandMap.has(item.name);
+      inTarget = targetCommandMap.has(item.name);
     }
 
     // Skip if already in source or target (already processed above)

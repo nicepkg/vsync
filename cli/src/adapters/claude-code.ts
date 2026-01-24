@@ -7,8 +7,13 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
-import type { Skill, MCPServer, Agent } from "@src/types/models.js";
-import { hashSkill, hashMCPServer, hashAgent } from "@src/utils/hash.js";
+import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
+import {
+  hashSkill,
+  hashMCPServer,
+  hashAgent,
+  hashCommand,
+} from "@src/utils/hash.js";
 import type {
   ToolAdapter,
   AdapterConfig,
@@ -259,6 +264,93 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   }
 
   /**
+   * Read all commands from .claude/commands/
+   * Each command is a directory with COMMAND.md and optional support files
+   */
+  async readCommands(): Promise<Command[]> {
+    const commandsDir = join(this.config.baseDir, ".claude", "commands");
+
+    try {
+      const entries = await readdir(commandsDir, { withFileTypes: true });
+      const commands: Command[] = [];
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) {
+          continue; // Skip non-directories
+        }
+
+        const commandName = entry.name;
+        const commandDir = join(commandsDir, commandName);
+        const commandMdPath = join(commandDir, "COMMAND.md");
+
+        try {
+          // Read COMMAND.md
+          const commandContent = await readFile(commandMdPath, "utf-8");
+
+          // Parse frontmatter
+          const parsed = matter(commandContent);
+
+          // Read support files
+          const supportFiles: Record<string, string> = {};
+          const commandFiles = await readdir(commandDir, {
+            withFileTypes: true,
+          });
+
+          for (const file of commandFiles) {
+            if (file.name === "COMMAND.md" || file.isDirectory()) {
+              continue;
+            }
+
+            const filePath = join(commandDir, file.name);
+            const fileContent = await readFile(filePath, "utf-8");
+            supportFiles[file.name] = fileContent;
+          }
+
+          // Create command object (omit undefined optional fields)
+          const command: Command = {
+            name: commandName,
+            content: parsed.content,
+            hash: "", // Will be computed
+          };
+
+          // Add optional fields only if they have values
+          if (parsed.data.description) {
+            command.description = parsed.data.description as string;
+          }
+          if (Object.keys(parsed.data).length > 0) {
+            command.metadata = parsed.data;
+          }
+          if (Object.keys(supportFiles).length > 0) {
+            command.supportFiles = supportFiles;
+          }
+
+          // Compute hash
+          command.hash = hashCommand(command);
+
+          commands.push(command);
+        } catch (error) {
+          // Skip commands with missing or invalid COMMAND.md
+          console.warn(
+            `Skipping command ${commandName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
+      }
+
+      return commands;
+    } catch (error) {
+      // Commands directory doesn't exist
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Validate Claude Code configuration
    */
   async validate(): Promise<ValidationResult> {
@@ -329,6 +421,18 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   }
 
   async deleteAgent(_name: string): Promise<void> {
+    throw new Error(
+      "Claude Code adapter is read-only (source tool). Use as source_tool only.",
+    );
+  }
+
+  async writeCommands(_commands: Command[]): Promise<WriteResult> {
+    throw new Error(
+      "Claude Code adapter is read-only (source tool). Use as source_tool only.",
+    );
+  }
+
+  async deleteCommand(_name: string): Promise<void> {
     throw new Error(
       "Claude Code adapter is read-only (source tool). Use as source_tool only.",
     );
