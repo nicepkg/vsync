@@ -309,11 +309,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.4 `vibe-sync plan` Command
 
-- [ ] Implement `cli/src/cli/commands/plan.ts`
-  - [ ] Same as `sync --dry-run` but with detailed output
-  - [ ] Show hash comparisons
-  - [ ] Show file diffs for changes
-  - [ ] No confirmation prompt
+- [x] Implement `cli/src/cli/commands/plan.ts`
+  - [x] Same as `sync --dry-run` but with detailed output
+  - [x] Show hash comparisons
+  - [x] Show operation reasons
+  - [x] No confirmation prompt
 
 ### 4.5 `vibe-sync status` Command
 
