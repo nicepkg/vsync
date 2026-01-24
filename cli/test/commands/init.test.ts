@@ -1,7 +1,7 @@
 import { readFile, access } from "node:fs/promises";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { VibeConfig, ToolName } from "../../../src/types/config.js";
+import type { VibeConfig, ToolName } from "../../src/types/config.js";
 
 describe("Init Command", () => {
   beforeEach(() => {
@@ -25,16 +25,16 @@ describe("Init Command", () => {
 
   describe("Tool Detection", () => {
     it("should detect existing Claude Code directory", async () => {
-      const detected = await import("../../../src/cli/commands/init.js").then(
-        (m) => m.detectTools("/project"),
+      const detected = await import("../../src/commands/init.js").then((m) =>
+        m.detectTools("/project"),
       );
 
       expect(detected).toContain("claude-code");
     });
 
     it("should detect existing Cursor directory", async () => {
-      const detected = await import("../../../src/cli/commands/init.js").then(
-        (m) => m.detectTools("/project"),
+      const detected = await import("../../src/commands/init.js").then((m) =>
+        m.detectTools("/project"),
       );
 
       expect(detected).toContain("cursor");
@@ -47,16 +47,16 @@ describe("Init Command", () => {
         },
       });
 
-      const detected = await import("../../../src/cli/commands/init.js").then(
-        (m) => m.detectTools("/project"),
+      const detected = await import("../../src/commands/init.js").then((m) =>
+        m.detectTools("/project"),
       );
 
       expect(detected).toContain("opencode");
     });
 
     it("should return empty array if no tools detected", async () => {
-      const detected = await import("../../../src/cli/commands/init.js").then(
-        (m) => m.detectTools("/empty"),
+      const detected = await import("../../src/commands/init.js").then((m) =>
+        m.detectTools("/empty"),
       );
 
       expect(detected).toEqual([]);
@@ -72,8 +72,8 @@ describe("Init Command", () => {
         isUserLevel: false,
       };
 
-      const config = await import("../../../src/cli/commands/init.js").then(
-        (m) => m.generateConfig(options),
+      const config = await import("../../src/commands/init.js").then((m) =>
+        m.generateConfig(options),
       );
 
       expect(config.source_tool).toBe("claude-code");
@@ -91,8 +91,8 @@ describe("Init Command", () => {
         isUserLevel: false,
       };
 
-      const config = await import("../../../src/cli/commands/init.js").then(
-        (m) => m.generateConfig(options),
+      const config = await import("../../src/commands/init.js").then((m) =>
+        m.generateConfig(options),
       );
 
       expect(config.source_tool).toBe("cursor");
@@ -108,8 +108,8 @@ describe("Init Command", () => {
         isUserLevel: false,
       };
 
-      const config = await import("../../../src/cli/commands/init.js").then(
-        (m) => m.generateConfig(options),
+      const config = await import("../../src/commands/init.js").then((m) =>
+        m.generateConfig(options),
       );
 
       expect(config.sync_config.skills).toBe(true);
@@ -130,7 +130,7 @@ describe("Init Command", () => {
         },
       };
 
-      await import("../../../src/cli/commands/init.js").then((m) =>
+      await import("../../src/commands/init.js").then((m) =>
         m.saveConfig(config, "/project"),
       );
 
@@ -142,7 +142,7 @@ describe("Init Command", () => {
     });
 
     it("should create .vibe-sync-cache directory", async () => {
-      await import("../../../src/cli/commands/init.js").then((m) =>
+      await import("../../src/commands/init.js").then((m) =>
         m.createCacheDirectory("/project"),
       );
 
@@ -150,7 +150,7 @@ describe("Init Command", () => {
     });
 
     it("should create empty manifest.json in cache", async () => {
-      await import("../../../src/cli/commands/init.js").then((m) =>
+      await import("../../src/commands/init.js").then((m) =>
         m.initializeManifest("/project"),
       );
 
@@ -176,7 +176,7 @@ describe("Init Command", () => {
         },
       };
 
-      await import("../../../src/cli/commands/init.js").then((m) =>
+      await import("../../src/commands/init.js").then((m) =>
         m.saveConfig(config, "/project"),
       );
 
@@ -199,7 +199,7 @@ describe("Init Command", () => {
         },
       };
 
-      await import("../../../src/cli/commands/init.js").then((m) =>
+      await import("../../src/commands/init.js").then((m) =>
         m.saveConfig(config, "/home/user"),
       );
 
@@ -220,7 +220,7 @@ describe("Init Command", () => {
       };
 
       await expect(
-        import("../../../src/cli/commands/init.js").then((m) =>
+        import("../../src/commands/init.js").then((m) =>
           m.generateConfig(options),
         ),
       ).rejects.toThrow("At least one tool must be selected");
@@ -235,7 +235,7 @@ describe("Init Command", () => {
       };
 
       await expect(
-        import("../../../src/cli/commands/init.js").then((m) =>
+        import("../../src/commands/init.js").then((m) =>
           m.generateConfig(options),
         ),
       ).rejects.toThrow("Source tool must be one of the selected tools");
@@ -250,7 +250,7 @@ describe("Init Command", () => {
       };
 
       await expect(
-        import("../../../src/cli/commands/init.js").then((m) =>
+        import("../../src/commands/init.js").then((m) =>
           m.generateConfig(options),
         ),
       ).rejects.toThrow("At least one sync item must be selected");

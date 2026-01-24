@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createCLI } from "@src/cli/index.js";
+import { createCLI } from "@src/cli-setup.js";
 
 describe("CLI Framework", () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;

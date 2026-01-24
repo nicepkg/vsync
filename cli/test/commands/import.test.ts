@@ -1,7 +1,7 @@
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { detectSourceTool, importConfigs } from "@src/cli/commands/import.js";
-import type { ImportOptions } from "@src/cli/commands/import.js";
+import { detectSourceTool, importConfigs } from "@src/commands/import.js";
+import type { ImportOptions } from "@src/commands/import.js";
 
 describe("Import Command", () => {
   beforeEach(() => {

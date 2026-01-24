@@ -7,7 +7,7 @@
  * Single source of truth → Compile to multiple formats → Diff-based sync
  */
 
-import { runCLI } from "./cli/index.js";
+import { runCLI } from "./cli-setup.js";
 
 export async function main(): Promise<void> {
   await runCLI();
