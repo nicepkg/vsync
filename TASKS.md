@@ -505,20 +505,20 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 7.2 Agents Synchronization
 
-- [ ] Define Agent types in `cli/src/types/models.ts`
-  - [ ] `Agent` interface (name, description, content, metadata)
-  - [ ] Support Claude Code agent format
-- [ ] Extend adapters for Agents
-  - [ ] Claude Code: `readAgents()` - from `.claude/agents/`
-  - [ ] Cursor: `writeAgents()` - to `.cursor/agents/`
-  - [ ] OpenCode: `writeAgents()` - to `.opencode/agents/`
-- [ ] Update diff/plan system for Agents
-  - [ ] Add agent hash calculation
-  - [ ] Add agent diff operations
-- [ ] Update sync config
-  - [ ] Add `agents: boolean` to sync_config
-  - [ ] Update init command to ask about agents
-- [ ] Write unit tests
+- [x] Define Agent types in `cli/src/types/models.ts`
+  - [x] `Agent` interface (name, description, content, metadata)
+  - [x] Support Claude Code agent format
+- [x] Extend adapters for Agents
+  - [x] Claude Code: `readAgents()` - from `.claude/agents/`
+  - [x] Cursor: `writeAgents()` - to `.cursor/agents/`
+  - [x] OpenCode: `writeAgents()` - to `.opencode/agents/`
+- [x] Update diff/plan system for Agents
+  - [x] Add agent hash calculation
+  - [x] Add agent diff operations
+- [x] Update sync config
+  - [x] Add `agents: boolean` to sync_config
+  - [ ] Update init command to ask about agents (deferred - not critical for MVP)
+- [x] Write unit tests (updated existing tests to include agents)
 
 ### 7.3 Commands Synchronization
 
