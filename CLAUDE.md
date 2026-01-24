@@ -167,9 +167,31 @@ These commands auto-read TASKS.md, PRD, and guide TDD workflow.
 
 ---
 
-## 📦 Tech Stack (See TASKS.md Phase 1)
+## 📦 Tech Stack & Project Structure
+
+**Architecture**: pnpm monorepo
+
+```
+vibe-sync/                  # Project root
+├── pnpm-workspace.yaml     # Workspace config (root level)
+├── cli/                    # CLI workspace package
+│   ├── package.json        # CLI dependencies
+│   ├── tsconfig.json       # TypeScript config
+│   ├── src/                # CLI source code
+│   │   ├── cli/            # CLI commands
+│   │   ├── core/           # Core logic
+│   │   ├── adapters/       # Tool adapters
+│   │   ├── types/          # TypeScript types
+│   │   ├── utils/          # Utilities
+│   │   └── index.ts        # Entry point
+│   └── test/               # Tests (mirrors src/)
+└── (future: website/, packages/...)
+```
+
+**Tech Stack**:
 
 - TypeScript 5 (strict mode)
+- pnpm monorepo (CLI workspace in `cli/`)
 - Commander.js + Inquirer.js (CLI)
 - Vitest + mock-fs (Testing)
 - jsonc-parser (JSONC support)
@@ -206,6 +228,34 @@ These commands auto-read TASKS.md, PRD, and guide TDD workflow.
 4. PRD other sections - As needed
 
 **Then:** Use `/do-task next` to start.
+
+---
+
+## 📁 Working Directory
+
+⚠️ **CRITICAL**: pnpm monorepo structure
+
+- `pnpm-workspace.yaml` is at **project root** (same level as `cli/`)
+- CLI code is in `cli/` workspace
+- Run `pnpm` commands from `cli/` directory
+- Source code: `cli/src/`
+- Tests: `cli/test/`
+
+```bash
+# Project structure
+vibe-sync/
+├── pnpm-workspace.yaml    # Root level
+└── cli/                   # Work here!
+    ├── package.json
+    ├── src/
+    └── test/
+
+# Commands (run from cli/)
+cd cli                     # Enter CLI workspace
+pnpm install               # Install dependencies
+pnpm test                  # Run tests
+pnpm build                 # Build CLI
+```
 
 ---
 

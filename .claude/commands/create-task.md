@@ -65,32 +65,32 @@ Parse `$ARGUMENTS` to determine task type:
 
 Analyze which modules this task will affect:
 
-**Adapters** (`src/adapters/`):
+**Adapters** (`cli/src/adapters/`):
 
 - New adapter: Create new file + register in registry
 - Adapter modification: Update existing adapter + tests
 - Affects: PRD Section 2 (config formats)
 
-**Core Logic** (`src/core/`):
+**Core Logic** (`cli/src/core/`):
 
 - Config management: Update config-manager.ts
 - Diff/Plan: Update diff.ts or planner.ts
 - Security: Update security.ts
 - Affects: PRD Section 5, 6, 7
 
-**CLI** (`src/cli/`):
+**CLI** (`cli/src/cli/`):
 
 - New command: Create in cli/commands/
 - Command modification: Update existing command
 - Affects: PRD Section 4
 
-**Types** (`src/types/`):
+**Types** (`cli/src/types/`):
 
 - New data model: Add to types/
 - Type modification: Update existing types
 - Affects: PRD Section 6
 
-**Utils** (`src/utils/`):
+**Utils** (`cli/src/utils/`):
 
 - New utility: Create new file
 - Utility modification: Update existing
@@ -104,31 +104,31 @@ Based on task type, identify files to change:
 
 ```
 Files to create:
-- src/adapters/codex.ts
-- test/adapters/codex.test.ts
+- cli/src/adapters/codex.ts
+- cli/test/adapters/codex.test.ts
 
 Files to modify:
-- src/adapters/registry.ts (register adapter)
-- src/types/config.ts (add "codex" to ToolName)
+- cli/src/adapters/registry.ts (register adapter)
+- cli/src/types/config.ts (add "codex" to ToolName)
 - docs/prd.md (update Section 2 if format different)
 - CLAUDE.md (add Codex examples if needed)
 
 Files to read:
 - docs/prd.md Section 2 (config formats)
-- src/adapters/cursor.ts (reference implementation)
-- src/adapters/base.ts (interface definition)
+- cli/src/adapters/cursor.ts (reference implementation)
+- cli/src/adapters/base.ts (interface definition)
 ```
 
 **For Config Format Bugfix** (e.g., OpenCode env vars):
 
 ```
 Files to modify:
-- src/adapters/opencode.ts (fix env var format)
-- test/adapters/opencode.test.ts (add test case)
+- cli/src/adapters/opencode.ts (fix env var format)
+- cli/test/adapters/opencode.test.ts (add test case)
 
 Files to read:
 - docs/prd.md Section 2.2 (OpenCode format spec)
-- src/utils/env-preserv.ts (env var utilities)
+- cli/src/utils/env-preserv.ts (env var utilities)
 - CLAUDE.md (env var preservation rules)
 ```
 
@@ -136,24 +136,24 @@ Files to read:
 
 ```
 Files to create:
-- src/cli/commands/[command-name].ts
-- test/cli/[command-name].test.ts
+- cli/src/cli/commands/[command-name].ts
+- cli/test/cli/[command-name].test.ts
 
 Files to modify:
-- src/cli/index.ts (register command)
+- cli/src/cli/index.ts (register command)
 - docs/prd.md Section 4 (document command)
 
 Files to read:
 - docs/prd.md Section 4 (CLI command patterns)
-- src/cli/commands/sync.ts (reference implementation)
+- cli/src/cli/commands/sync.ts (reference implementation)
 ```
 
 **For Security Enhancement**:
 
 ```
 Files to modify:
-- src/core/security.ts
-- test/core/security.test.ts
+- cli/src/core/security.ts
+- cli/test/core/security.test.ts
 
 Files to read:
 - docs/prd.md Section 5.2 (MCP security)
@@ -260,21 +260,21 @@ Users who use Codex want to sync their Claude Code configs to Codex.
 
 #### Files to Create
 
-- [ ] `src/adapters/codex.ts` - Codex adapter implementation
-- [ ] `test/adapters/codex.test.ts` - Adapter tests
+- [ ] `cli/src/adapters/codex.ts` - Codex adapter implementation
+- [ ] `cli/test/adapters/codex.test.ts` - Adapter tests
 
 #### Files to Modify
 
-- [ ] `src/adapters/registry.ts` - Register Codex adapter
-- [ ] `src/types/config.ts` - Add "codex" to ToolName type
+- [ ] `cli/src/adapters/registry.ts` - Register Codex adapter
+- [ ] `cli/src/types/config.ts` - Add "codex" to ToolName type
 - [ ] `docs/prd.md` - Update Section 2 with Codex format
 - [ ] `CLAUDE.md` - Add Codex examples
 
 #### Files to Read (Before Starting)
 
 - [ ] `docs/prd.md` Section 2 - Config format specs
-- [ ] `src/adapters/cursor.ts` - Reference implementation
-- [ ] `src/adapters/base.ts` - Interface definition
+- [ ] `cli/src/adapters/cursor.ts` - Reference implementation
+- [ ] `cli/src/adapters/base.ts` - Interface definition
 - [ ] `CLAUDE.md` - Adapter implementation rules
 
 ### Testing Strategy
@@ -333,15 +333,15 @@ is wrong. PRD Section 2.2 clearly states OpenCode uses `${VAR}` format.
 
 #### Files to Modify
 
-- [ ] `src/adapters/opencode.ts` - Fix env var conversion
-- [ ] `test/adapters/opencode.test.ts` - Add test case
-- [ ] `src/utils/env-preserv.ts` - Update conversion function if needed
+- [ ] `cli/src/adapters/opencode.ts` - Fix env var conversion
+- [ ] `cli/test/adapters/opencode.test.ts` - Add test case
+- [ ] `cli/src/utils/env-preserv.ts` - Update conversion function if needed
 
 #### Files to Read (Before Starting)
 
 - [ ] `docs/prd.md` Section 2.2 - OpenCode format spec
 - [ ] `CLAUDE.md` - Env var preservation rules
-- [ ] `src/adapters/opencode.ts` - Current implementation
+- [ ] `cli/src/adapters/opencode.ts` - Current implementation
 
 ### Testing Strategy
 
@@ -404,14 +404,14 @@ Refactoring will make code DRY and easier to maintain.
 
 #### Files to Create
 
-- [ ] `src/adapters/abstract-adapter.ts` - Base class
+- [ ] `cli/src/adapters/abstract-adapter.ts` - Base class
 
 #### Files to Modify
 
-- [ ] `src/adapters/claude-code.ts` - Extend base class
-- [ ] `src/adapters/cursor.ts` - Extend base class
-- [ ] `src/adapters/opencode.ts` - Extend base class
-- [ ] `src/adapters/base.ts` - Update interface if needed
+- [ ] `cli/src/adapters/claude-code.ts` - Extend base class
+- [ ] `cli/src/adapters/cursor.ts` - Extend base class
+- [ ] `cli/src/adapters/opencode.ts` - Extend base class
+- [ ] `cli/src/adapters/base.ts` - Update interface if needed
 
 #### Files to Read (Before Starting)
 

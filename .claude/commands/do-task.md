@@ -44,7 +44,7 @@ If no argument, show current phase and ask which task to work on.
 1. Read task from TASKS.md
 2. Check phase dependencies (previous phases must be complete)
 3. Read relevant documentation sections
-4. **WRITE TESTS FIRST** (test/[module].test.ts)
+4. **WRITE TESTS FIRST** (cli/test/[module].test.ts)
    - Use vitest + mock-fs
    - Cover all edge cases
 5. Implement code (src/[module].ts)
@@ -122,8 +122,8 @@ await atomicWrite(path, content);
 **Phase 1 (Foundation)**:
 
 - Create TypeScript strict config
-- Define all types in `src/types/`
-- Implement core utilities in `src/utils/`
+- Define all types in `cli/src/types/`
+- Implement core utilities in `cli/src/utils/`
 - No implementation without types first
 
 **Phase 2 (Adapters)**:
@@ -220,7 +220,7 @@ src/
 │   └── env-preserv.ts    # Env var preservation
 └── index.ts          # Entry point
 
-test/                 # Mirror src/ structure
+cli/test/                 # Mirror src/ structure
 ```
 
 ### 7. Validation Checklist
@@ -301,7 +301,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 ```typescript
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import mockFs from "mock-fs";
-import { CursorAdapter } from "../../src/adapters/cursor";
+import { CursorAdapter } from "../../cli/src/adapters/cursor";
 
 describe("CursorAdapter", () => {
   beforeEach(() => {
@@ -326,7 +326,7 @@ describe("CursorAdapter", () => {
 2. **Read task details**: From TASKS.md
 3. **Check dependencies**: Ensure previous phases/tasks complete
 4. **Read documentation**: CLAUDE.md + relevant PRD sections
-5. **Write tests**: In test/ directory (TDD)
+5. **Write tests**: In cli/test/ directory (TDD)
 6. **Implement code**: In src/ directory
 7. **Validate**: Run pnpm test && pnpm typecheck && pnpm lint
 8. **Update TASKS.md**: Mark task [x], update phase status

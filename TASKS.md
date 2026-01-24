@@ -22,9 +22,12 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 1.1 Project Initialization
 
-- [ ] Initialize TypeScript project with strict mode
-  - [ ] Configure `tsconfig.json` (strict mode, ES2022, Node20)
-  - [ ] Set up `package.json` with type: "module"
+⚠️ **IMPORTANT**: pnpm monorepo - `pnpm-workspace.yaml` at root, CLI code in `cli/`
+
+- [ ] Initialize pnpm monorepo structure
+  - [ ] Create `pnpm-workspace.yaml` at project root
+  - [ ] Initialize `cli/package.json` with type: "module"
+  - [ ] Configure `cli/tsconfig.json` (strict mode, ES2022, Node20)
   - [ ] Configure build scripts (tsup for bundling)
 - [ ] Install core dependencies
   - [ ] `commander` - CLI framework
@@ -40,42 +43,48 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [ ] `mock-fs` - File system mocking
 - [ ] Set up directory structure
   ```
-  src/
-  ├── cli/              # CLI commands
-  ├── core/             # Core logic
-  ├── adapters/         # Tool adapters
-  ├── types/            # TypeScript types
-  ├── utils/            # Utilities
-  └── index.ts          # Entry point
+  vibe-sync/                # Project root
+  ├── pnpm-workspace.yaml   # Workspace config (root level)
+  └── cli/                  # CLI workspace
+      ├── package.json
+      ├── tsconfig.json
+      ├── src/
+      │   ├── cli/          # CLI commands
+      │   ├── core/         # Core logic
+      │   ├── adapters/     # Tool adapters
+      │   ├── types/        # TypeScript types
+      │   ├── utils/        # Utilities
+      │   └── index.ts      # Entry point
+      └── test/             # Tests (mirrors src/)
   ```
 
 ### 1.2 Core Type Definitions
 
-- [ ] Define `src/types/config.ts`
+- [ ] Define `cli/src/types/config.ts`
   - [ ] `VibeConfig` interface (`.vibe-sync.json` structure)
   - [ ] `SyncMode` type (`"safe" | "prune"`)
   - [ ] `ToolName` type (`"claude-code" | "cursor" | "opencode"`)
   - [ ] `ConfigLevel` type (`"project" | "user"`)
-- [ ] Define `src/types/models.ts`
+- [ ] Define `cli/src/types/models.ts`
   - [ ] `Skill` interface (name, description, content, metadata, hash)
   - [ ] `MCPServer` interface (name, type, command, args, env, url, headers, auth, hash)
   - [ ] `MCPType` type (`"stdio" | "http" | "oauth"`)
-- [ ] Define `src/types/manifest.ts`
+- [ ] Define `cli/src/types/manifest.ts`
   - [ ] `Manifest` interface (version, last_sync, items)
   - [ ] `ManifestItem` interface (hash, last_synced, targets)
-- [ ] Define `src/types/plan.ts`
+- [ ] Define `cli/src/types/plan.ts`
   - [ ] `SyncPlan` interface (tool, operations)
   - [ ] `Operation` types (create, update, delete, skip)
   - [ ] `DiffResult` interface
 
 ### 1.3 Configuration Management
 
-- [ ] Implement `src/core/config-manager.ts`
+- [ ] Implement `cli/src/core/config-manager.ts`
   - [ ] `loadConfig(level)` - Load `.vibe-sync.json`
   - [ ] `saveConfig(config, level)` - Save configuration
   - [ ] `validateConfig(config)` - Validate schema
   - [ ] `getConfigPath(level)` - Resolve config file path
-- [ ] Implement `src/core/manifest-manager.ts`
+- [ ] Implement `cli/src/core/manifest-manager.ts`
   - [ ] `loadManifest()` - Load manifest.json
   - [ ] `saveManifest(manifest)` - Save manifest
   - [ ] `updateManifest(plan, results)` - Update after sync
@@ -83,13 +92,13 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 1.4 Utility Functions
 
-- [ ] Implement `src/utils/hash.ts`
+- [ ] Implement `cli/src/utils/hash.ts`
   - [ ] `hashContent(content)` - SHA256 hashing
   - [ ] `hashSkill(skill)` - Hash skill object
   - [ ] `hashMCPServer(server)` - Hash MCP server object
-- [ ] Implement `src/utils/atomic-write.ts`
+- [ ] Implement `cli/src/utils/atomic-write.ts`
   - [ ] `atomicWrite(path, content)` - Atomic file write with fsync
-- [ ] Implement `src/utils/env-vars.ts`
+- [ ] Implement `cli/src/utils/env-vars.ts`
   - [ ] `preserveEnvVars(content)` - Preserve ${...} variables
   - [ ] `normalizeEnvVar(value, format)` - Convert env var formats
 
@@ -108,7 +117,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.1 Adapter Interface
 
-- [ ] Define `src/adapters/base.ts`
+- [ ] Define `cli/src/adapters/base.ts`
   - [ ] `ToolAdapter` interface
   - [ ] `AdapterConfig` interface
   - [ ] `WriteResult` interface
@@ -116,7 +125,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.2 Claude Code Adapter (Source)
 
-- [ ] Implement `src/adapters/claude-code.ts`
+- [ ] Implement `cli/src/adapters/claude-code.ts`
   - [ ] `init(config)` - Initialize adapter
   - [ ] `readSkills()` - Read from `.claude/skills/`
     - [ ] Parse `SKILL.md` frontmatter + content
@@ -135,7 +144,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.3 Cursor Adapter (Target)
 
-- [ ] Implement `src/adapters/cursor.ts`
+- [ ] Implement `cli/src/adapters/cursor.ts`
   - [ ] `init(config)` - Initialize adapter
   - [ ] `writeSkills(skills)` - Write to `.cursor/skills/`
     - [ ] Create skill directory structure
@@ -158,7 +167,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.4 OpenCode Adapter (Target)
 
-- [ ] Implement `src/adapters/opencode.ts`
+- [ ] Implement `cli/src/adapters/opencode.ts`
   - [ ] `init(config)` - Initialize adapter
   - [ ] `writeSkills(skills)` - Write to `.opencode/skills/`
     - [ ] Same structure as Cursor
@@ -181,7 +190,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.5 Adapter Registry
 
-- [ ] Implement `src/adapters/registry.ts`
+- [ ] Implement `cli/src/adapters/registry.ts`
   - [ ] `getAdapter(toolName)` - Factory function
   - [ ] Register all adapters
   - [ ] Validate adapter availability
@@ -201,7 +210,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 3.1 Hash Calculation
 
-- [ ] Implement `src/core/hasher.ts`
+- [ ] Implement `cli/src/core/hasher.ts`
   - [ ] `calculateSkillHash(skill)` - Hash skill content + metadata
   - [ ] `calculateMCPHash(server)` - Hash MCP server config
   - [ ] Handle whitespace normalization
@@ -209,7 +218,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 3.2 Difference Calculator
 
-- [ ] Implement `src/core/diff.ts`
+- [ ] Implement `cli/src/core/diff.ts`
   - [ ] `calculateDiff(source, target, manifest, mode)` - Main diff function
     - [ ] Identify items to CREATE (in source, not in target)
     - [ ] Identify items to UPDATE (hash mismatch)
@@ -224,7 +233,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 3.3 Plan Generator
 
-- [ ] Implement `src/core/planner.ts`
+- [ ] Implement `cli/src/core/planner.ts`
   - [ ] `generatePlan(source, targets, manifest, mode)` - Generate sync plan
   - [ ] `formatPlan(plan)` - Format plan for display
   - [ ] `validatePlan(plan)` - Validate plan safety
@@ -236,7 +245,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 3.4 Manifest Updates
 
-- [ ] Implement manifest update logic in `src/core/manifest-manager.ts`
+- [ ] Implement manifest update logic in `cli/src/core/manifest-manager.ts`
   - [ ] `updateAfterCreate(item)` - Add new item to manifest
   - [ ] `updateAfterUpdate(item, newHash)` - Update hash
   - [ ] `updateAfterDelete(item, tool)` - Remove target entry
@@ -257,7 +266,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.1 CLI Framework Setup
 
-- [ ] Implement `src/cli/index.ts`
+- [ ] Implement `cli/src/cli/index.ts`
   - [ ] Set up Commander.js
   - [ ] Register all commands
   - [ ] Global error handler
@@ -266,7 +275,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.2 `vibe-sync init` Command
 
-- [ ] Implement `src/cli/commands/init.ts`
+- [ ] Implement `cli/src/cli/commands/init.ts`
   - [ ] Detect existing tools (check for `.claude/`, `.cursor/`, `.opencode/`)
   - [ ] Interactive prompts:
     - [ ] Multi-select: Which tools do you use?
@@ -280,7 +289,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.3 `vibe-sync sync` Command
 
-- [ ] Implement `src/cli/commands/sync.ts`
+- [ ] Implement `cli/src/cli/commands/sync.ts`
   - [ ] Read configuration
   - [ ] Load source tool adapter
   - [ ] Load target tool adapters
@@ -300,7 +309,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.4 `vibe-sync plan` Command
 
-- [ ] Implement `src/cli/commands/plan.ts`
+- [ ] Implement `cli/src/cli/commands/plan.ts`
   - [ ] Same as `sync --dry-run` but with detailed output
   - [ ] Show hash comparisons
   - [ ] Show file diffs for changes
@@ -308,7 +317,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.5 `vibe-sync status` Command
 
-- [ ] Implement `src/cli/commands/status.ts`
+- [ ] Implement `cli/src/cli/commands/status.ts`
   - [ ] Read configuration
   - [ ] Read manifest
   - [ ] Display:
@@ -321,7 +330,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.6 `vibe-sync list` Command
 
-- [ ] Implement `src/cli/commands/list.ts`
+- [ ] Implement `cli/src/cli/commands/list.ts`
   - [ ] `list skills` - Show all skills with hash, description, synced targets
   - [ ] `list mcp` - Show all MCP servers with type, command, synced targets
   - [ ] Table format output
@@ -329,7 +338,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.7 `vibe-sync clean` Command
 
-- [ ] Implement `src/cli/commands/clean.ts`
+- [ ] Implement `cli/src/cli/commands/clean.ts`
   - [ ] Interactive mode: multi-select items to remove
   - [ ] Single item mode: `clean skill/name`
   - [ ] Display removal plan
@@ -354,7 +363,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 5.1 MCP Security System
 
-- [ ] Implement `src/core/security.ts`
+- [ ] Implement `cli/src/core/security.ts`
   - [ ] `checkMCPServer(server, config)` - Security validation
     - [ ] Check if command in `allowed_commands`
     - [ ] Check if command in `denied_commands`
@@ -387,7 +396,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 5.4 Rollback Mechanism
 
-- [ ] Implement `src/core/rollback.ts`
+- [ ] Implement `cli/src/core/rollback.ts`
   - [ ] Create backup before sync
   - [ ] Restore on error
   - [ ] Clean up backups on success
@@ -530,7 +539,9 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ## Notes
 
-- **Package Manager**: Use `pnpm`
+- **Working Directory**: `cli/` folder (pnpm monorepo workspace)
+- **Package Manager**: Use `pnpm` (run from `cli/` directory)
+- **Project Structure**: pnpm monorepo (CLI workspace in `cli/`)
 - **Commit Convention**: Angular format (`feat`, `fix`, `docs`, etc.)
 - **Testing Strategy**: Write tests BEFORE implementation (TDD)
 - **Code Style**: Use Prettier + ESLint (will be configured in Phase 1)
