@@ -40,6 +40,7 @@ export async function detectTools(projectDir: string): Promise<ToolName[]> {
     "claude-code": ".claude",
     cursor: ".cursor",
     opencode: ".opencode",
+    codex: ".codex",
   };
 
   for (const [tool, dir] of Object.entries(toolDirs)) {

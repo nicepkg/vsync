@@ -47,5 +47,8 @@
   "engines": {
     "node": ">=24.0.0",
     "pnpm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@iarna/toml": "^2.2.5"
   }
 }

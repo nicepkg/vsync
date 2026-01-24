@@ -13,7 +13,7 @@ export type SyncMode = "safe" | "prune";
 /**
  * Supported AI coding tools
  */
-export type ToolName = "claude-code" | "cursor" | "opencode";
+export type ToolName = "claude-code" | "cursor" | "opencode" | "codex";
 
 /**
  * Configuration level

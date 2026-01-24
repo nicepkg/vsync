@@ -11,8 +11,8 @@
 
 This document tracks all implementation tasks for vibe-sync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
 
-**Current Status**: 🟢 MVP 1.0 Complete (Phases 1-5) | Starting v1.1
-**Next Phase**: Phase 7.1 - User-Level Configuration
+**Current Status**: 🟡 Phase 7.4 Complete (Codex Adapter)
+**Next Phase**: Phase 7.5 - Import Command
 
 ---
 
@@ -539,26 +539,28 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 7.4 Codex Adapter
 
-- [ ] Research Codex configuration format
-  - [ ] Document Skills location (`.codex/skills/`)
-  - [ ] Document MCP config location
-  - [ ] Document Agents format (if supported)
-  - [ ] Document Commands format (if supported)
-- [ ] Implement `cli/src/adapters/codex.ts`
-  - [ ] `readSkills()` - Read from `.codex/skills/`
-  - [ ] `writeSkills()` - Write to `.codex/skills/`
-  - [ ] `readMCPServers()` - Read from Codex MCP config
-  - [ ] `writeMCPServers()` - Write to Codex MCP config
-  - [ ] `readAgents()` - If supported
-  - [ ] `writeAgents()` - If supported
-  - [ ] Handle Codex-specific formats
-  - [ ] Preserve Codex variable syntax
-- [ ] Register Codex adapter in registry
-- [ ] Update types to include "codex" as ToolName
-- [ ] Write comprehensive unit tests
-  - [ ] Test all read/write operations
-  - [ ] Test format compatibility
-  - [ ] Test variable preservation
+- [x] Research Codex configuration format
+  - [x] Document Skills location (`.codex/skills/`)
+  - [x] Document MCP config location (`config.toml` with `[mcp_servers.<name>]`)
+  - [x] Document Agents format (`.codex/agents/` - same as Claude Code)
+  - [x] Document Commands format (`.codex/commands/` - same as Claude Code)
+- [x] Implement `cli/src/adapters/codex.ts`
+  - [x] `readSkills()` - Read from `.codex/skills/`
+  - [x] `writeSkills()` - Write to `.codex/skills/`
+  - [x] `readMCPServers()` - Read from `config.toml`
+  - [x] `writeMCPServers()` - Write to `config.toml` (TOML format)
+  - [x] `readAgents()` - Read from `.codex/agents/`
+  - [x] `writeAgents()` - Write to `.codex/agents/`
+  - [x] `readCommands()` - Read from `.codex/commands/`
+  - [x] `writeCommands()` - Write to `.codex/commands/`
+  - [x] Handle Codex-specific formats (TOML for MCP config)
+  - [x] Preserve environment variable syntax
+- [x] Register Codex adapter in registry
+- [x] Update types to include "codex" as ToolName
+- [x] Write comprehensive unit tests
+  - [x] Test all read/write operations (22 tests, all passing)
+  - [x] Test TOML format compatibility
+  - [x] Test hash computation for all item types
 
 ### 7.5 Import Command
 

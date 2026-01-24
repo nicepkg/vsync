@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ClaudeCodeAdapter } from "@src/adapters/claude-code.js";
+import { CodexAdapter } from "@src/adapters/codex.js";
 import { CursorAdapter } from "@src/adapters/cursor.js";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
 import { getAdapter } from "@src/adapters/registry.js";
@@ -36,6 +37,17 @@ describe("Adapter Registry", () => {
 
       expect(adapter).toBeInstanceOf(OpenCodeAdapter);
       expect(adapter.config.tool).toBe("opencode");
+      expect(adapter.config.baseDir).toBe("/test");
+    });
+
+    it("should create CodexAdapter for codex tool", () => {
+      const adapter = getAdapter({
+        tool: "codex",
+        baseDir: "/test",
+      });
+
+      expect(adapter).toBeInstanceOf(CodexAdapter);
+      expect(adapter.config.tool).toBe("codex");
       expect(adapter.config.baseDir).toBe("/test");
     });
 

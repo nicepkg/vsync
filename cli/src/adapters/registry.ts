@@ -5,6 +5,7 @@
 
 import type { AdapterConfig, ToolAdapter } from "./base.js";
 import { ClaudeCodeAdapter } from "./claude-code.js";
+import { CodexAdapter } from "./codex.js";
 import { CursorAdapter } from "./cursor.js";
 import { OpenCodeAdapter } from "./opencode.js";
 
@@ -27,9 +28,12 @@ export function getAdapter(config: AdapterConfig): ToolAdapter {
     case "opencode":
       return new OpenCodeAdapter(config);
 
+    case "codex":
+      return new CodexAdapter(config);
+
     default:
       throw new Error(
-        `Unsupported tool: ${config.tool}. Supported tools: claude-code, cursor, opencode`,
+        `Unsupported tool: ${config.tool}. Supported tools: claude-code, cursor, opencode, codex`,
       );
   }
 }
