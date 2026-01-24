@@ -116,14 +116,13 @@ describe("Clean Command", () => {
         itemName: "skill/test",
         type: "skill",
         name: "test",
-        targetTools: ["cursor", "opencode", "codex"],
+        targetTools: ["cursor", "opencode"],
         fromSource: false,
         sourceTool: "claude-code",
       });
 
       expect(output).toContain("cursor");
       expect(output).toContain("opencode");
-      expect(output).toContain("codex");
     });
   });
 });

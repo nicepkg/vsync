@@ -29,7 +29,7 @@ export function getManifestPath(projectDir?: string): string {
 export function createEmptyManifest(): Manifest {
   return {
     version: "1.0.0",
-    last_sync: new Date().toISOString(),
+    last_synced: new Date().toISOString(),
     items: {},
   };
 }
@@ -82,8 +82,8 @@ export async function saveManifest(
 ): Promise<void> {
   const manifestPath = getManifestPath(projectDir);
 
-  // Update last_sync timestamp
-  manifest.last_sync = new Date().toISOString();
+  // Update last_synced timestamp
+  manifest.last_synced = new Date().toISOString();
 
   // Format with indentation for readability
   const content = JSON.stringify(manifest, null, 2);
@@ -154,7 +154,7 @@ export function updateAfterCreate(
   manifest.items[key].targets[targetTool] = {
     synced: true,
     hash,
-    last_sync: now,
+    last_synced: now,
   };
 }
 
@@ -193,7 +193,7 @@ export function updateAfterUpdate(
   item.targets[targetTool] = {
     synced: true,
     hash: newHash,
-    last_sync: now,
+    last_synced: now,
   };
 }
 

@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { readFile, access } from "node:fs/promises";
 import mockFs from "mock-fs";
-import { initCommand } from "../../../src/cli/commands/init.js";
-import type { VibeConfig } from "../../../src/types/config.js";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import type { VibeConfig, ToolName } from "../../../src/types/config.js";
 
 describe("Init Command", () => {
   beforeEach(() => {
@@ -67,8 +66,8 @@ describe("Init Command", () => {
   describe("Config Generation", () => {
     it("should generate valid config with selected options", async () => {
       const options = {
-        tools: ["claude-code", "cursor"],
-        source: "claude-code",
+        tools: ["claude-code", "cursor"] as ToolName[],
+        source: "claude-code" as ToolName,
         syncItems: ["skills", "mcp"],
         isUserLevel: false,
       };
@@ -86,8 +85,8 @@ describe("Init Command", () => {
 
     it("should exclude source tool from targets", async () => {
       const options = {
-        tools: ["claude-code", "cursor", "opencode"],
-        source: "cursor",
+        tools: ["claude-code", "cursor", "opencode"] as ToolName[],
+        source: "cursor" as ToolName,
         syncItems: ["skills"],
         isUserLevel: false,
       };
@@ -103,8 +102,8 @@ describe("Init Command", () => {
 
     it("should set correct sync flags", async () => {
       const options = {
-        tools: ["claude-code", "cursor"],
-        source: "claude-code",
+        tools: ["claude-code", "cursor"] as ToolName[],
+        source: "claude-code" as ToolName,
         syncItems: ["skills"],
         isUserLevel: false,
       };
@@ -214,8 +213,8 @@ describe("Init Command", () => {
   describe("Error Handling", () => {
     it("should throw error if no tools selected", async () => {
       const options = {
-        tools: [],
-        source: "claude-code",
+        tools: [] as ToolName[],
+        source: "claude-code" as ToolName,
         syncItems: ["skills"],
         isUserLevel: false,
       };
@@ -229,8 +228,8 @@ describe("Init Command", () => {
 
     it("should throw error if source not in tools", async () => {
       const options = {
-        tools: ["cursor"],
-        source: "claude-code",
+        tools: ["cursor"] as ToolName[],
+        source: "claude-code" as ToolName,
         syncItems: ["skills"],
         isUserLevel: false,
       };
@@ -244,8 +243,8 @@ describe("Init Command", () => {
 
     it("should throw error if no sync items selected", async () => {
       const options = {
-        tools: ["claude-code", "cursor"],
-        source: "claude-code",
+        tools: ["claude-code", "cursor"] as ToolName[],
+        source: "claude-code" as ToolName,
         syncItems: [],
         isUserLevel: false,
       };

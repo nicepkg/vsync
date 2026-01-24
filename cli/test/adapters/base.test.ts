@@ -3,7 +3,6 @@ import type {
   AdapterConfig,
   WriteResult,
   ValidationResult,
-  ToolAdapter,
 } from "@src/adapters/base.js";
 
 describe("Adapter Base Types", () => {

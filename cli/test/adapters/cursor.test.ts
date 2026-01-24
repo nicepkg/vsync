@@ -235,7 +235,7 @@ describe("CursorAdapter", () => {
           auth: {
             client_id: "${env:CLIENT_ID}",
             client_secret: "${env:CLIENT_SECRET}",
-            token_url: "https://oauth.example.com/token",
+            token_endpoint: "https://oauth.example.com/token",
           },
           hash: "vwx234",
         },

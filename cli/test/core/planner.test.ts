@@ -68,7 +68,7 @@ describe("Plan Generator", () => {
 
   const manifest: Manifest = {
     version: "1.0.0",
-    last_sync: "2026-01-24T10:00:00Z",
+    last_synced: "2026-01-24T10:00:00Z",
     items: {
       skill1: {
         hash: "hash-skill1",

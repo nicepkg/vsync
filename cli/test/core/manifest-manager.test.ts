@@ -12,12 +12,12 @@ import {
   updateAfterDelete,
   pruneOrphanedItems,
 } from "@src/core/manifest-manager.js";
-import type { Manifest, ManifestItem } from "@src/types/manifest.js";
+import type { Manifest } from "@src/types/manifest.js";
 
 describe("Manifest Manager", () => {
   const sampleManifest: Manifest = {
     version: "1.0.0",
-    last_sync: "2026-01-24T10:30:00Z",
+    last_synced: "2026-01-24T10:30:00Z",
     items: {
       "skill/test-skill": {
         type: "skill",
@@ -28,7 +28,7 @@ describe("Manifest Manager", () => {
           cursor: {
             synced: true,
             hash: "abc123",
-            last_sync: "2026-01-24T10:30:00Z",
+            last_synced: "2026-01-24T10:30:00Z",
           },
         },
       },
@@ -70,7 +70,7 @@ describe("Manifest Manager", () => {
 
       expect(manifest.version).toBe("1.0.0");
       expect(manifest.items).toEqual({});
-      expect(manifest.last_sync).toBeTruthy();
+      expect(manifest.last_synced).toBeTruthy();
     });
   });
 
@@ -107,7 +107,7 @@ describe("Manifest Manager", () => {
     it("should save manifest atomically", async () => {
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "2026-01-24T11:00:00Z",
+        last_synced: "2026-01-24T11:00:00Z",
         items: {},
       };
 

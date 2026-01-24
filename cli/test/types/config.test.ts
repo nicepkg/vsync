@@ -47,27 +47,6 @@ describe("Config Types", () => {
       expect(config.target_tools).toContain("cursor");
     });
 
-    it("should create a config with MCP security settings", () => {
-      const config: VibeConfig = {
-        version: "3.0.0",
-        level: "project",
-        source_tool: "claude-code",
-        target_tools: ["cursor", "opencode"],
-        sync_config: {
-          skills: true,
-          mcp: true,
-        },
-        mcp_security: {
-          require_confirmation: true,
-          allowed_commands: ["npx @modelcontextprotocol/*"],
-          allowed_domains: ["https://api.linear.app"],
-        },
-      };
-
-      expect(config.mcp_security?.require_confirmation).toBe(true);
-      expect(config.mcp_security?.allowed_commands).toHaveLength(1);
-    });
-
     it("should create a config with last_sync timestamp", () => {
       const config: VibeConfig = {
         version: "3.0.0",

@@ -76,8 +76,8 @@ export function formatStatus(data: StatusData): string {
     chalk.cyan("Target Tools:      ") + data.config.target_tools.join(", "),
   );
 
-  const lastSync = data.manifest.last_sync
-    ? formatRelativeTime(data.manifest.last_sync)
+  const lastSync = data.manifest.last_synced
+    ? formatRelativeTime(data.manifest.last_synced)
     : "Never synced";
   lines.push(chalk.cyan("Last Sync:         ") + lastSync);
 

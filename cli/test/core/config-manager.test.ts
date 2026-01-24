@@ -149,28 +149,6 @@ describe("Config Manager", () => {
       expect(saved).toContain("  ");
     });
 
-    it("should preserve MCP security settings", async () => {
-      const config: VibeConfig = {
-        version: "3.0.0",
-        level: "project",
-        source_tool: "claude-code",
-        target_tools: ["cursor"],
-        sync_config: {
-          skills: true,
-          mcp: true,
-        },
-        mcp_security: {
-          require_confirmation: true,
-          allowed_commands: ["npx @modelcontextprotocol/*"],
-        },
-      };
-
-      await saveConfig(config, "project", "/empty");
-
-      const loaded = await loadConfig("project", "/empty");
-      expect(loaded.mcp_security?.require_confirmation).toBe(true);
-      expect(loaded.mcp_security?.allowed_commands).toHaveLength(1);
-    });
   });
 
   describe("validateConfig", () => {

@@ -20,7 +20,7 @@ export interface TargetStatus {
   /** Hash of the synced content */
   hash: string;
   /** Last sync timestamp (ISO 8601) */
-  last_sync: string;
+  last_synced: string;
   /** Error message if sync failed */
   error?: string;
 }
@@ -50,7 +50,7 @@ export interface Manifest {
   /** Manifest format version */
   version: string;
   /** Last successful sync timestamp (ISO 8601) */
-  last_sync: string;
+  last_synced: string;
   /** All tracked items, keyed by "type/name" */
   items: Record<string, ManifestItem>;
 }

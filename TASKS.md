@@ -357,112 +357,6 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ---
 
-## Refactor: TypeScript Path Aliases and Typecheck Improvements
-
-**Type**: refactor
-**Priority**: medium
-**Affects**: config, all modules
-**Estimated Time**: 1-2 hours
-
-### Description
-
-Add TypeScript path aliases to simplify imports and make code more maintainable. Configure typecheck to include test files for better type safety.
-
-### Motivation
-
-Current code uses deep relative imports like `../../adapters/registry.js`, which:
-- Are harder to maintain when files move
-- Are more error-prone to type
-- Make code less readable
-- TypeScript doesn't check test files for type errors
-
-Path aliases will make imports cleaner:
-- `@src/adapters/registry.js` instead of `../../adapters/registry.js`
-- `@test/fixtures/skills` for test utilities
-
-### Acceptance Criteria
-
-- [x] `@src` alias points to `./src`
-- [x] `@test` alias points to `./test`
-- [x] All relative imports `../../` replaced with aliases
-- [x] TypeScript typecheck includes test files
-- [x] All tests still pass
-- [x] `pnpm typecheck` runs (has pre-existing type errors in test files)
-- [x] `pnpm build` works correctly
-
-### Implementation Plan
-
-#### Files to Modify
-
-- [x] `cli/tsconfig.json` - Add path aliases, include test folder
-- [x] All `cli/src/**/*.ts` files - Replace relative imports with `@src/*`
-- [x] All `cli/test/**/*.ts` files - Replace relative imports with `@src/*` and `@test/*`
-- [x] `cli/vitest.config.ts` - Add alias resolution for tests
-
-#### Files to Read (Before Starting)
-
-- [ ] `cli/tsconfig.json` - Current TypeScript configuration
-- [ ] `cli/src/cli/commands/*.ts` - Examples of current import patterns
-- [ ] TypeScript documentation on path mapping
-
-### Testing Strategy
-
-- [x] Run `pnpm typecheck` after adding aliases
-- [x] Run `pnpm test` to ensure nothing breaks
-- [x] Run `pnpm build` to verify build works
-- [x] Manually verify imports resolve correctly in IDE
-- [x] Test coverage maintained (no changes to test logic)
-
-### Implementation Steps
-
-1. **Update `tsconfig.json`**:
-   ```json
-   {
-     "compilerOptions": {
-       "baseUrl": ".",
-       "paths": {
-         "@src/*": ["./src/*"],
-         "@test/*": ["./test/*"]
-       }
-     },
-     "include": ["src/**/*", "test/**/*", "*.mjs", "*.cjs", "*.js", "*.ts", "*.tsx"]
-   }
-   ```
-
-2. **Replace imports in all source files**:
-   - `../../adapters/registry.js` → `@src/adapters/registry.js`
-   - `../../core/config-manager.js` → `@src/core/config-manager.js`
-   - `../../types/config.js` → `@src/types/config.js`
-
-3. **Replace imports in all test files**:
-   - `../../src/core/diff.js` → `@src/core/diff.js`
-   - `../fixtures/skills` → `@test/fixtures/skills`
-
-4. **Verify**:
-   - Run typecheck
-   - Run tests
-   - Build project
-
-### Related Issues/Tasks
-
-- Part of Phase 4 cleanup
-- Improves developer experience
-- Makes codebase more maintainable
-
-### Notes
-
-- Path aliases only work at compile time (TypeScript)
-- Runtime needs `.js` extensions preserved (Node16 module resolution)
-- This is a pure refactor - no functionality changes
-- All imports must still use `.js` extension for ESM compatibility
-
----
-
-**Created**: 2026-01-25
-**Status**: [x] Complete
-
----
-
 ## Phase 5: Safety & Reliability (1-2 days)
 
 **Goal**: Ensure atomic writes and safe error recovery
@@ -609,14 +503,14 @@ Path aliases will make imports cleaner:
 
 **Overall Progress**: 1/6 phases complete
 
-| Phase   | Status      | Start Date | End Date   | Notes      |
-| ------- | ----------- | ---------- | ---------- | ---------- |
-| Phase 1 | 🟢 Complete | 2026-01-24 | 2026-01-24 | Foundation |
-| Phase 2 | 🔴 Not Started | -          | -        | Adapters     |
-| Phase 3 | 🔴 Not Started | -          | -        | Diff & Plan  |
-| Phase 4 | 🔴 Not Started | -          | -        | CLI Commands |
-| Phase 5 | 🔴 Not Started | -          | -        | Security     |
-| Phase 6 | 🔴 Not Started | -          | -        | Testing      |
+| Phase   | Status         | Start Date | End Date   | Notes        |
+| ------- | -------------- | ---------- | ---------- | ------------ |
+| Phase 1 | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Foundation   |
+| Phase 2 | 🔴 Not Started | -          | -          | Adapters     |
+| Phase 3 | 🔴 Not Started | -          | -          | Diff & Plan  |
+| Phase 4 | 🔴 Not Started | -          | -          | CLI Commands |
+| Phase 5 | 🔴 Not Started | -          | -          | Security     |
+| Phase 6 | 🔴 Not Started | -          | -          | Testing      |
 
 **Legend**:
 

@@ -6,7 +6,6 @@ import {
 } from "@src/core/diff.js";
 import type { Skill, MCPServer } from "@src/types/models.js";
 import type { Manifest } from "@src/types/manifest.js";
-import type { OperationType } from "@src/types/plan.js";
 
 describe("Diff Calculator", () => {
   describe("compareHashes", () => {
@@ -142,7 +141,7 @@ describe("Diff Calculator", () => {
 
     const manifest: Manifest = {
       version: "1.0.0",
-      last_sync: "2026-01-24T10:00:00Z",
+      last_synced: "2026-01-24T10:00:00Z",
       items: {
         skill1: {
           hash: "hash-skill1",
@@ -386,7 +385,7 @@ describe("Diff Calculator", () => {
       it("should handle empty manifest", () => {
         const emptyManifest: Manifest = {
           version: "1.0.0",
-          last_sync: "",
+          last_synced: "",
           items: {},
         };
 
@@ -411,9 +410,11 @@ describe("Diff Calculator", () => {
       it("should handle manifest with missing items", () => {
         const partialManifest: Manifest = {
           version: "1.0.0",
-          last_sync: "2026-01-24T10:00:00Z",
+          last_synced: "2026-01-24T10:00:00Z",
           items: {
             skill1: {
+              type: "skill",
+              name: "skill1",
               hash: "hash-skill1",
               last_synced: "2026-01-24T10:00:00Z",
               targets: {},
@@ -449,7 +450,7 @@ describe("Diff Calculator", () => {
       it("should detect target modifications (target hash != manifest hash)", () => {
         const modifiedManifest: Manifest = {
           version: "1.0.0",
-          last_sync: "2026-01-24T10:00:00Z",
+          last_synced: "2026-01-24T10:00:00Z",
           items: {
             skill1: {
               hash: "original-hash",

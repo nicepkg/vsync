@@ -17,7 +17,7 @@ describe("Status Command", () => {
 
   const sampleManifest: Manifest = {
     version: "1.0.0",
-    last_sync: "2026-01-24T10:30:00.000Z",
+    last_synced: "2026-01-24T10:30:00.000Z",
     items: {
       "skill/test-skill": {
         type: "skill",
@@ -28,12 +28,12 @@ describe("Status Command", () => {
           cursor: {
             synced: true,
             hash: "hash123",
-            last_sync: "2026-01-24T10:30:00.000Z",
+            last_synced: "2026-01-24T10:30:00.000Z",
           },
           opencode: {
             synced: true,
             hash: "hash123",
-            last_sync: "2026-01-24T10:30:00.000Z",
+            last_synced: "2026-01-24T10:30:00.000Z",
           },
         },
       },
@@ -46,7 +46,7 @@ describe("Status Command", () => {
           cursor: {
             synced: true,
             hash: "hash456",
-            last_sync: "2026-01-24T10:30:00.000Z",
+            last_synced: "2026-01-24T10:30:00.000Z",
           },
         },
       },
@@ -146,7 +146,7 @@ describe("Status Command", () => {
     it("should handle never-synced state", () => {
       const neverSyncedManifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 
@@ -206,7 +206,7 @@ describe("Status Command", () => {
     it("should display multiple target tools correctly", () => {
       const multiTargetConfig: VibeConfig = {
         ...sampleConfig,
-        target_tools: ["cursor", "opencode", "codex"],
+        target_tools: ["cursor", "opencode"],
       };
 
       const output = formatStatus({
@@ -217,7 +217,7 @@ describe("Status Command", () => {
         pendingChanges: false,
       });
 
-      expect(output).toContain("cursor, opencode, codex");
+      expect(output).toContain("cursor, opencode");
       expect(output).toContain("Skills:          2 items");
       expect(output).toContain("MCP Servers:     3 items");
     });
@@ -229,7 +229,7 @@ describe("Status Command", () => {
 
       const recentManifest: Manifest = {
         version: "1.0.0",
-        last_sync: recentDate.toISOString(),
+        last_synced: recentDate.toISOString(),
         items: {},
       };
 

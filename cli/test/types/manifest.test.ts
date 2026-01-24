@@ -24,12 +24,12 @@ describe("Manifest Types", () => {
           cursor: {
             synced: true,
             hash: "abc123",
-            last_sync: "2026-01-24T10:30:00Z",
+            last_synced: "2026-01-24T10:30:00Z",
           },
           opencode: {
             synced: true,
             hash: "abc123",
-            last_sync: "2026-01-24T10:30:00Z",
+            last_synced: "2026-01-24T10:30:00Z",
           },
         },
       };
@@ -50,7 +50,7 @@ describe("Manifest Types", () => {
           cursor: {
             synced: true,
             hash: "xyz789",
-            last_sync: "2026-01-24T11:00:00Z",
+            last_synced: "2026-01-24T11:00:00Z",
           },
         },
       };
@@ -81,7 +81,7 @@ describe("Manifest Types", () => {
           opencode: {
             synced: false,
             hash: "old456",
-            last_sync: "2026-01-24T12:00:00Z",
+            last_synced: "2026-01-24T12:00:00Z",
             error: "Connection timeout",
           },
         },
@@ -96,7 +96,7 @@ describe("Manifest Types", () => {
     it("should create a valid manifest", () => {
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "2026-01-24T10:30:00Z",
+        last_synced: "2026-01-24T10:30:00Z",
         items: {
           "skill/git-release": {
             type: "skill",
@@ -124,7 +124,7 @@ describe("Manifest Types", () => {
     it("should create an empty manifest", () => {
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "2026-01-24T10:00:00Z",
+        last_synced: "2026-01-24T10:00:00Z",
         items: {},
       };
 

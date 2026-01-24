@@ -6,7 +6,7 @@ import type { Manifest } from "../../../src/types/manifest.js";
 describe("List Command", () => {
   const sampleManifest: Manifest = {
     version: "1.0.0",
-    last_sync: "2026-01-24T10:30:00.000Z",
+    last_synced: "2026-01-24T10:30:00.000Z",
     items: {
       "skill/git-release": {
         type: "skill",
@@ -17,12 +17,12 @@ describe("List Command", () => {
           cursor: {
             synced: true,
             hash: "abc123def456",
-            last_sync: "2026-01-24T10:30:00.000Z",
+            last_synced: "2026-01-24T10:30:00.000Z",
           },
           opencode: {
             synced: true,
             hash: "abc123def456",
-            last_sync: "2026-01-24T10:30:00.000Z",
+            last_synced: "2026-01-24T10:30:00.000Z",
           },
         },
       },
@@ -35,7 +35,7 @@ describe("List Command", () => {
           cursor: {
             synced: true,
             hash: "def456ghi789",
-            last_sync: "2026-01-24T10:30:00.000Z",
+            last_synced: "2026-01-24T10:30:00.000Z",
           },
         },
       },
@@ -48,7 +48,7 @@ describe("List Command", () => {
           cursor: {
             synced: true,
             hash: "mcp123hash",
-            last_sync: "2026-01-24T10:30:00.000Z",
+            last_synced: "2026-01-24T10:30:00.000Z",
           },
         },
       },
@@ -109,7 +109,7 @@ describe("List Command", () => {
 
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 
@@ -123,7 +123,7 @@ describe("List Command", () => {
       const skills: Skill[] = [];
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 
@@ -145,7 +145,7 @@ describe("List Command", () => {
 
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 
@@ -166,7 +166,7 @@ describe("List Command", () => {
 
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 
@@ -226,7 +226,7 @@ describe("List Command", () => {
       const mcpServers: MCPServer[] = [];
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 
@@ -249,7 +249,7 @@ describe("List Command", () => {
 
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 
@@ -271,7 +271,7 @@ describe("List Command", () => {
 
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 
@@ -294,7 +294,7 @@ describe("List Command", () => {
 
       const manifest: Manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {},
       };
 

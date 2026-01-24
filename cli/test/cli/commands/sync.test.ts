@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { readFile } from "node:fs/promises";
 import mockFs from "mock-fs";
-import { syncCommand } from "../../../src/cli/commands/sync.js";
-import type { VibeConfig } from "../../../src/types/config.js";
+import type { VibeConfig, ToolName } from "../../../src/types/config.js";
 
 describe("Sync Command", () => {
   const sampleConfig: VibeConfig = {
@@ -23,7 +22,7 @@ describe("Sync Command", () => {
         ".vibe-sync-cache": {
           "manifest.json": JSON.stringify({
             version: "1.0.0",
-            last_sync: "",
+            last_synced: "",
             items: {},
           }),
         },
@@ -114,7 +113,7 @@ describe("Sync Command", () => {
         ["cursor"],
         {
           version: "1.0.0",
-          last_sync: "",
+          last_synced: "",
           items: {},
         },
         "safe",
@@ -129,7 +128,7 @@ describe("Sync Command", () => {
       );
 
       const plan = {
-        source_tool: "claude-code",
+        source_tool: "claude-code" as ToolName,
         diffs: {
           cursor: {
             tool: "cursor" as const,
@@ -194,7 +193,7 @@ describe("Sync Command", () => {
 
       const manifest = {
         version: "1.0.0",
-        last_sync: "",
+        last_synced: "",
         items: {
           "skill/old-skill": {
             type: "skill" as const,
@@ -205,7 +204,7 @@ describe("Sync Command", () => {
               cursor: {
                 synced: true,
                 hash: "old-hash",
-                last_sync: "",
+                last_synced: "",
               },
             },
           },
