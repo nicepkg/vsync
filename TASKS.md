@@ -371,13 +371,13 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 5.2 Environment Variable Preservation
 
-- [ ] Implement `src/utils/env-preserv.ts`
-  - [ ] Test regex for `${env:VAR}` detection
-  - [ ] Test preservation during JSON stringify
-  - [ ] Test format conversion (Claude Code ↔ Cursor ↔ OpenCode)
-- [ ] Add validation tests
-  - [ ] Ensure variables not expanded
-  - [ ] Ensure correct format per tool
+- [x] Implement `src/utils/env-vars.ts`
+  - [x] Test regex for `${env:VAR}` detection
+  - [x] Test preservation during JSON stringify
+  - [x] Test format conversion (Claude Code ↔ Cursor ↔ OpenCode)
+- [x] Add validation tests
+  - [x] Ensure variables not expanded
+  - [x] Ensure correct format per tool
 
 ### 5.3 Rollback Mechanism
 
