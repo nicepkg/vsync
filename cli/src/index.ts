@@ -7,11 +7,16 @@
  * Single source of truth → Compile to multiple formats → Diff-based sync
  */
 
-export function main(): void {
-  console.log("vibe-sync CLI - Coming soon!");
+import { runCLI } from "./cli/index.js";
+
+export async function main(): Promise<void> {
+  await runCLI();
 }
 
 // Run CLI if this is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+  main().catch((error) => {
+    console.error("Fatal error:", error);
+    process.exit(1);
+  });
 }

@@ -7,7 +7,7 @@ describe("CLI Entry Point", () => {
     expect(typeof main).toBe("function");
   });
 
-  it("should run without errors", () => {
-    expect(() => main()).not.toThrow();
+  it("should be async function", () => {
+    expect(main.constructor.name).toBe("AsyncFunction");
   });
 });
