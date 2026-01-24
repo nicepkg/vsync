@@ -7,12 +7,13 @@
 - **Project Name**: vibe-sync
 - **Repo Name**: vibe-sync
 - **Slogan (EN)**: One config. Many AI tools. Zero pain.
-- **Slogan (ZH)**: 一处配置，多端个 AI 工具同步，不再折腾。
+- **Slogan (ZH)**: 一处配置，多个 AI 工具同步，不再折腾。
 - **Domain**: vibe-sync.xiaominglab.com
 
 ## GitHub
 
-- **Username**: 2214962083
+- **Username**: nicepkg
+- **Repo**: https://github.com/nicepkg/vibe-sync
 
 ## Author
 
