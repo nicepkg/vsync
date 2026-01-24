@@ -23,7 +23,8 @@
     "mdx"
   ],
   "eslint.workingDirectories": [
-    { "directory": "website", "changeProcessCWD": true }
+    { "directory": "website", "changeProcessCWD": true },
+    { "directory": "cli", "changeProcessCWD": true }
   ],
   "eslint.probe": [
     "javascript",
