@@ -233,15 +233,15 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 3.3 Plan Generator
 
-- [ ] Implement `cli/src/core/planner.ts`
-  - [ ] `generatePlan(source, targets, manifest, mode)` - Generate sync plan
-  - [ ] `formatPlan(plan)` - Format plan for display
-  - [ ] `validatePlan(plan)` - Validate plan safety
-- [ ] Implement plan display
-  - [ ] Color-coded operations (CREATE=green, UPDATE=yellow, DELETE=red, SKIP=gray)
-  - [ ] Show hash changes for updates
-  - [ ] Show diff preview for MCP servers
-  - [ ] Summary statistics
+- [x] Implement `cli/src/core/planner.ts`
+  - [x] `generatePlan(source, targets, manifest, mode)` - Generate sync plan
+  - [x] `formatPlan(plan)` - Format plan for display
+  - [x] `validatePlan(plan)` - Validate plan safety
+- [x] Implement plan display
+  - [x] Color-coded operations (CREATE=green, UPDATE=yellow, DELETE=red, SKIP=gray)
+  - [x] Show hash changes for updates
+  - [x] Show diff preview for MCP servers
+  - [x] Summary statistics
 
 ### 3.4 Manifest Updates
 
