@@ -270,6 +270,44 @@ export function calculateDiff(input: DiffInput): DiffResult {
     }
   }
 
+  // Process manifest items for this target that are not in source or target
+  // This handles delete detection for write-only targets where we can't read
+  for (const item of Object.values(manifest.items)) {
+    // Check if this item was synced to this target
+    if (!item.targets[targetTool]?.synced) {
+      continue;
+    }
+
+    // Check if item is already processed (in source or target)
+    const isSkill = item.type === "skill";
+    const inSource = isSkill
+      ? sourceSkillMap.has(item.name)
+      : sourceMCPMap.has(item.name);
+    const inTarget = isSkill
+      ? targetSkillMap.has(item.name)
+      : targetMCPMap.has(item.name);
+
+    // Skip if already in source or target (already processed above)
+    if (inSource || inTarget) {
+      continue;
+    }
+
+    // Item was synced to target, not in source, not in target
+    // This means it should be deleted (if prune mode)
+    const comparison = compareHashes(null, null, item.hash, mode);
+
+    if (comparison.operation === "delete") {
+      toDelete.push({
+        type: "delete",
+        itemType: isSkill ? "skill" : "mcp",
+        name: item.name,
+        description: comparison.reason,
+        oldHash: item.hash,
+        reason: comparison.reason,
+      });
+    }
+  }
+
   return {
     tool: targetTool,
     toCreate,
