@@ -167,26 +167,26 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.4 OpenCode Adapter (Target)
 
-- [ ] Implement `cli/src/adapters/opencode.ts`
-  - [ ] `init(config)` - Initialize adapter
-  - [ ] `writeSkills(skills)` - Write to `.opencode/skills/`
-    - [ ] Same structure as Cursor
-  - [ ] `writeMCPServers(servers)` - Write to `opencode.jsonc`
-    - [ ] Read existing config (preserve other fields)
-    - [ ] Generate `mcp` object (not `mcpServers`!)
-    - [ ] Add `type` field (`"stdio"` or `"remote"`)
-    - [ ] Convert env vars: `${env:VAR}` → `${VAR}`
-    - [ ] Preserve JSONC comments using `jsonc-parser`
-    - [ ] Merge with existing config
-    - [ ] Use atomic write
-  - [ ] `deleteSkill(name)` - Remove skill directory
-  - [ ] `deleteMCPServer(name)` - Remove from opencode.jsonc
-  - [ ] `validate()` - Validate OpenCode configuration
-- [ ] Write unit tests
-  - [ ] Test JSONC comment preservation
-  - [ ] Test `mcp` vs `mcpServers` field name
-  - [ ] Test `type` field requirement
-  - [ ] Test env var format conversion
+- [x] Implement `cli/src/adapters/opencode.ts`
+  - [x] `init(config)` - Initialize adapter
+  - [x] `writeSkills(skills)` - Write to `.opencode/skills/`
+    - [x] Same structure as Cursor
+  - [x] `writeMCPServers(servers)` - Write to `opencode.jsonc`
+    - [x] Read existing config (preserve other fields)
+    - [x] Generate `mcp` object (not `mcpServers`!)
+    - [x] Add `type` field (`"stdio"` or `"remote"`)
+    - [x] Convert env vars: `${env:VAR}` → `${VAR}`
+    - [x] Preserve JSONC comments using `jsonc-parser`
+    - [x] Merge with existing config
+    - [x] Use atomic write
+  - [x] `deleteSkill(name)` - Remove skill directory
+  - [x] `deleteMCPServer(name)` - Remove from opencode.jsonc
+  - [x] `validate()` - Validate OpenCode configuration
+- [x] Write unit tests
+  - [x] Test JSONC comment preservation
+  - [x] Test `mcp` vs `mcpServers` field name
+  - [x] Test `type` field requirement
+  - [x] Test env var format conversion
 
 ### 2.5 Adapter Registry
 
