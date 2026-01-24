@@ -9,6 +9,7 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { createCleanCommand } from "./commands/clean.js";
+import { createImportCommand } from "./commands/import.js";
 import { createInitCommand } from "./commands/init.js";
 import { createListCommand } from "./commands/list.js";
 import { createPlanCommand } from "./commands/plan.js";
@@ -55,6 +56,7 @@ export function createCLI(): Command {
   program.addCommand(createPlanCommand());
   program.addCommand(createStatusCommand());
   program.addCommand(createListCommand());
+  program.addCommand(createImportCommand());
   program.addCommand(createCleanCommand());
 
   // Global error handler
