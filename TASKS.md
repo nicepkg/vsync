@@ -190,10 +190,10 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.5 Adapter Registry
 
-- [ ] Implement `cli/src/adapters/registry.ts`
-  - [ ] `getAdapter(toolName)` - Factory function
-  - [ ] Register all adapters
-  - [ ] Validate adapter availability
+- [x] Implement `cli/src/adapters/registry.ts`
+  - [x] `getAdapter(toolName)` - Factory function
+  - [x] Register all adapters
+  - [x] Validate adapter availability
 
 **Phase 2 Deliverables**:
 
