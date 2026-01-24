@@ -307,11 +307,6 @@ vibe-sync sync --user   # 操作 ~/.vibe-sync.json
     "skills": true,
     "mcp": true
   },
-  "mcp_security": {
-    "require_confirmation": true,
-    "allowed_commands": ["npx @modelcontextprotocol/*"],
-    "allowed_domains": ["https://api.linear.app", "https://api.notion.com"]
-  },
   "last_sync": "2026-01-24T10:30:00Z"
 }
 ```
@@ -522,30 +517,6 @@ opencode:
   🗑️  skill/old-skill deleted
 
 ✓ Sync completed in 0.8s
-```
-
-#### MCP 安全确认示例
-
-```bash
-$ vibe-sync sync
-
-📖 Reading source...
-  ✓ Found 1 NEW MCP server: postgres
-
-──────────────────────────────────────────────────────────
-
-🔒 New MCP Server Detected
-
-Name:         postgres
-Type:         stdio
-Command:      npx -y @modelcontextprotocol/server-postgres
-Environment:  DATABASE_URL=${env:DATABASE_URL}
-
-⚠️  This MCP server will execute commands on your system.
-
-? Allow syncing this MCP server to cursor, opencode? (y/N) y
-
-✓ MCP server whitelisted
 ```
 
 ### 4.4 `vibe-sync clean` - 清理目标配置
@@ -796,43 +767,7 @@ Skills (3 items) - Source: claude-code
 | **Safe**  | `vibe-sync sync`         | ✅     | ✅     | ❌     | 日常同步（默认） |
 | **Prune** | `vibe-sync sync --prune` | ✅     | ✅     | ✅     | 严格镜像         |
 
-### 5.2 MCP 安全机制
-
-#### 首次同步 MCP Server 必须确认
-
-```json
-{
-  "mcp_security": {
-    "require_confirmation": true,
-    "allowed_commands": [
-      "npx @modelcontextprotocol/*",
-      "npx -y @modelcontextprotocol/*"
-    ],
-    "allowed_domains": [
-      "https://api.linear.app",
-      "https://api.notion.com",
-      "https://mcp.*.com"
-    ],
-    "denied_commands": ["rm", "curl", "wget"]
-  }
-}
-```
-
-#### 安全检查流程
-
-```
-检测到新 MCP Server
-       ↓
-检查 command 是否在 allowed_commands
-       ↓ No
-显示详情并要求用户确认
-       ↓
-用户批准
-       ↓
-添加到白名单并继续同步
-```
-
-### 5.3 原子化写入
+### 5.2 原子化写入
 
 所有配置文件写入都必须原子化：
 
@@ -859,7 +794,7 @@ async function atomicWrite(filePath: string, content: string): Promise<void> {
 }
 ```
 
-### 5.4 环境变量保留
+### 5.3 环境变量保留
 
 写入 MCP 配置时，必须保留环境变量不被展开：
 
@@ -1266,7 +1201,6 @@ async function updateManifest(
 - ✅ 只同步 Skills 和 MCP
 - ✅ Safe 模式同步
 - ✅ Prune 模式同步
-- ✅ MCP 安全确认
 - ✅ 差异计划系统
 - ✅ Manifest 管理
 - ✅ 原子化写入
@@ -1312,7 +1246,6 @@ async function updateManifest(
 
 #### Phase 5: 安全机制（1-2 天）
 
-- [ ] MCP 安全确认
 - [ ] 原子化写入
 - [ ] 环境变量保留
 
@@ -1353,7 +1286,6 @@ async function updateManifest(
 3. **原子化写入**: 避免半写入状态
 4. **差异计划系统**: read → normalize → diff → plan → apply
 5. **Manifest 管理**: 快速判定是否需要同步
-6. **MCP 安全机制**: 首次确认 + 白名单
 
 ### 技术栈
 

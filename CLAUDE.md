@@ -126,7 +126,6 @@ These commands auto-read TASKS.md, PRD, and guide TDD workflow.
 - ✅ Claude Code (source) → Cursor, OpenCode (targets)
 - ✅ Safe/Prune modes
 - ✅ Project-level config
-- ✅ MCP security prompts
 - ✅ Atomic writes
 
 **EXCLUDED (v1.1):**

@@ -357,26 +357,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ---
 
-## Phase 5: Security & Safety (1-2 days)
+## Phase 5: Safety & Reliability (1-2 days)
 
-**Goal**: Implement MCP security checks and atomic write guarantees
+**Goal**: Ensure atomic writes and safe error recovery
 
-### 5.1 MCP Security System
-
-- [ ] Implement `cli/src/core/security.ts`
-  - [ ] `checkMCPServer(server, config)` - Security validation
-    - [ ] Check if command in `allowed_commands`
-    - [ ] Check if command in `denied_commands`
-    - [ ] Check if URL in `allowed_domains`
-  - [ ] `promptMCPApproval(server)` - Interactive approval prompt
-  - [ ] `addToWhitelist(server, config)` - Update security config
-- [ ] Add security checks to sync flow
-  - [ ] Detect new MCP servers
-  - [ ] Show server details (command, env, url)
-  - [ ] Require user confirmation
-  - [ ] Update `.vibe-sync.json` with approval
-
-### 5.2 Atomic Write Verification
+### 5.1 Atomic Write Verification
 
 - [ ] Verify atomic write implementation
   - [ ] Test write → fsync → rename flow
@@ -384,7 +369,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [ ] Test concurrent writes
   - [ ] Test crash recovery
 
-### 5.3 Environment Variable Preservation
+### 5.2 Environment Variable Preservation
 
 - [ ] Implement `src/utils/env-preserv.ts`
   - [ ] Test regex for `${env:VAR}` detection
@@ -394,7 +379,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [ ] Ensure variables not expanded
   - [ ] Ensure correct format per tool
 
-### 5.4 Rollback Mechanism
+### 5.3 Rollback Mechanism
 
 - [ ] Implement `cli/src/core/rollback.ts`
   - [ ] Create backup before sync
@@ -403,7 +388,6 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Phase 5 Deliverables**:
 
-- ✅ MCP security prompts working
 - ✅ Atomic writes verified
 - ✅ Environment variables preserved
 - ✅ Rollback mechanism tested

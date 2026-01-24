@@ -33,20 +33,6 @@ export interface SyncConfig {
 }
 
 /**
- * MCP security settings
- */
-export interface MCPSecurity {
-  /** Require user confirmation for new MCP servers */
-  require_confirmation: boolean;
-  /** Allowed command patterns (e.g., "npx @modelcontextprotocol/*") */
-  allowed_commands?: string[];
-  /** Blocked command patterns */
-  denied_commands?: string[];
-  /** Allowed API domains for HTTP MCP servers */
-  allowed_domains?: string[];
-}
-
-/**
  * Main vibe-sync configuration
  * Stored in .vibe-sync.json (project) or ~/.vibe-sync.json (user)
  */
@@ -63,8 +49,6 @@ export interface VibeConfig {
   target_tools: ToolName[];
   /** What to synchronize */
   sync_config: SyncConfig;
-  /** MCP security settings */
-  mcp_security?: MCPSecurity;
   /** Last successful sync timestamp (ISO 8601) */
   last_sync?: string;
 }
