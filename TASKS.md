@@ -11,8 +11,8 @@
 
 This document tracks all implementation tasks for vibe-sync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
 
-**Current Status**: 🟢 Phases 1-5 Complete
-**Next Phase**: Phase 6 - Testing & Polish
+**Current Status**: 🟢 MVP 1.0 Complete (Phases 1-5) | Starting v1.1
+**Next Phase**: Phase 7.1 - User-Level Configuration
 
 ---
 
@@ -485,32 +485,174 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ---
 
-## Post-MVP (v1.1) - Not in Current Scope
+## Phase 7: v1.1 Extensions (3-5 days)
 
-- [ ] User-level configuration support
-- [ ] Agents synchronization
-- [ ] Commands synchronization
-- [ ] Codex adapter
-- [ ] `import` command
-- [ ] Performance optimization (parallel sync)
-- [ ] Watch mode (`sync --watch`)
-- [ ] GitHub Action integration
+**Goal**: Extend MVP with user-level configs, Agents, Commands, and Codex support
+
+### 7.1 User-Level Configuration
+
+- [ ] Extend config system for user-level
+  - [ ] Update `cli/src/types/config.ts` - add user config path
+  - [ ] Update `cli/src/core/config-manager.ts`
+    - [ ] `getUserConfigPath()` - Get ~/.vibe-sync.json path
+    - [ ] Support both project and user configs
+    - [ ] Merge user + project configs (project overrides user)
+  - [ ] Update all CLI commands to support `--user` flag
+- [ ] Write unit tests
+  - [ ] Test user config loading
+  - [ ] Test config merging
+  - [ ] Test precedence rules
+
+### 7.2 Agents Synchronization
+
+- [ ] Define Agent types in `cli/src/types/models.ts`
+  - [ ] `Agent` interface (name, description, content, metadata)
+  - [ ] Support Claude Code agent format
+- [ ] Extend adapters for Agents
+  - [ ] Claude Code: `readAgents()` - from `.claude/agents/`
+  - [ ] Cursor: `writeAgents()` - to `.cursor/agents/`
+  - [ ] OpenCode: `writeAgents()` - to `.opencode/agents/`
+- [ ] Update diff/plan system for Agents
+  - [ ] Add agent hash calculation
+  - [ ] Add agent diff operations
+- [ ] Update sync config
+  - [ ] Add `agents: boolean` to sync_config
+  - [ ] Update init command to ask about agents
+- [ ] Write unit tests
+
+### 7.3 Commands Synchronization
+
+- [ ] Define Command types in `cli/src/types/models.ts`
+  - [ ] `Command` interface (name, description, command, metadata)
+  - [ ] Support Claude Code command format
+- [ ] Extend adapters for Commands
+  - [ ] Claude Code: `readCommands()` - from `.claude/commands/`
+  - [ ] Cursor: `writeCommands()` - to `.cursor/commands/`
+  - [ ] OpenCode: `writeCommands()` - to `.opencode/commands/`
+- [ ] Update diff/plan system for Commands
+  - [ ] Add command hash calculation
+  - [ ] Add command diff operations
+- [ ] Update sync config
+  - [ ] Add `commands: boolean` to sync_config
+  - [ ] Update init command to ask about commands
+- [ ] Write unit tests
+
+### 7.4 Codex Adapter
+
+- [ ] Research Codex configuration format
+  - [ ] Document Skills location (`.codex/skills/`)
+  - [ ] Document MCP config location
+  - [ ] Document Agents format (if supported)
+  - [ ] Document Commands format (if supported)
+- [ ] Implement `cli/src/adapters/codex.ts`
+  - [ ] `readSkills()` - Read from `.codex/skills/`
+  - [ ] `writeSkills()` - Write to `.codex/skills/`
+  - [ ] `readMCPServers()` - Read from Codex MCP config
+  - [ ] `writeMCPServers()` - Write to Codex MCP config
+  - [ ] `readAgents()` - If supported
+  - [ ] `writeAgents()` - If supported
+  - [ ] Handle Codex-specific formats
+  - [ ] Preserve Codex variable syntax
+- [ ] Register Codex adapter in registry
+- [ ] Update types to include "codex" as ToolName
+- [ ] Write comprehensive unit tests
+  - [ ] Test all read/write operations
+  - [ ] Test format compatibility
+  - [ ] Test variable preservation
+
+### 7.5 Import Command
+
+- [ ] Implement `cli/src/cli/commands/import.ts`
+  - [ ] `import <source-tool>` - Import configs from another tool
+  - [ ] Detect source tool automatically
+  - [ ] Interactive: Select what to import (skills, mcp, agents, commands)
+  - [ ] Preview import plan
+  - [ ] Confirm before import
+  - [ ] Execute import (copy to source tool)
+  - [ ] Update manifest
+- [ ] Add to Commander registry
+- [ ] Write unit tests
+
+**Phase 7 Deliverables**:
+
+- ✅ User-level config working
+- ✅ Agents sync working
+- ✅ Commands sync working
+- ✅ Codex adapter complete
+- ✅ Import command functional
+
+---
+
+## Phase 8: Performance & Advanced Features (2-3 days)
+
+**Goal**: Optimize performance and add advanced features
+
+### 8.1 Performance Optimization
+
+- [ ] Parallel sync for multiple targets
+  - [ ] Update `executeSyncPlan()` to sync targets in parallel
+  - [ ] Use `Promise.all()` for concurrent writes
+  - [ ] Ensure rollback still works with parallel execution
+- [ ] Incremental sync optimization
+  - [ ] Only read changed files
+  - [ ] Cache parsed configs
+  - [ ] Skip unchanged items early
+- [ ] Benchmark and measure improvements
+
+### 8.2 Watch Mode
+
+- [ ] Implement `cli/src/cli/commands/watch.ts`
+  - [ ] Use `chokidar` for file watching
+  - [ ] Watch source tool directories
+  - [ ] Debounce file change events
+  - [ ] Auto-sync on changes
+  - [ ] Display live sync status
+- [ ] Add `sync --watch` flag
+- [ ] Handle errors gracefully in watch mode
+- [ ] Write unit tests
+
+### 8.3 GitHub Action Integration
+
+- [ ] Create `.github/workflows/vibe-sync.yml` template
+  - [ ] Auto-sync on push
+  - [ ] Create PR with sync changes
+  - [ ] Configurable triggers
+- [ ] Document GitHub Action usage
+- [ ] Provide example workflows
+
+**Phase 8 Deliverables**:
+
+- ✅ Parallel sync working
+- ✅ Watch mode functional
+- ✅ GitHub Action template ready
+
+---
+
+## Post-v1.1 Future Ideas
+
+- [ ] Web dashboard for sync management
+- [ ] Cloud sync via GitHub Gists
+- [ ] Team collaboration features
+- [ ] Plugin system for custom adapters
+- [ ] AI-powered config migration
 - [ ] VSCode extension
 
 ---
 
 ## Progress Tracking
 
-**Overall Progress**: 1/6 phases complete
+**Overall Progress**: 5/8 phases complete (MVP 1.0 done, starting v1.1)
 
-| Phase   | Status      | Start Date | End Date   | Notes                |
-| ------- | ----------- | ---------- | ---------- | -------------------- |
-| Phase 1 | 🟢 Complete | 2026-01-24 | 2026-01-24 | Foundation           |
-| Phase 2 | 🟢 Complete | 2026-01-24 | 2026-01-24 | Adapters             |
-| Phase 3 | 🟢 Complete | 2026-01-24 | 2026-01-24 | Diff & Plan          |
-| Phase 4 | 🟢 Complete | 2026-01-24 | 2026-01-25 | CLI Commands         |
-| Phase 5 | 🟢 Complete | 2026-01-25 | 2026-01-25 | Safety & Reliability |
-| Phase 6 | 🔴 Not Started | -          | -          | Testing              |
+| Phase   | Status         | Start Date | End Date   | Notes                         |
+| ------- | -------------- | ---------- | ---------- | ----------------------------- |
+| Phase 1 | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Foundation                    |
+| Phase 2 | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Adapters                      |
+| Phase 3 | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Diff & Plan                   |
+| Phase 4 | 🟢 Complete    | 2026-01-24 | 2026-01-25 | CLI Commands                  |
+| Phase 5 | 🟢 Complete    | 2026-01-25 | 2026-01-25 | Safety & Reliability          |
+| Phase 6 | ⏸️  Deferred    | -          | -          | Testing (deferred post-v1.1)  |
+| Phase 7 | 🔴 Not Started | -          | -          | v1.1 Extensions               |
+| Phase 8 | 🔴 Not Started | -          | -          | Performance & Advanced        |
 
 **Legend**:
 
