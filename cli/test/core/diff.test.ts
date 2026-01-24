@@ -144,38 +144,48 @@ describe("Diff Calculator", () => {
       last_synced: "2026-01-24T10:00:00Z",
       items: {
         skill1: {
+          type: "skill",
+          name: "skill1",
           hash: "hash-skill1",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { last_synced: "2026-01-24T10:00:00Z" },
+            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
           },
         },
         skill2: {
+          type: "skill",
+          name: "skill2",
           hash: "hash-skill2-old",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { last_synced: "2026-01-24T10:00:00Z" },
+            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
           },
         },
         skill3: {
+          type: "skill",
+          name: "skill3",
           hash: "hash-skill3",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { last_synced: "2026-01-24T10:00:00Z" },
+            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
           },
         },
         postgres: {
+          type: "mcp",
+          name: "postgres",
           hash: "hash-postgres",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { last_synced: "2026-01-24T10:00:00Z" },
+            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
           },
         },
         sqlite: {
+          type: "mcp",
+          name: "sqlite",
           hash: "hash-sqlite-old",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { last_synced: "2026-01-24T10:00:00Z" },
+            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
           },
         },
       },
@@ -453,10 +463,12 @@ describe("Diff Calculator", () => {
           last_synced: "2026-01-24T10:00:00Z",
           items: {
             skill1: {
+              type: "skill",
+              name: "skill1",
               hash: "original-hash",
               last_synced: "2026-01-24T10:00:00Z",
               targets: {
-                cursor: { last_synced: "2026-01-24T10:00:00Z" },
+                cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
               },
             },
           },
