@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { readFile } from "node:fs/promises";
 import mockFs from "mock-fs";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { VibeConfig, ToolName } from "../../../src/types/config.js";
 
 describe("Sync Command", () => {
@@ -53,9 +53,8 @@ describe("Sync Command", () => {
 
   describe("Configuration Loading", () => {
     it("should load project config", async () => {
-      const { loadSyncConfig } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { loadSyncConfig } =
+        await import("../../../src/cli/commands/sync.js");
 
       const config = await loadSyncConfig("/project", false);
 
@@ -68,9 +67,8 @@ describe("Sync Command", () => {
         "/empty": {},
       });
 
-      const { loadSyncConfig } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { loadSyncConfig } =
+        await import("../../../src/cli/commands/sync.js");
 
       await expect(loadSyncConfig("/empty", false)).rejects.toThrow();
     });
@@ -78,9 +76,8 @@ describe("Sync Command", () => {
 
   describe("Sync Execution", () => {
     it("should read source configurations", async () => {
-      const { readSourceConfig } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { readSourceConfig } =
+        await import("../../../src/cli/commands/sync.js");
 
       const result = await readSourceConfig("claude-code", "/project");
 
@@ -89,9 +86,8 @@ describe("Sync Command", () => {
     });
 
     it("should calculate diff for targets", async () => {
-      const { calculateSyncDiff } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { calculateSyncDiff } =
+        await import("../../../src/cli/commands/sync.js");
 
       const sourceSkills = [
         { name: "test-skill", content: "test", hash: "hash123" },
@@ -123,9 +119,8 @@ describe("Sync Command", () => {
     });
 
     it("should execute sync operations for safe mode", async () => {
-      const { executeSyncPlan } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { executeSyncPlan } =
+        await import("../../../src/cli/commands/sync.js");
 
       const plan = {
         source_tool: "claude-code" as ToolName,
@@ -149,9 +144,7 @@ describe("Sync Command", () => {
       };
 
       const sourceData = {
-        skills: [
-          { name: "test-skill", content: "# Test", hash: "hash123" },
-        ],
+        skills: [{ name: "test-skill", content: "# Test", hash: "hash123" }],
         mcpServers: [],
       };
 
@@ -163,9 +156,7 @@ describe("Sync Command", () => {
 
   describe("Dry Run Mode", () => {
     it("should not execute operations in dry-run mode", async () => {
-      const { syncCommand } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { syncCommand } = await import("../../../src/cli/commands/sync.js");
 
       // Mock console and process.exit to suppress output
       vi.spyOn(console, "log").mockImplementation(() => {});
@@ -187,9 +178,8 @@ describe("Sync Command", () => {
 
   describe("Prune Mode", () => {
     it("should include delete operations in prune mode", async () => {
-      const { calculateSyncDiff } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { calculateSyncDiff } =
+        await import("../../../src/cli/commands/sync.js");
 
       const manifest = {
         version: "1.0.0",
@@ -227,12 +217,13 @@ describe("Sync Command", () => {
 
   describe("Manifest Updates", () => {
     it("should update manifest after successful sync", async () => {
-      const { updateManifestAfterSync } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { updateManifestAfterSync } =
+        await import("../../../src/cli/commands/sync.js");
 
       const operations = {
-        created: [{ type: "skill" as const, name: "test-skill", hash: "hash123" }],
+        created: [
+          { type: "skill" as const, name: "test-skill", hash: "hash123" },
+        ],
         updated: [],
         deleted: [],
       };
@@ -269,9 +260,8 @@ describe("Sync Command", () => {
         },
       });
 
-      const { readSourceConfig } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { readSourceConfig } =
+        await import("../../../src/cli/commands/sync.js");
 
       const result = await readSourceConfig("claude-code", "/invalid");
 
@@ -293,9 +283,8 @@ describe("Sync Command", () => {
         },
       });
 
-      const { loadSyncConfig } = await import(
-        "../../../src/cli/commands/sync.js"
-      );
+      const { loadSyncConfig } =
+        await import("../../../src/cli/commands/sync.js");
 
       // Should not throw, should handle gracefully
       const config = await loadSyncConfig("/project", false);

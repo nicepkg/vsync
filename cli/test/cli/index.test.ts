@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Command } from "commander";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createCLI } from "@src/cli/index.js";
 
 describe("CLI Framework", () => {

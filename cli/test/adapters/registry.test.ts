@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { getAdapter } from "@src/adapters/registry.js";
 import { ClaudeCodeAdapter } from "@src/adapters/claude-code.js";
 import { CursorAdapter } from "@src/adapters/cursor.js";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
+import { getAdapter } from "@src/adapters/registry.js";
 
 describe("Adapter Registry", () => {
   describe("getAdapter", () => {

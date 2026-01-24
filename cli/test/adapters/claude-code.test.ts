@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import mockFs from "mock-fs";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { ClaudeCodeAdapter } from "@src/adapters/claude-code.js";
 
 describe("ClaudeCodeAdapter", () => {
@@ -89,7 +89,7 @@ No frontmatter, just content.`,
       const gitRelease = skills.find((s) => s.name === "git-release");
       expect(gitRelease?.supportFiles).toBeDefined();
       expect(gitRelease?.supportFiles?.["template.md"]).toBe(
-        "Release template content"
+        "Release template content",
       );
     });
 
@@ -108,7 +108,7 @@ No frontmatter, just content.`,
         "/project": {
           ".claude": {
             skills: {
-              "skill1": {
+              skill1: {
                 "SKILL.md": "# Skill 1",
               },
               "not-a-dir.txt": "some file",
@@ -252,25 +252,25 @@ No frontmatter, just content.`,
   describe("write methods", () => {
     it("should throw error for writeSkills (read-only)", async () => {
       await expect(adapter.writeSkills([])).rejects.toThrow(
-        "Claude Code adapter is read-only"
+        "Claude Code adapter is read-only",
       );
     });
 
     it("should throw error for writeMCPServers (read-only)", async () => {
       await expect(adapter.writeMCPServers([])).rejects.toThrow(
-        "Claude Code adapter is read-only"
+        "Claude Code adapter is read-only",
       );
     });
 
     it("should throw error for deleteSkill (read-only)", async () => {
       await expect(adapter.deleteSkill("test")).rejects.toThrow(
-        "Claude Code adapter is read-only"
+        "Claude Code adapter is read-only",
       );
     });
 
     it("should throw error for deleteMCPServer (read-only)", async () => {
       await expect(adapter.deleteMCPServer("test")).rejects.toThrow(
-        "Claude Code adapter is read-only"
+        "Claude Code adapter is read-only",
       );
     });
   });

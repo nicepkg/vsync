@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type {
-  Manifest,
-  ManifestItem,
-  ItemType,
-} from "@src/types/manifest.js";
+import type { Manifest, ManifestItem, ItemType } from "@src/types/manifest.js";
 
 describe("Manifest Types", () => {
   describe("ItemType", () => {

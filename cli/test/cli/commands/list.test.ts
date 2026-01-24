@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { formatSkillsTable, formatMCPTable } from "../../../src/cli/commands/list.js";
-import type { Skill, MCPServer } from "../../../src/types/models.js";
+import {
+  formatSkillsTable,
+  formatMCPTable,
+} from "../../../src/cli/commands/list.js";
 import type { Manifest } from "../../../src/types/manifest.js";
+import type { Skill, MCPServer } from "../../../src/types/models.js";
 
 describe("List Command", () => {
   const sampleManifest: Manifest = {

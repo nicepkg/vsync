@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import mockFs from "mock-fs";
 import { readFile, readdir } from "node:fs/promises";
+import mockFs from "mock-fs";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { CursorAdapter } from "@src/adapters/cursor.js";
 import type { Skill, MCPServer } from "@src/types/models.js";
 
@@ -326,9 +326,7 @@ describe("CursorAdapter", () => {
     });
 
     it("should handle deleting non-existent skill", async () => {
-      await expect(
-        adapter.deleteSkill("non-existent"),
-      ).resolves.not.toThrow();
+      await expect(adapter.deleteSkill("non-existent")).resolves.not.toThrow();
     });
   });
 

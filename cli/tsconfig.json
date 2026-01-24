@@ -44,6 +44,14 @@
       "@test/*": ["./test/*"]
     }
   },
-  "include": ["src/**/*", "test/**/*", "*.mjs", "*.cjs", "*.js", "*.ts", "*.tsx"],
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "*.mjs",
+    "*.cjs",
+    "*.js",
+    "*.ts",
+    "*.tsx"
+  ],
   "exclude": ["node_modules", "dist"]
 }

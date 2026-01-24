@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFile } from "node:fs/promises";
 import mockFs from "mock-fs";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   loadConfig,
   saveConfig,
@@ -148,7 +148,6 @@ describe("Config Manager", () => {
       expect(saved).toContain("\n");
       expect(saved).toContain("  ");
     });
-
   });
 
   describe("validateConfig", () => {

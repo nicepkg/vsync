@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import mockFs from "mock-fs";
 import { readFile, readdir } from "node:fs/promises";
 import * as jsonc from "jsonc-parser";
+import mockFs from "mock-fs";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
 import type { Skill, MCPServer } from "@src/types/models.js";
 
@@ -384,9 +384,7 @@ describe("OpenCodeAdapter", () => {
     });
 
     it("should handle deleting non-existent skill", async () => {
-      await expect(
-        adapter.deleteSkill("non-existent"),
-      ).resolves.not.toThrow();
+      await expect(adapter.deleteSkill("non-existent")).resolves.not.toThrow();
     });
   });
 

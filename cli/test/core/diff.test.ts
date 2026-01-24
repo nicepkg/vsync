@@ -4,8 +4,8 @@ import {
   compareHashes,
   type DiffInput,
 } from "@src/core/diff.js";
-import type { Skill, MCPServer } from "@src/types/models.js";
 import type { Manifest } from "@src/types/manifest.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
 
 describe("Diff Calculator", () => {
   describe("compareHashes", () => {
@@ -149,7 +149,11 @@ describe("Diff Calculator", () => {
           hash: "hash-skill1",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+            cursor: {
+              synced: true,
+              hash: "hash-placeholder",
+              last_synced: "2026-01-24T10:00:00Z",
+            },
           },
         },
         skill2: {
@@ -158,7 +162,11 @@ describe("Diff Calculator", () => {
           hash: "hash-skill2-old",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+            cursor: {
+              synced: true,
+              hash: "hash-placeholder",
+              last_synced: "2026-01-24T10:00:00Z",
+            },
           },
         },
         skill3: {
@@ -167,7 +175,11 @@ describe("Diff Calculator", () => {
           hash: "hash-skill3",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+            cursor: {
+              synced: true,
+              hash: "hash-placeholder",
+              last_synced: "2026-01-24T10:00:00Z",
+            },
           },
         },
         postgres: {
@@ -176,7 +188,11 @@ describe("Diff Calculator", () => {
           hash: "hash-postgres",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+            cursor: {
+              synced: true,
+              hash: "hash-placeholder",
+              last_synced: "2026-01-24T10:00:00Z",
+            },
           },
         },
         sqlite: {
@@ -185,7 +201,11 @@ describe("Diff Calculator", () => {
           hash: "hash-sqlite-old",
           last_synced: "2026-01-24T10:00:00Z",
           targets: {
-            cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+            cursor: {
+              synced: true,
+              hash: "hash-placeholder",
+              last_synced: "2026-01-24T10:00:00Z",
+            },
           },
         },
       },
@@ -205,7 +225,9 @@ describe("Diff Calculator", () => {
 
         const result = calculateDiff(input);
 
-        const createOps = result.toCreate.filter((op) => op.itemType === "skill");
+        const createOps = result.toCreate.filter(
+          (op) => op.itemType === "skill",
+        );
         expect(createOps).toHaveLength(1);
         expect(createOps[0]?.name).toBe("skill4");
       });
@@ -223,7 +245,9 @@ describe("Diff Calculator", () => {
 
         const result = calculateDiff(input);
 
-        const updateOps = result.toUpdate.filter((op) => op.itemType === "skill");
+        const updateOps = result.toUpdate.filter(
+          (op) => op.itemType === "skill",
+        );
         expect(updateOps).toHaveLength(1);
         expect(updateOps[0]?.name).toBe("skill2");
       });
@@ -259,7 +283,9 @@ describe("Diff Calculator", () => {
 
         const result = calculateDiff(input);
 
-        const deleteOps = result.toDelete.filter((op) => op.itemType === "skill");
+        const deleteOps = result.toDelete.filter(
+          (op) => op.itemType === "skill",
+        );
         expect(deleteOps).toHaveLength(0);
       });
 
@@ -277,15 +303,21 @@ describe("Diff Calculator", () => {
         const result = calculateDiff(input);
 
         // postgres: unchanged
-        const postgresOp = result.toSkip.find((op) => op.itemType === "mcp" && op.name === "postgres");
+        const postgresOp = result.toSkip.find(
+          (op) => op.itemType === "mcp" && op.name === "postgres",
+        );
         expect(postgresOp?.type).toBe("skip");
 
         // sqlite: updated
-        const sqliteOp = result.toUpdate.find((op) => op.itemType === "mcp" && op.name === "sqlite");
+        const sqliteOp = result.toUpdate.find(
+          (op) => op.itemType === "mcp" && op.name === "sqlite",
+        );
         expect(sqliteOp?.type).toBe("update");
 
         // redis: not deleted (safe mode)
-        const redisOp = result.toDelete.find((op) => op.itemType === "mcp" && op.name === "redis");
+        const redisOp = result.toDelete.find(
+          (op) => op.itemType === "mcp" && op.name === "redis",
+        );
         expect(redisOp).toBeUndefined();
       });
     });
@@ -304,7 +336,9 @@ describe("Diff Calculator", () => {
 
         const result = calculateDiff(input);
 
-        const deleteOps = result.toDelete.filter((op) => op.itemType === "skill");
+        const deleteOps = result.toDelete.filter(
+          (op) => op.itemType === "skill",
+        );
         expect(deleteOps).toHaveLength(1);
         expect(deleteOps[0]?.name).toBe("skill3");
       });
@@ -340,10 +374,18 @@ describe("Diff Calculator", () => {
 
         const result = calculateDiff(input);
 
-        expect(result.toCreate.filter((op) => op.itemType === "skill")).toHaveLength(1);
-        expect(result.toUpdate.filter((op) => op.itemType === "skill")).toHaveLength(1);
-        expect(result.toSkip.filter((op) => op.itemType === "skill")).toHaveLength(1);
-        expect(result.toDelete.filter((op) => op.itemType === "skill")).toHaveLength(1);
+        expect(
+          result.toCreate.filter((op) => op.itemType === "skill"),
+        ).toHaveLength(1);
+        expect(
+          result.toUpdate.filter((op) => op.itemType === "skill"),
+        ).toHaveLength(1);
+        expect(
+          result.toSkip.filter((op) => op.itemType === "skill"),
+        ).toHaveLength(1);
+        expect(
+          result.toDelete.filter((op) => op.itemType === "skill"),
+        ).toHaveLength(1);
       });
     });
 
@@ -362,12 +404,12 @@ describe("Diff Calculator", () => {
         const result = calculateDiff(input);
 
         // All target items should be deleted in prune mode
-        expect(result.toDelete.filter((op) => op.itemType === "skill")).toHaveLength(
-          targetSkills.length,
-        );
-        expect(result.toDelete.filter((op) => op.itemType === "mcp")).toHaveLength(
-          targetMCPServers.length,
-        );
+        expect(
+          result.toDelete.filter((op) => op.itemType === "skill"),
+        ).toHaveLength(targetSkills.length);
+        expect(
+          result.toDelete.filter((op) => op.itemType === "mcp"),
+        ).toHaveLength(targetMCPServers.length);
       });
 
       it("should handle empty target", () => {
@@ -384,12 +426,12 @@ describe("Diff Calculator", () => {
         const result = calculateDiff(input);
 
         // All source items should be created
-        expect(result.toCreate.filter((op) => op.itemType === "skill")).toHaveLength(
-          sourceSkills.length,
-        );
-        expect(result.toCreate.filter((op) => op.itemType === "mcp")).toHaveLength(
-          sourceMCPServers.length,
-        );
+        expect(
+          result.toCreate.filter((op) => op.itemType === "skill"),
+        ).toHaveLength(sourceSkills.length);
+        expect(
+          result.toCreate.filter((op) => op.itemType === "mcp"),
+        ).toHaveLength(sourceMCPServers.length);
       });
 
       it("should handle empty manifest", () => {
@@ -401,9 +443,7 @@ describe("Diff Calculator", () => {
 
         const input: DiffInput = {
           sourceSkills: [sourceSkills[0]!],
-          targetSkills: [
-            { ...sourceSkills[0]!, hash: "different-hash" },
-          ],
+          targetSkills: [{ ...sourceSkills[0]!, hash: "different-hash" }],
           sourceMCPServers: [],
           targetMCPServers: [],
           manifest: emptyManifest,
@@ -445,10 +485,12 @@ describe("Diff Calculator", () => {
         const result = calculateDiff(input);
 
         // Should handle missing manifest items gracefully
-        const totalSkillOps = result.toCreate.filter((op) => op.itemType === "skill").length +
+        const totalSkillOps =
+          result.toCreate.filter((op) => op.itemType === "skill").length +
           result.toUpdate.filter((op) => op.itemType === "skill").length +
           result.toSkip.filter((op) => op.itemType === "skill").length;
-        const totalMCPOps = result.toCreate.filter((op) => op.itemType === "mcp").length +
+        const totalMCPOps =
+          result.toCreate.filter((op) => op.itemType === "mcp").length +
           result.toUpdate.filter((op) => op.itemType === "mcp").length +
           result.toSkip.filter((op) => op.itemType === "mcp").length;
         expect(totalSkillOps).toBeGreaterThan(0);
@@ -468,7 +510,11 @@ describe("Diff Calculator", () => {
               hash: "original-hash",
               last_synced: "2026-01-24T10:00:00Z",
               targets: {
-                cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+                cursor: {
+                  synced: true,
+                  hash: "hash-placeholder",
+                  last_synced: "2026-01-24T10:00:00Z",
+                },
               },
             },
           },

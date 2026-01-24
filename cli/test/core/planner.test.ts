@@ -5,8 +5,8 @@ import {
   validatePlan,
   type PlanInput,
 } from "@src/core/planner.js";
-import type { Skill, MCPServer } from "@src/types/models.js";
 import type { Manifest } from "@src/types/manifest.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
 
 describe("Plan Generator", () => {
@@ -76,8 +76,16 @@ describe("Plan Generator", () => {
         hash: "hash-skill1",
         last_synced: "2026-01-24T10:00:00Z",
         targets: {
-          cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
-          opencode: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+          cursor: {
+            synced: true,
+            hash: "hash-placeholder",
+            last_synced: "2026-01-24T10:00:00Z",
+          },
+          opencode: {
+            synced: true,
+            hash: "hash-placeholder",
+            last_synced: "2026-01-24T10:00:00Z",
+          },
         },
       },
       skill2: {
@@ -86,7 +94,11 @@ describe("Plan Generator", () => {
         hash: "hash-skill2-old",
         last_synced: "2026-01-24T10:00:00Z",
         targets: {
-          cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+          cursor: {
+            synced: true,
+            hash: "hash-placeholder",
+            last_synced: "2026-01-24T10:00:00Z",
+          },
         },
       },
       postgres: {
@@ -95,7 +107,11 @@ describe("Plan Generator", () => {
         hash: "hash-postgres",
         last_synced: "2026-01-24T10:00:00Z",
         targets: {
-          cursor: { synced: true, hash: "hash-placeholder", last_synced: "2026-01-24T10:00:00Z" },
+          cursor: {
+            synced: true,
+            hash: "hash-placeholder",
+            last_synced: "2026-01-24T10:00:00Z",
+          },
         },
       },
     },
@@ -142,11 +158,15 @@ describe("Plan Generator", () => {
       expect(skill1Ops.length).toBeGreaterThan(0);
 
       // skill2: updated
-      const skill2Ops = cursorDiff.toUpdate.filter((op) => op.name === "skill2");
+      const skill2Ops = cursorDiff.toUpdate.filter(
+        (op) => op.name === "skill2",
+      );
       expect(skill2Ops.length).toBeGreaterThan(0);
 
       // postgres: unchanged (SKIP)
-      const postgresOps = cursorDiff.toSkip.filter((op) => op.name === "postgres");
+      const postgresOps = cursorDiff.toSkip.filter(
+        (op) => op.name === "postgres",
+      );
       expect(postgresOps.length).toBeGreaterThan(0);
     });
 
@@ -166,11 +186,15 @@ describe("Plan Generator", () => {
       const opencodeDiff = plan.diffs.opencode!;
 
       // skill2: new to opencode (CREATE)
-      const skill2Ops = opencodeDiff.toCreate.filter((op) => op.name === "skill2");
+      const skill2Ops = opencodeDiff.toCreate.filter(
+        (op) => op.name === "skill2",
+      );
       expect(skill2Ops.length).toBeGreaterThan(0);
 
       // postgres: new to opencode (CREATE)
-      const postgresOps = opencodeDiff.toCreate.filter((op) => op.name === "postgres");
+      const postgresOps = opencodeDiff.toCreate.filter(
+        (op) => op.name === "postgres",
+      );
       expect(postgresOps.length).toBeGreaterThan(0);
     });
 

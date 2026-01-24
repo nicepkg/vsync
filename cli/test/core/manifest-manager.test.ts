@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFile } from "node:fs/promises";
 import mockFs from "mock-fs";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   loadManifest,
   saveManifest,
@@ -115,7 +115,7 @@ describe("Manifest Manager", () => {
 
       const saved = await readFile(
         "/empty/.vibe-sync-cache/manifest.json",
-        "utf-8"
+        "utf-8",
       );
       const parsed = JSON.parse(saved);
 
@@ -128,7 +128,7 @@ describe("Manifest Manager", () => {
 
       const saved = await readFile(
         "/empty/.vibe-sync-cache/manifest.json",
-        "utf-8"
+        "utf-8",
       );
       expect(saved).toContain("\n");
     });
@@ -304,8 +304,20 @@ describe("Manifest Manager", () => {
       const manifest = createEmptyManifest();
 
       // Create items
-      updateAfterCreate(manifest, "skill", "skill-with-target", "hash1", "cursor");
-      updateAfterCreate(manifest, "skill", "skill-no-target", "hash2", "cursor");
+      updateAfterCreate(
+        manifest,
+        "skill",
+        "skill-with-target",
+        "hash1",
+        "cursor",
+      );
+      updateAfterCreate(
+        manifest,
+        "skill",
+        "skill-no-target",
+        "hash2",
+        "cursor",
+      );
       updateAfterCreate(manifest, "mcp", "mcp-no-target", "hash3", "cursor");
 
       // Remove targets from some items

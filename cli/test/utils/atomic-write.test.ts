@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFile } from "node:fs/promises";
 import mockFs from "mock-fs";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 
 describe("Atomic Write Utility", () => {

@@ -107,19 +107,19 @@ describe("Environment Variable Utilities", () => {
 
     it("should handle ${workspaceFolder} for all tools", () => {
       expect(normalizeEnvVar("${workspaceFolder}/data", "cursor")).toBe(
-        "${workspaceFolder}/data"
+        "${workspaceFolder}/data",
       );
       expect(normalizeEnvVar("${workspaceFolder}/data", "claude-code")).toBe(
-        "${workspaceFolder}/data"
+        "${workspaceFolder}/data",
       );
       expect(normalizeEnvVar("${workspaceFolder}/data", "opencode")).toBe(
-        "${workspaceFolder}/data"
+        "${workspaceFolder}/data",
       );
     });
 
     it("should handle ${userHome} for all tools", () => {
       expect(normalizeEnvVar("${userHome}/.config", "cursor")).toBe(
-        "${userHome}/.config"
+        "${userHome}/.config",
       );
     });
 

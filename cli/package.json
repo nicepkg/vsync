@@ -16,8 +16,8 @@
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --max-warnings 0",
-    "lint:fix": "eslint src --fix"
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.9",

@@ -1,10 +1,6 @@
 import { describe, it, expect } from "vitest";
-import {
-  hashContent,
-  hashSkill,
-  hashMCPServer,
-} from "@src/utils/hash.js";
 import type { Skill, MCPServer } from "@src/types/models.js";
+import { hashContent, hashSkill, hashMCPServer } from "@src/utils/hash.js";
 
 describe("Hash Utilities", () => {
   describe("hashContent", () => {
