@@ -5,6 +5,7 @@
 
 import type { ToolName } from "../types/config.js";
 import type { Skill, MCPServer } from "../types/models.js";
+import { getAdapter as getAdapterFromRegistry } from "./registry.js";
 
 /**
  * Adapter configuration
@@ -103,8 +104,9 @@ export interface ToolAdapter {
  *
  * @param config - Adapter configuration
  * @returns Tool adapter instance
+ * @deprecated Use getAdapter from registry.ts instead
  */
 export function createAdapter(config: AdapterConfig): ToolAdapter {
-  // Will be implemented in registry.ts
-  throw new Error(`Adapter not implemented for tool: ${config.tool}`);
+  // Re-export from registry for backward compatibility
+  return getAdapterFromRegistry(config);
 }
