@@ -522,20 +522,20 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 7.3 Commands Synchronization
 
-- [ ] Define Command types in `cli/src/types/models.ts`
-  - [ ] `Command` interface (name, description, command, metadata)
-  - [ ] Support Claude Code command format
-- [ ] Extend adapters for Commands
-  - [ ] Claude Code: `readCommands()` - from `.claude/commands/`
-  - [ ] Cursor: `writeCommands()` - to `.cursor/commands/`
-  - [ ] OpenCode: `writeCommands()` - to `.opencode/commands/`
-- [ ] Update diff/plan system for Commands
-  - [ ] Add command hash calculation
-  - [ ] Add command diff operations
-- [ ] Update sync config
-  - [ ] Add `commands: boolean` to sync_config
-  - [ ] Update init command to ask about commands
-- [ ] Write unit tests
+- [x] Define Command types in `cli/src/types/models.ts`
+  - [x] `Command` interface (name, description, content, metadata)
+  - [x] Support Claude Code command format
+- [x] Extend adapters for Commands
+  - [x] Claude Code: `readCommands()` - from `.claude/commands/`
+  - [x] Cursor: `writeCommands()` - to `.cursor/commands/`
+  - [x] OpenCode: `writeCommands()` - to `.opencode/commands/`
+- [x] Update diff/plan system for Commands
+  - [x] Add command hash calculation
+  - [x] Add command diff operations
+- [x] Update sync config
+  - [x] Add `commands: boolean` to sync_config
+  - [ ] Update init command to ask about commands (deferred - not critical for MVP)
+- [x] Write unit tests (updated existing tests to include commands)
 
 ### 7.4 Codex Adapter
 
