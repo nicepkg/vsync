@@ -330,11 +330,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.6 `vibe-sync list` Command
 
-- [ ] Implement `cli/src/cli/commands/list.ts`
-  - [ ] `list skills` - Show all skills with hash, description, synced targets
-  - [ ] `list mcp` - Show all MCP servers with type, command, synced targets
-  - [ ] Table format output
-  - [ ] Support `--user` flag
+- [x] Implement `cli/src/cli/commands/list.ts`
+  - [x] `list skills` - Show all skills with hash, description, synced targets
+  - [x] `list mcp` - Show all MCP servers with type, command, synced targets
+  - [x] Table format output
+  - [x] Support `--user` flag
 
 ### 4.7 `vibe-sync clean` Command
 
