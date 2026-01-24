@@ -7,6 +7,10 @@ import {
   getItemHash,
   createEmptyManifest,
   getManifestPath,
+  updateAfterCreate,
+  updateAfterUpdate,
+  updateAfterDelete,
+  pruneOrphanedItems,
 } from "../../src/core/manifest-manager.js";
 import type { Manifest, ManifestItem } from "../../src/types/manifest.js";
 
@@ -150,6 +154,188 @@ describe("Manifest Manager", () => {
       const hash = getItemHash(manifest, "skill", "non-existent");
 
       expect(hash).toBeUndefined();
+    });
+  });
+
+  describe("updateAfterCreate", () => {
+    it("should add new skill to manifest", () => {
+      const manifest = createEmptyManifest();
+
+      updateAfterCreate(manifest, "skill", "new-skill", "hash123", "cursor");
+
+      const item = manifest.items["skill/new-skill"];
+      expect(item).toBeDefined();
+      expect(item?.type).toBe("skill");
+      expect(item?.name).toBe("new-skill");
+      expect(item?.hash).toBe("hash123");
+      expect(item?.last_synced).toBeTruthy();
+      expect(item?.targets.cursor).toBeDefined();
+      expect(item?.targets.cursor?.synced).toBe(true);
+      expect(item?.targets.cursor?.hash).toBe("hash123");
+    });
+
+    it("should add new MCP server to manifest", () => {
+      const manifest = createEmptyManifest();
+
+      updateAfterCreate(manifest, "mcp", "postgres", "hash456", "opencode");
+
+      const item = manifest.items["mcp/postgres"];
+      expect(item).toBeDefined();
+      expect(item?.type).toBe("mcp");
+      expect(item?.name).toBe("postgres");
+      expect(item?.hash).toBe("hash456");
+      expect(item?.targets.opencode).toBeDefined();
+      expect(item?.targets.opencode?.synced).toBe(true);
+    });
+
+    it("should add target to existing item if item already exists", () => {
+      const manifest = createEmptyManifest();
+
+      // First create
+      updateAfterCreate(manifest, "skill", "test-skill", "hash123", "cursor");
+
+      // Second create (same item, different target)
+      updateAfterCreate(manifest, "skill", "test-skill", "hash123", "opencode");
+
+      const item = manifest.items["skill/test-skill"];
+      expect(item?.targets.cursor).toBeDefined();
+      expect(item?.targets.opencode).toBeDefined();
+      expect(Object.keys(item?.targets || {}).length).toBe(2);
+    });
+  });
+
+  describe("updateAfterUpdate", () => {
+    it("should update hash for existing skill", () => {
+      const manifest = createEmptyManifest();
+      updateAfterCreate(manifest, "skill", "test-skill", "old-hash", "cursor");
+
+      updateAfterUpdate(manifest, "skill", "test-skill", "new-hash", "cursor");
+
+      const item = manifest.items["skill/test-skill"];
+      expect(item?.hash).toBe("new-hash");
+      expect(item?.targets.cursor?.hash).toBe("new-hash");
+      expect(item?.targets.cursor?.synced).toBe(true);
+    });
+
+    it("should update hash for existing MCP server", () => {
+      const manifest = createEmptyManifest();
+      updateAfterCreate(manifest, "mcp", "postgres", "old-hash", "cursor");
+
+      updateAfterUpdate(manifest, "mcp", "postgres", "new-hash", "cursor");
+
+      const item = manifest.items["mcp/postgres"];
+      expect(item?.hash).toBe("new-hash");
+      expect(item?.targets.cursor?.hash).toBe("new-hash");
+    });
+
+    it("should update last_synced timestamp", () => {
+      const manifest = createEmptyManifest();
+      updateAfterCreate(manifest, "skill", "test-skill", "hash123", "cursor");
+
+      const oldTimestamp = manifest.items["skill/test-skill"]?.last_synced;
+
+      // The update should set a new timestamp
+      const newHash = "new-hash";
+      updateAfterUpdate(manifest, "skill", "test-skill", newHash, "cursor");
+
+      const newTimestamp = manifest.items["skill/test-skill"]?.last_synced;
+      // Timestamps should be valid ISO strings
+      expect(oldTimestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(newTimestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      // Both should be truthy (updated)
+      expect(oldTimestamp).toBeTruthy();
+      expect(newTimestamp).toBeTruthy();
+    });
+
+    it("should throw error if item does not exist", () => {
+      const manifest = createEmptyManifest();
+
+      expect(() => {
+        updateAfterUpdate(manifest, "skill", "non-existent", "hash", "cursor");
+      }).toThrow("Item skill/non-existent not found in manifest");
+    });
+  });
+
+  describe("updateAfterDelete", () => {
+    it("should remove target from skill", () => {
+      const manifest = createEmptyManifest();
+      updateAfterCreate(manifest, "skill", "test-skill", "hash123", "cursor");
+      updateAfterCreate(manifest, "skill", "test-skill", "hash123", "opencode");
+
+      updateAfterDelete(manifest, "skill", "test-skill", "cursor");
+
+      const item = manifest.items["skill/test-skill"];
+      expect(item?.targets.cursor).toBeUndefined();
+      expect(item?.targets.opencode).toBeDefined();
+    });
+
+    it("should remove target from MCP server", () => {
+      const manifest = createEmptyManifest();
+      updateAfterCreate(manifest, "mcp", "postgres", "hash123", "cursor");
+
+      updateAfterDelete(manifest, "mcp", "postgres", "cursor");
+
+      const item = manifest.items["mcp/postgres"];
+      expect(item?.targets.cursor).toBeUndefined();
+    });
+
+    it("should not remove item even if no targets remain", () => {
+      const manifest = createEmptyManifest();
+      updateAfterCreate(manifest, "skill", "test-skill", "hash123", "cursor");
+
+      updateAfterDelete(manifest, "skill", "test-skill", "cursor");
+
+      const item = manifest.items["skill/test-skill"];
+      expect(item).toBeDefined();
+      expect(Object.keys(item?.targets || {}).length).toBe(0);
+    });
+
+    it("should throw error if item does not exist", () => {
+      const manifest = createEmptyManifest();
+
+      expect(() => {
+        updateAfterDelete(manifest, "skill", "non-existent", "cursor");
+      }).toThrow("Item skill/non-existent not found in manifest");
+    });
+  });
+
+  describe("pruneOrphanedItems", () => {
+    it("should remove items with no targets", () => {
+      const manifest = createEmptyManifest();
+
+      // Create items
+      updateAfterCreate(manifest, "skill", "skill-with-target", "hash1", "cursor");
+      updateAfterCreate(manifest, "skill", "skill-no-target", "hash2", "cursor");
+      updateAfterCreate(manifest, "mcp", "mcp-no-target", "hash3", "cursor");
+
+      // Remove targets from some items
+      updateAfterDelete(manifest, "skill", "skill-no-target", "cursor");
+      updateAfterDelete(manifest, "mcp", "mcp-no-target", "cursor");
+
+      const removed = pruneOrphanedItems(manifest);
+
+      expect(removed).toEqual(["skill/skill-no-target", "mcp/mcp-no-target"]);
+      expect(manifest.items["skill/skill-with-target"]).toBeDefined();
+      expect(manifest.items["skill/skill-no-target"]).toBeUndefined();
+      expect(manifest.items["mcp/mcp-no-target"]).toBeUndefined();
+    });
+
+    it("should return empty array if no orphaned items", () => {
+      const manifest = createEmptyManifest();
+      updateAfterCreate(manifest, "skill", "test-skill", "hash123", "cursor");
+
+      const removed = pruneOrphanedItems(manifest);
+
+      expect(removed).toEqual([]);
+      expect(manifest.items["skill/test-skill"]).toBeDefined();
+    });
+
+    it("should handle empty manifest", () => {
+      const manifest = createEmptyManifest();
+
+      const removed = pruneOrphanedItems(manifest);
+
+      expect(removed).toEqual([]);
     });
   });
 });

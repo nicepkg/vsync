@@ -6,6 +6,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { cwd } from "node:process";
+import type { ToolName } from "../types/config.js";
 import type { Manifest, ItemType } from "../types/manifest.js";
 import { atomicWrite } from "../utils/atomic-write.js";
 
@@ -116,4 +117,130 @@ export function getItemHash(
  */
 export function getItemKey(type: ItemType, name: string): string {
   return `${type}/${name}`;
+}
+
+/**
+ * Update manifest after creating a new item
+ * Adds the item to manifest or updates target if item already exists
+ *
+ * @param manifest - Manifest to update
+ * @param type - Item type (skill or mcp)
+ * @param name - Item name
+ * @param hash - Item hash
+ * @param targetTool - Target tool name
+ */
+export function updateAfterCreate(
+  manifest: Manifest,
+  type: ItemType,
+  name: string,
+  hash: string,
+  targetTool: ToolName,
+): void {
+  const key = getItemKey(type, name);
+  const now = new Date().toISOString();
+
+  // If item doesn't exist, create it
+  if (!manifest.items[key]) {
+    manifest.items[key] = {
+      type,
+      name,
+      hash,
+      last_synced: now,
+      targets: {},
+    };
+  }
+
+  // Add or update target
+  manifest.items[key].targets[targetTool] = {
+    synced: true,
+    hash,
+    last_sync: now,
+  };
+}
+
+/**
+ * Update manifest after updating an existing item
+ * Updates the hash for both the item and the target
+ *
+ * @param manifest - Manifest to update
+ * @param type - Item type (skill or mcp)
+ * @param name - Item name
+ * @param newHash - New hash value
+ * @param targetTool - Target tool name
+ * @throws Error if item doesn't exist in manifest
+ */
+export function updateAfterUpdate(
+  manifest: Manifest,
+  type: ItemType,
+  name: string,
+  newHash: string,
+  targetTool: ToolName,
+): void {
+  const key = getItemKey(type, name);
+  const item = manifest.items[key];
+
+  if (!item) {
+    throw new Error(`Item ${key} not found in manifest`);
+  }
+
+  const now = new Date().toISOString();
+
+  // Update item hash and timestamp
+  item.hash = newHash;
+  item.last_synced = now;
+
+  // Update target
+  item.targets[targetTool] = {
+    synced: true,
+    hash: newHash,
+    last_sync: now,
+  };
+}
+
+/**
+ * Update manifest after deleting an item from a target
+ * Removes the target entry but keeps the item in manifest
+ *
+ * @param manifest - Manifest to update
+ * @param type - Item type (skill or mcp)
+ * @param name - Item name
+ * @param targetTool - Target tool name
+ * @throws Error if item doesn't exist in manifest
+ */
+export function updateAfterDelete(
+  manifest: Manifest,
+  type: ItemType,
+  name: string,
+  targetTool: ToolName,
+): void {
+  const key = getItemKey(type, name);
+  const item = manifest.items[key];
+
+  if (!item) {
+    throw new Error(`Item ${key} not found in manifest`);
+  }
+
+  // Remove target entry
+  delete item.targets[targetTool];
+}
+
+/**
+ * Remove orphaned items from manifest
+ * Orphaned items are items with no targets
+ *
+ * @param manifest - Manifest to clean
+ * @returns Array of removed item keys
+ */
+export function pruneOrphanedItems(manifest: Manifest): string[] {
+  const removed: string[] = [];
+
+  for (const [key, item] of Object.entries(manifest.items)) {
+    // If item has no targets, remove it
+    if (Object.keys(item.targets).length === 0) {
+      delete manifest.items[key];
+      removed.push(key);
+    }
+  }
+
+  return removed;
 }
