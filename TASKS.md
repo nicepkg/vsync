@@ -210,26 +210,26 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 3.1 Hash Calculation
 
-- [ ] Implement `cli/src/core/hasher.ts`
-  - [ ] `calculateSkillHash(skill)` - Hash skill content + metadata
-  - [ ] `calculateMCPHash(server)` - Hash MCP server config
-  - [ ] Handle whitespace normalization
-  - [ ] Handle JSON key ordering
+- [x] Implement `cli/src/utils/hash.ts` (completed in Phase 1.4)
+  - [x] `hashSkill(skill)` - Hash skill content + metadata
+  - [x] `hashMCPServer(server)` - Hash MCP server config
+  - [x] Handle whitespace normalization
+  - [x] Handle JSON key ordering
 
 ### 3.2 Difference Calculator
 
-- [ ] Implement `cli/src/core/diff.ts`
-  - [ ] `calculateDiff(source, target, manifest, mode)` - Main diff function
-    - [ ] Identify items to CREATE (in source, not in target)
-    - [ ] Identify items to UPDATE (hash mismatch)
-    - [ ] Identify items to DELETE (in target, not in source, prune mode only)
-    - [ ] Identify items to SKIP (hash match)
-  - [ ] `compareHashes(sourceHash, targetHash, manifestHash)` - Hash comparison logic
-  - [ ] Handle missing manifest items
-- [ ] Write unit tests
-  - [ ] Test safe mode (no deletes)
-  - [ ] Test prune mode (with deletes)
-  - [ ] Test hash comparison edge cases
+- [x] Implement `cli/src/core/diff.ts`
+  - [x] `calculateDiff(source, target, manifest, mode)` - Main diff function
+    - [x] Identify items to CREATE (in source, not in target)
+    - [x] Identify items to UPDATE (hash mismatch)
+    - [x] Identify items to DELETE (in target, not in source, prune mode only)
+    - [x] Identify items to SKIP (hash match)
+  - [x] `compareHashes(sourceHash, targetHash, manifestHash)` - Hash comparison logic
+  - [x] Handle missing manifest items
+- [x] Write unit tests
+  - [x] Test safe mode (no deletes)
+  - [x] Test prune mode (with deletes)
+  - [x] Test hash comparison edge cases
 
 ### 3.3 Plan Generator
 
