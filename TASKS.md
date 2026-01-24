@@ -357,6 +357,112 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ---
 
+## Refactor: TypeScript Path Aliases and Typecheck Improvements
+
+**Type**: refactor
+**Priority**: medium
+**Affects**: config, all modules
+**Estimated Time**: 1-2 hours
+
+### Description
+
+Add TypeScript path aliases to simplify imports and make code more maintainable. Configure typecheck to include test files for better type safety.
+
+### Motivation
+
+Current code uses deep relative imports like `../../adapters/registry.js`, which:
+- Are harder to maintain when files move
+- Are more error-prone to type
+- Make code less readable
+- TypeScript doesn't check test files for type errors
+
+Path aliases will make imports cleaner:
+- `@src/adapters/registry.js` instead of `../../adapters/registry.js`
+- `@test/fixtures/skills` for test utilities
+
+### Acceptance Criteria
+
+- [ ] `@src` alias points to `./src`
+- [ ] `@test` alias points to `./test`
+- [ ] All relative imports `../../` replaced with aliases
+- [ ] TypeScript typecheck includes test files
+- [ ] All tests still pass
+- [ ] `pnpm typecheck` passes with no errors
+- [ ] `pnpm build` works correctly
+
+### Implementation Plan
+
+#### Files to Modify
+
+- [ ] `cli/tsconfig.json` - Add path aliases, include test folder
+- [ ] All `cli/src/**/*.ts` files - Replace relative imports with `@src/*`
+- [ ] All `cli/test/**/*.ts` files - Replace relative imports with `@src/*` and `@test/*`
+- [ ] `cli/package.json` - Update typecheck script if needed
+
+#### Files to Read (Before Starting)
+
+- [ ] `cli/tsconfig.json` - Current TypeScript configuration
+- [ ] `cli/src/cli/commands/*.ts` - Examples of current import patterns
+- [ ] TypeScript documentation on path mapping
+
+### Testing Strategy
+
+- [ ] Run `pnpm typecheck` after adding aliases
+- [ ] Run `pnpm test` to ensure nothing breaks
+- [ ] Run `pnpm build` to verify build works
+- [ ] Manually verify imports resolve correctly in IDE
+- [ ] Test coverage maintained (no changes to test logic)
+
+### Implementation Steps
+
+1. **Update `tsconfig.json`**:
+   ```json
+   {
+     "compilerOptions": {
+       "baseUrl": ".",
+       "paths": {
+         "@src/*": ["./src/*"],
+         "@test/*": ["./test/*"]
+       }
+     },
+     "include": ["src/**/*", "test/**/*", "*.mjs", "*.cjs", "*.js", "*.ts", "*.tsx"]
+   }
+   ```
+
+2. **Replace imports in all source files**:
+   - `../../adapters/registry.js` → `@src/adapters/registry.js`
+   - `../../core/config-manager.js` → `@src/core/config-manager.js`
+   - `../../types/config.js` → `@src/types/config.js`
+
+3. **Replace imports in all test files**:
+   - `../../src/core/diff.js` → `@src/core/diff.js`
+   - `../fixtures/skills` → `@test/fixtures/skills`
+
+4. **Verify**:
+   - Run typecheck
+   - Run tests
+   - Build project
+
+### Related Issues/Tasks
+
+- Part of Phase 4 cleanup
+- Improves developer experience
+- Makes codebase more maintainable
+
+### Notes
+
+- Path aliases only work at compile time (TypeScript)
+- Runtime needs `.js` extensions preserved (Node16 module resolution)
+- This is a pure refactor - no functionality changes
+- All imports must still use `.js` extension for ESM compatibility
+
+---
+
+**Created**: 2026-01-25
+**Status**: [ ] Not Started
+
+---
+
 ## Phase 5: Safety & Reliability (1-2 days)
 
 **Goal**: Ensure atomic writes and safe error recovery
