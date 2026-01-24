@@ -8,7 +8,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
-import { getAdapter } from "@src/adapters/registry.js";
+import { getAdapter, getToolConfigFiles } from "@src/adapters/registry.js";
 import { loadConfig } from "@src/core/config-manager.js";
 import {
   loadManifest,
@@ -119,7 +119,7 @@ export async function readSourceConfig(
  * @param projectDir - Project directory
  * @returns Map of target data
  */
-export async function readTargetConfigs(targetTools: ToolName[]): Promise<
+async function readTargetConfigs(targetTools: ToolName[]): Promise<
   Partial<
     Record<
       ToolName,
@@ -212,18 +212,8 @@ export async function calculateSyncDiff(
  * @returns Array of file paths that may be modified
  */
 function getTargetFilePaths(tool: ToolName, baseDir: string): string[] {
-  const paths: string[] = [];
-
-  if (tool === "cursor") {
-    paths.push(`${baseDir}/.cursor/mcp.json`);
-    // Note: Individual skill files would be backed up separately if needed
-  } else if (tool === "opencode") {
-    paths.push(`${baseDir}/.opencode/opencode.jsonc`);
-  } else if (tool === "claude-code") {
-    paths.push(`${baseDir}/.mcp.json`);
-  }
-
-  return paths;
+  // Get config files from registry (no hardcoding!)
+  return getToolConfigFiles(tool, baseDir);
 }
 
 /**

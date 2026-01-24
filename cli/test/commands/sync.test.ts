@@ -1,6 +1,14 @@
 import { readFile } from "node:fs/promises";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {
+  loadSyncConfig,
+  readSourceConfig,
+  calculateSyncDiff,
+  executeSyncPlan,
+  syncCommand,
+  updateManifestAfterSync,
+} from "@src/commands/sync.js";
 import type { VibeConfig, ToolName } from "../../src/types/config.js";
 
 describe("Sync Command", () => {
@@ -53,8 +61,6 @@ describe("Sync Command", () => {
 
   describe("Configuration Loading", () => {
     it("should load project config", async () => {
-      const { loadSyncConfig } = await import("../../src/commands/sync.js");
-
       const config = await loadSyncConfig("/project", false);
 
       expect(config.source_tool).toBe("claude-code");
@@ -66,16 +72,12 @@ describe("Sync Command", () => {
         "/empty": {},
       });
 
-      const { loadSyncConfig } = await import("../../src/commands/sync.js");
-
       await expect(loadSyncConfig("/empty", false)).rejects.toThrow();
     });
   });
 
   describe("Sync Execution", () => {
     it("should read source configurations", async () => {
-      const { readSourceConfig } = await import("../../src/commands/sync.js");
-
       const result = await readSourceConfig("claude-code", "/project");
 
       expect(result.skills.length).toBeGreaterThan(0);
@@ -83,8 +85,6 @@ describe("Sync Command", () => {
     });
 
     it("should calculate diff for targets", async () => {
-      const { calculateSyncDiff } = await import("../../src/commands/sync.js");
-
       const sourceSkills = [
         { name: "test-skill", content: "test", hash: "hash123" },
       ];
@@ -117,8 +117,6 @@ describe("Sync Command", () => {
     });
 
     it("should execute sync operations for safe mode", async () => {
-      const { executeSyncPlan } = await import("../../src/commands/sync.js");
-
       const plan = {
         source_tool: "claude-code" as ToolName,
         diffs: {
@@ -155,8 +153,6 @@ describe("Sync Command", () => {
 
   describe("Dry Run Mode", () => {
     it("should not execute operations in dry-run mode", async () => {
-      const { syncCommand } = await import("../../src/commands/sync.js");
-
       // Mock console and process.exit to suppress output
       vi.spyOn(console, "log").mockImplementation(() => {});
       vi.spyOn(console, "error").mockImplementation(() => {});
@@ -177,8 +173,6 @@ describe("Sync Command", () => {
 
   describe("Prune Mode", () => {
     it("should include delete operations in prune mode", async () => {
-      const { calculateSyncDiff } = await import("../../src/commands/sync.js");
-
       const manifest = {
         version: "1.0.0",
         last_synced: "",
@@ -217,9 +211,6 @@ describe("Sync Command", () => {
 
   describe("Manifest Updates", () => {
     it("should update manifest after successful sync", async () => {
-      const { updateManifestAfterSync } =
-        await import("../../src/commands/sync.js");
-
       const operations = {
         created: [
           { type: "skill" as const, name: "test-skill", hash: "hash123" },
@@ -260,8 +251,6 @@ describe("Sync Command", () => {
         },
       });
 
-      const { readSourceConfig } = await import("../../src/commands/sync.js");
-
       const result = await readSourceConfig("claude-code", "/invalid");
 
       // Adapters gracefully return empty arrays when directories don't exist
@@ -281,8 +270,6 @@ describe("Sync Command", () => {
           },
         },
       });
-
-      const { loadSyncConfig } = await import("../../src/commands/sync.js");
 
       // Should not throw, should handle gracefully
       const config = await loadSyncConfig("/project", false);

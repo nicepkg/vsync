@@ -226,12 +226,12 @@ async function removeItem(
 }
 
 /**
- * Run clean command
+ * Run clean command - Internal use only
  *
  * @param itemName - Optional item name (e.g., "skill/name")
  * @param options - Command options
  */
-export async function cleanCommand(
+async function cleanCommand(
   itemName: string | undefined,
   options: { user?: boolean; fromSource?: boolean },
 ): Promise<void> {

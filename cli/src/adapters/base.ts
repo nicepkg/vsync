@@ -5,7 +5,6 @@
 
 import type { ToolName } from "../types/config.js";
 import type { Skill, MCPServer, Agent, Command } from "../types/models.js";
-import { getAdapter as getAdapterFromRegistry } from "./registry.js";
 
 /**
  * Adapter configuration
@@ -48,6 +47,50 @@ export interface ValidationResult {
 export interface ToolAdapter {
   /** Adapter configuration */
   readonly config: AdapterConfig;
+
+  // Metadata (for self-registration and discovery)
+  /** Tool name (e.g., "claude-code", "cursor") */
+  readonly toolName: string;
+  /** Display name (e.g., "Claude Code", "Cursor") */
+  readonly displayName: string;
+  /** Config file format */
+  readonly configFormat: "json" | "jsonc" | "toml";
+  /** Adapter capabilities */
+  readonly capabilities: {
+    skills: boolean;
+    mcp: boolean;
+    agents: boolean;
+    commands: boolean;
+  };
+  /** Whether this adapter is read-only (source tool) */
+  readonly isReadOnly: boolean;
+
+  /**
+   * Get configuration directory name (e.g., ".claude", ".cursor")
+   * This is the directory where the tool stores its configuration
+   */
+  getConfigDir(): string;
+
+  /**
+   * Get configuration file paths that should be backed up
+   * Returns array of file paths relative to baseDir
+   */
+  getConfigFiles(): string[];
+
+  /**
+   * Get skills directory path relative to baseDir
+   */
+  getSkillsDir(): string;
+
+  /**
+   * Get agents directory path relative to baseDir
+   */
+  getAgentsDir(): string;
+
+  /**
+   * Get commands directory path relative to baseDir
+   */
+  getCommandsDir(): string;
 
   // Read methods (for source tools)
   /**
@@ -134,17 +177,4 @@ export interface ToolAdapter {
    * @returns Validation result
    */
   validate(): Promise<ValidationResult>;
-}
-
-/**
- * Create adapter for a specific tool
- * Factory function to instantiate the correct adapter
- *
- * @param config - Adapter configuration
- * @returns Tool adapter instance
- * @deprecated Use getAdapter from registry.ts instead
- */
-export function createAdapter(config: AdapterConfig): ToolAdapter {
-  // Re-export from registry for backward compatibility
-  return getAdapterFromRegistry(config);
 }

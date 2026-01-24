@@ -244,7 +244,7 @@ export function formatMCPTable(
  * @param type - Item type to list (skills or mcp)
  * @param options - Command options
  */
-export async function listCommand(
+async function listCommand(
   type: string | undefined,
   options: { user?: boolean },
 ): Promise<void> {

@@ -7,7 +7,8 @@ import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { cwd } from "node:process";
-import type { VibeConfig, ConfigLevel, ToolName } from "@src/types/config.js";
+import { getAvailableTools } from "@src/adapters/registry.js";
+import type { VibeConfig, ConfigLevel } from "@src/types/config.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 
 /**
@@ -217,7 +218,8 @@ export function validateConfig(config: VibeConfig): ValidationResult {
   if (!config.source_tool) {
     errors.push("Missing required field: source_tool");
   } else {
-    const validTools: ToolName[] = ["claude-code", "cursor", "opencode"];
+    // Get valid tools from registry (no hardcoding!)
+    const validTools = getAvailableTools();
     if (!validTools.includes(config.source_tool)) {
       errors.push(`Invalid source_tool: ${config.source_tool}`);
     }
@@ -231,7 +233,8 @@ export function validateConfig(config: VibeConfig): ValidationResult {
     } else if (config.target_tools.length === 0) {
       errors.push("target_tools cannot be empty");
     } else {
-      const validTools: ToolName[] = ["claude-code", "cursor", "opencode"];
+      // Get valid tools from registry (no hardcoding!)
+      const validTools = getAvailableTools();
       for (const tool of config.target_tools) {
         if (!validTools.includes(tool)) {
           errors.push(`Invalid target tool: ${tool}`);

@@ -9,7 +9,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
-import { getAdapter } from "@src/adapters/registry.js";
+import { getAdapter, getAllConfigDirs } from "@src/adapters/registry.js";
 import type { ToolName } from "@src/types/config.js";
 
 /**
@@ -37,9 +37,9 @@ export interface ImportOptions {
 }
 
 /**
- * Import count for a single type
+ * Import count for a single type - Internal use only
  */
-export interface ImportCount {
+interface ImportCount {
   imported: number;
   skipped: number;
 }
@@ -67,12 +67,8 @@ export async function detectSourceTool(
 ): Promise<ToolName[]> {
   const detected: ToolName[] = [];
 
-  const toolDirs: Record<ToolName, string> = {
-    "claude-code": ".claude",
-    cursor: ".cursor",
-    opencode: ".opencode",
-    codex: ".codex",
-  };
+  // Get config directories from registry (no hardcoding!)
+  const toolDirs = getAllConfigDirs();
 
   for (const [tool, dir] of Object.entries(toolDirs)) {
     try {
@@ -121,7 +117,23 @@ export async function importConfigs(
     // Import skills
     if (options.importSkills) {
       const sourceSkills = await sourceAdapter.readSkills();
-      const targetSkills = await targetAdapter.readSkills();
+
+      // Try to read target skills for duplicate checking
+      let targetSkills: typeof sourceSkills = [];
+      try {
+        targetSkills = await targetAdapter.readSkills();
+      } catch {
+        // Target adapter is write-only, try using source adapter to read target
+        try {
+          const fallbackAdapter = getAdapter({
+            tool: options.sourceTool,
+            baseDir: options.targetPath,
+          });
+          targetSkills = await fallbackAdapter.readSkills();
+        } catch {
+          // Failed to read target skills, assume empty
+        }
+      }
       const targetSkillNames = new Set(targetSkills.map((s) => s.name));
 
       const skillsToImport = sourceSkills.filter((skill) => {
@@ -147,7 +159,23 @@ export async function importConfigs(
     // Import MCP servers
     if (options.importMcp) {
       const sourceServers = await sourceAdapter.readMCPServers();
-      const targetServers = await targetAdapter.readMCPServers();
+
+      // Try to read target servers for duplicate checking
+      let targetServers: typeof sourceServers = [];
+      try {
+        targetServers = await targetAdapter.readMCPServers();
+      } catch {
+        // Target adapter is write-only, try using source adapter to read target
+        try {
+          const fallbackAdapter = getAdapter({
+            tool: options.sourceTool,
+            baseDir: options.targetPath,
+          });
+          targetServers = await fallbackAdapter.readMCPServers();
+        } catch {
+          // Failed to read target servers, assume empty
+        }
+      }
       const targetServerNames = new Set(targetServers.map((s) => s.name));
 
       const serversToImport = sourceServers.filter((server) => {
@@ -174,7 +202,23 @@ export async function importConfigs(
     // Import agents
     if (options.importAgents) {
       const sourceAgents = await sourceAdapter.readAgents();
-      const targetAgents = await targetAdapter.readAgents();
+
+      // Try to read target agents for duplicate checking
+      let targetAgents: typeof sourceAgents = [];
+      try {
+        targetAgents = await targetAdapter.readAgents();
+      } catch {
+        // Target adapter is write-only, try using source adapter to read target
+        try {
+          const fallbackAdapter = getAdapter({
+            tool: options.sourceTool,
+            baseDir: options.targetPath,
+          });
+          targetAgents = await fallbackAdapter.readAgents();
+        } catch {
+          // Failed to read target agents, assume empty
+        }
+      }
       const targetAgentNames = new Set(targetAgents.map((a) => a.name));
 
       const agentsToImport = sourceAgents.filter((agent) => {
@@ -200,7 +244,23 @@ export async function importConfigs(
     // Import commands
     if (options.importCommands) {
       const sourceCommands = await sourceAdapter.readCommands();
-      const targetCommands = await targetAdapter.readCommands();
+
+      // Try to read target commands for duplicate checking
+      let targetCommands: typeof sourceCommands = [];
+      try {
+        targetCommands = await targetAdapter.readCommands();
+      } catch {
+        // Target adapter is write-only, try using source adapter to read target
+        try {
+          const fallbackAdapter = getAdapter({
+            tool: options.sourceTool,
+            baseDir: options.targetPath,
+          });
+          targetCommands = await fallbackAdapter.readCommands();
+        } catch {
+          // Failed to read target commands, assume empty
+        }
+      }
       const targetCommandNames = new Set(targetCommands.map((c) => c.name));
 
       const commandsToImport = sourceCommands.filter((command) => {
@@ -254,11 +314,11 @@ export function createImportCommand(): Command {
 
         if (availableTools.length === 0) {
           spinner.fail("No AI coding tool configurations found in source");
-          console.log(
-            chalk.yellow(
-              "\nLooked for: .claude/, .cursor/, .opencode/, .codex/",
-            ),
-          );
+          // Generate directory list from registry
+          const configDirs = Object.values(getAllConfigDirs())
+            .map((dir) => `${dir}/`)
+            .join(", ");
+          console.log(chalk.yellow(`\nLooked for: ${configDirs}`));
           process.exit(1);
         }
 

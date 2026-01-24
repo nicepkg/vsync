@@ -115,7 +115,7 @@ export function getItemHash(
  * @param name - Item name
  * @returns Manifest key (e.g., "skill/name" or "mcp/name")
  */
-export function getItemKey(type: ItemType, name: string): string {
+function getItemKey(type: ItemType, name: string): string {
   return `${type}/${name}`;
 }
 

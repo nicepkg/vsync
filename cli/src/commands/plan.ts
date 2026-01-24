@@ -103,7 +103,7 @@ export function formatDetailedPlan(plan: SyncPlan): string {
  *
  * @param options - Command options
  */
-export async function planCommand(options: {
+async function planCommand(options: {
   prune?: boolean;
   user?: boolean;
 }): Promise<void> {

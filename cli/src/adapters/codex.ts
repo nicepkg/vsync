@@ -30,9 +30,39 @@ import type {
  */
 export class CodexAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
+  readonly toolName = "codex";
+  readonly displayName = "Codex";
+  readonly configFormat = "toml" as const;
+  readonly capabilities = {
+    skills: true,
+    mcp: true,
+    agents: true,
+    commands: true,
+  } as const;
+  readonly isReadOnly = false;
 
   constructor(config: AdapterConfig) {
     this.config = config;
+  }
+
+  getConfigDir(): string {
+    return ".codex";
+  }
+
+  getConfigFiles(): string[] {
+    return [".codex/config.toml"];
+  }
+
+  getSkillsDir(): string {
+    return `${this.config.baseDir}/.codex/skills`;
+  }
+
+  getAgentsDir(): string {
+    return `${this.config.baseDir}/.codex/agents`;
+  }
+
+  getCommandsDir(): string {
+    return `${this.config.baseDir}/.codex/commands`;
   }
 
   /**

@@ -27,9 +27,54 @@ import type {
  */
 export class ClaudeCodeAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
+  readonly toolName = "claude-code";
+  readonly displayName = "Claude Code";
+  readonly configFormat = "json" as const;
+  readonly capabilities = {
+    skills: true,
+    mcp: true,
+    agents: true,
+    commands: true,
+  } as const;
+  readonly isReadOnly = true;
 
   constructor(config: AdapterConfig) {
     this.config = config;
+  }
+
+  /**
+   * Get configuration directory name
+   */
+  getConfigDir(): string {
+    return ".claude";
+  }
+
+  /**
+   * Get configuration file paths for backup
+   */
+  getConfigFiles(): string[] {
+    return [".mcp.json"];
+  }
+
+  /**
+   * Get skills directory path
+   */
+  getSkillsDir(): string {
+    return `${this.config.baseDir}/.claude/skills`;
+  }
+
+  /**
+   * Get agents directory path
+   */
+  getAgentsDir(): string {
+    return `${this.config.baseDir}/.claude/agents`;
+  }
+
+  /**
+   * Get commands directory path
+   */
+  getCommandsDir(): string {
+    return `${this.config.baseDir}/.claude/commands`;
   }
 
   /**

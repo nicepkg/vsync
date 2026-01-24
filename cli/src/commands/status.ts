@@ -127,9 +127,7 @@ export function formatStatus(data: StatusData): string {
  *
  * @param options - Command options
  */
-export async function statusCommand(options: {
-  user?: boolean;
-}): Promise<void> {
+async function statusCommand(options: { user?: boolean }): Promise<void> {
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
 

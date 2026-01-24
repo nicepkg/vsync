@@ -10,6 +10,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
+import { getAllConfigDirs, getToolChoices } from "@src/adapters/registry.js";
 import {
   createEmptyManifest,
   saveManifest,
@@ -36,12 +37,8 @@ export interface ConfigOptions {
 export async function detectTools(projectDir: string): Promise<ToolName[]> {
   const detected: ToolName[] = [];
 
-  const toolDirs: Record<ToolName, string> = {
-    "claude-code": ".claude",
-    cursor: ".cursor",
-    opencode: ".opencode",
-    codex: ".codex",
-  };
+  // Get config directories from registry (no hardcoding!)
+  const toolDirs = getAllConfigDirs();
 
   for (const [tool, dir] of Object.entries(toolDirs)) {
     try {
@@ -142,7 +139,7 @@ export async function initializeManifest(projectDir: string): Promise<void> {
  *
  * @param options - Command options
  */
-export async function initCommand(options: { user?: boolean }): Promise<void> {
+async function initCommand(options: { user?: boolean }): Promise<void> {
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
 
@@ -161,23 +158,8 @@ export async function initCommand(options: { user?: boolean }): Promise<void> {
         type: "checkbox",
         name: "tools",
         message: "Which tools do you want to sync?",
-        choices: [
-          {
-            name: "Claude Code",
-            value: "claude-code",
-            checked: detected.includes("claude-code"),
-          },
-          {
-            name: "Cursor",
-            value: "cursor",
-            checked: detected.includes("cursor"),
-          },
-          {
-            name: "OpenCode",
-            value: "opencode",
-            checked: detected.includes("opencode"),
-          },
-        ],
+        // Get choices from registry (no hardcoding!)
+        choices: getToolChoices(detected),
         validate: (input: string[]) => {
           if (input.length === 0) {
             return "Please select at least one tool";

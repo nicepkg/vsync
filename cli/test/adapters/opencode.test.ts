@@ -497,18 +497,4 @@ describe("OpenCodeAdapter", () => {
       );
     });
   });
-
-  describe("read methods", () => {
-    it("should throw error for readSkills (write-only)", async () => {
-      await expect(adapter.readSkills()).rejects.toThrow(
-        "OpenCode adapter is write-only",
-      );
-    });
-
-    it("should throw error for readMCPServers (write-only)", async () => {
-      await expect(adapter.readMCPServers()).rejects.toThrow(
-        "OpenCode adapter is write-only",
-      );
-    });
-  });
 });

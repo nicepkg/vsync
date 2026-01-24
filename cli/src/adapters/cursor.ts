@@ -4,11 +4,23 @@
  * This adapter is write-only (target tool)
  */
 
-import { mkdir, readFile, rm, stat } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
-import type { MCPServer, Skill, Agent, Command } from "@src/types/models.js";
+import type {
+  MCPServer,
+  MCPOAuth,
+  Skill,
+  Agent,
+  Command,
+} from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+import {
+  hashSkill,
+  hashMCPServer,
+  hashAgent,
+  hashCommand,
+} from "@src/utils/hash.js";
 import type {
   AdapterConfig,
   ToolAdapter,
@@ -22,9 +34,39 @@ import type {
  */
 export class CursorAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
+  readonly toolName = "cursor";
+  readonly displayName = "Cursor";
+  readonly configFormat = "json" as const;
+  readonly capabilities = {
+    skills: true,
+    mcp: true,
+    agents: true,
+    commands: true,
+  } as const;
+  readonly isReadOnly = false;
 
   constructor(config: AdapterConfig) {
     this.config = config;
+  }
+
+  getConfigDir(): string {
+    return ".cursor";
+  }
+
+  getConfigFiles(): string[] {
+    return [".cursor/mcp.json"];
+  }
+
+  getSkillsDir(): string {
+    return `${this.config.baseDir}/.cursor/skills`;
+  }
+
+  getAgentsDir(): string {
+    return `${this.config.baseDir}/.cursor/agents`;
+  }
+
+  getCommandsDir(): string {
+    return `${this.config.baseDir}/.cursor/commands`;
   }
 
   /**
@@ -402,22 +444,200 @@ export class CursorAdapter implements ToolAdapter {
   }
 
   // Read methods - Cursor is write-only (target tool)
+  /**
+   * Read all skills from .cursor/skills/
+   */
   async readSkills(): Promise<Skill[]> {
-    throw new Error(
-      "Cursor adapter is write-only (target tool). Use as target_tool only.",
-    );
+    const skillsDir = join(this.config.baseDir, ".cursor", "skills");
+
+    try {
+      const entries = await readdir(skillsDir, { withFileTypes: true });
+      const skills: Skill[] = [];
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+
+        const skillName = entry.name;
+        const skillDir = join(skillsDir, skillName);
+        const skillMdPath = join(skillDir, "SKILL.md");
+
+        try {
+          const skillContent = await readFile(skillMdPath, "utf-8");
+          const parsed = matter(skillContent);
+
+          // Read support files
+          const supportFiles: Record<string, string> = {};
+          const skillFiles = await readdir(skillDir, { withFileTypes: true });
+
+          for (const file of skillFiles) {
+            if (file.name === "SKILL.md" || file.isDirectory()) continue;
+
+            const filePath = join(skillDir, file.name);
+            const fileContent = await readFile(filePath, "utf-8");
+            supportFiles[file.name] = fileContent;
+          }
+
+          // Build skill object
+          const skill: Skill = {
+            name: skillName,
+            content: parsed.content,
+            hash: "",
+          };
+
+          if (parsed.data.description) {
+            skill.description = parsed.data.description as string;
+          }
+          if (Object.keys(parsed.data).length > 0) {
+            skill.metadata = parsed.data;
+          }
+          if (Object.keys(supportFiles).length > 0) {
+            skill.supportFiles = supportFiles;
+          }
+
+          skill.hash = hashSkill(skill);
+          skills.push(skill);
+        } catch (error) {
+          console.warn(
+            `Skipping skill ${skillName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
+      }
+
+      return skills;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      throw error;
+    }
   }
 
+  /**
+   * Read MCP servers from .cursor/mcp.json
+   */
   async readMCPServers(): Promise<MCPServer[]> {
-    throw new Error(
-      "Cursor adapter is write-only (target tool). Use as target_tool only.",
-    );
+    const mcpJsonPath = join(this.config.baseDir, ".cursor", "mcp.json");
+
+    try {
+      const content = await readFile(mcpJsonPath, "utf-8");
+      const config = JSON.parse(content);
+
+      if (!config.mcpServers || typeof config.mcpServers !== "object") {
+        return [];
+      }
+
+      const servers: MCPServer[] = [];
+
+      for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
+        const rawConfig = serverConfig as Record<string, unknown>;
+
+        const server: MCPServer = {
+          name,
+          type: "stdio",
+          hash: "",
+        };
+
+        if (rawConfig.command) server.command = rawConfig.command as string;
+        if (rawConfig.args) server.args = rawConfig.args as string[];
+        if (rawConfig.env) server.env = rawConfig.env as Record<string, string>;
+        if (rawConfig.url) server.url = rawConfig.url as string;
+        if (rawConfig.headers)
+          server.headers = rawConfig.headers as Record<string, string>;
+        if (rawConfig.auth) server.auth = rawConfig.auth as unknown as MCPOAuth;
+
+        server.hash = hashMCPServer(server);
+        servers.push(server);
+      }
+
+      return servers;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      console.warn(
+        `Failed to read mcp.json: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      return [];
+    }
   }
 
+  /**
+   * Read all agents from .cursor/agents/
+   */
   async readAgents(): Promise<Agent[]> {
-    throw new Error(
-      "Cursor adapter is write-only (target tool). Use as target_tool only.",
-    );
+    const agentsDir = join(this.config.baseDir, ".cursor", "agents");
+
+    try {
+      const entries = await readdir(agentsDir, { withFileTypes: true });
+      const agents: Agent[] = [];
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+
+        const agentName = entry.name;
+        const agentDir = join(agentsDir, agentName);
+        const agentMdPath = join(agentDir, "AGENT.md");
+
+        try {
+          const agentContent = await readFile(agentMdPath, "utf-8");
+          const parsed = matter(agentContent);
+
+          // Read support files
+          const supportFiles: Record<string, string> = {};
+          const agentFiles = await readdir(agentDir, { withFileTypes: true });
+
+          for (const file of agentFiles) {
+            if (file.name === "AGENT.md" || file.isDirectory()) continue;
+
+            const filePath = join(agentDir, file.name);
+            const fileContent = await readFile(filePath, "utf-8");
+            supportFiles[file.name] = fileContent;
+          }
+
+          const agent: Agent = {
+            name: agentName,
+            content: parsed.content,
+            hash: "",
+          };
+
+          if (parsed.data.description) {
+            agent.description = parsed.data.description as string;
+          }
+          if (Object.keys(parsed.data).length > 0) {
+            agent.metadata = parsed.data;
+          }
+          if (Object.keys(supportFiles).length > 0) {
+            agent.supportFiles = supportFiles;
+          }
+
+          agent.hash = hashAgent(agent);
+          agents.push(agent);
+        } catch (error) {
+          console.warn(
+            `Skipping agent ${agentName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
+      }
+
+      return agents;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      throw error;
+    }
   }
 
   /**
@@ -440,9 +660,76 @@ export class CursorAdapter implements ToolAdapter {
     }
   }
 
+  /**
+   * Read all commands from .cursor/commands/
+   */
   async readCommands(): Promise<Command[]> {
-    throw new Error(
-      "Cursor adapter is write-only (target tool). Use as target_tool only.",
-    );
+    const commandsDir = join(this.config.baseDir, ".cursor", "commands");
+
+    try {
+      const entries = await readdir(commandsDir, { withFileTypes: true });
+      const commands: Command[] = [];
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+
+        const commandName = entry.name;
+        const commandDir = join(commandsDir, commandName);
+        const commandMdPath = join(commandDir, "COMMAND.md");
+
+        try {
+          const commandContent = await readFile(commandMdPath, "utf-8");
+          const parsed = matter(commandContent);
+
+          // Read support files
+          const supportFiles: Record<string, string> = {};
+          const commandFiles = await readdir(commandDir, {
+            withFileTypes: true,
+          });
+
+          for (const file of commandFiles) {
+            if (file.name === "COMMAND.md" || file.isDirectory()) continue;
+
+            const filePath = join(commandDir, file.name);
+            const fileContent = await readFile(filePath, "utf-8");
+            supportFiles[file.name] = fileContent;
+          }
+
+          const command: Command = {
+            name: commandName,
+            content: parsed.content,
+            hash: "",
+          };
+
+          if (parsed.data.description) {
+            command.description = parsed.data.description as string;
+          }
+          if (Object.keys(parsed.data).length > 0) {
+            command.metadata = parsed.data;
+          }
+          if (Object.keys(supportFiles).length > 0) {
+            command.supportFiles = supportFiles;
+          }
+
+          command.hash = hashCommand(command);
+          commands.push(command);
+        } catch (error) {
+          console.warn(
+            `Skipping command ${commandName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
+      }
+
+      return commands;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      throw error;
+    }
   }
 }

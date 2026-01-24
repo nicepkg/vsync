@@ -1,7 +1,9 @@
 import { readFile, access } from "node:fs/promises";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { VibeConfig, ToolName } from "../../src/types/config.js";
+// Import for module side-effects (needed for dynamic imports in tests)
+import "@src/commands/init.js";
+import type { VibeConfig, ToolName } from "@src/types/config.js";
 
 describe("Init Command", () => {
   beforeEach(() => {

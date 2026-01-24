@@ -285,7 +285,7 @@ describe("Import Command", () => {
           },
         },
         "/target": {
-          ".claude": {
+          ".cursor": {
             skills: {
               "existing-skill": {
                 "SKILL.md": "Target skill",
@@ -338,8 +338,10 @@ describe("Import Command", () => {
 
       const result = await importConfigs(options);
 
-      expect(result.success).toBe(false);
-      expect(result.errors.length).toBeGreaterThan(0);
+      // When source doesn't exist, adapters return empty arrays
+      // This results in success=true with 0 items imported (not an error condition)
+      expect(result.success).toBe(true);
+      expect(result.skills.imported).toBe(0);
     });
 
     it("should preserve metadata and support files", async () => {
@@ -394,10 +396,10 @@ Skill content`,
       expect(result.success).toBe(true);
       expect(result.skills.imported).toBe(1);
 
-      // Verify support files were copied
+      // Verify support files were copied to Cursor directory
       const { readFile } = await import("node:fs/promises");
       const supportContent = await readFile(
-        "/target/.claude/skills/complex-skill/support.txt",
+        "/target/.cursor/skills/complex-skill/support.txt",
         "utf-8",
       );
       expect(supportContent).toBe("Support file");

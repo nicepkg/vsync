@@ -4,13 +4,18 @@
  * This adapter is write-only (target tool)
  */
 
-import { mkdir, readFile, rm, stat } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import * as jsonc from "jsonc-parser";
 import type { MCPServer, Skill, Agent, Command } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
-import { normalizeEnvVar } from "@src/utils/env-vars.js";
+import {
+  hashSkill,
+  hashMCPServer,
+  hashAgent,
+  hashCommand,
+} from "@src/utils/hash.js";
 import type {
   AdapterConfig,
   ToolAdapter,
@@ -24,9 +29,39 @@ import type {
  */
 export class OpenCodeAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
+  readonly toolName = "opencode";
+  readonly displayName = "OpenCode";
+  readonly configFormat = "jsonc" as const;
+  readonly capabilities = {
+    skills: true,
+    mcp: true,
+    agents: true,
+    commands: true,
+  } as const;
+  readonly isReadOnly = false;
 
   constructor(config: AdapterConfig) {
     this.config = config;
+  }
+
+  getConfigDir(): string {
+    return ".opencode";
+  }
+
+  getConfigFiles(): string[] {
+    return ["opencode.jsonc"];
+  }
+
+  getSkillsDir(): string {
+    return `${this.config.baseDir}/.opencode/skills`;
+  }
+
+  getAgentsDir(): string {
+    return `${this.config.baseDir}/.opencode/agents`;
+  }
+
+  getCommandsDir(): string {
+    return `${this.config.baseDir}/.opencode/commands`;
   }
 
   /**
@@ -273,7 +308,7 @@ export class OpenCodeAdapter implements ToolAdapter {
 
   /**
    * Convert environment variables recursively
-   * ${env:VAR} -> ${VAR}
+   * ${env:VAR} -> ${VAR} (OpenCode format)
    */
   private convertEnvVars(
     obj: Record<string, unknown>,
@@ -282,7 +317,9 @@ export class OpenCodeAdapter implements ToolAdapter {
 
     for (const [key, value] of Object.entries(obj)) {
       if (typeof value === "string") {
-        result[key] = normalizeEnvVar(value, "opencode");
+        // OpenCode uses ${VAR} without "env:" prefix
+        // Convert ${env:VAR} → ${VAR}
+        result[key] = value.replace(/\$\{env:([^}]+)\}/g, "${$1}");
       } else if (typeof value === "object" && value !== null) {
         result[key] = this.convertEnvVars(value as Record<string, unknown>);
       } else {
@@ -477,22 +514,88 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   // Read methods - OpenCode is write-only (target tool)
+  // Read methods - use same structure as Cursor, just replace .cursor with .opencode
   async readSkills(): Promise<Skill[]> {
-    throw new Error(
-      "OpenCode adapter is write-only (target tool). Use as target_tool only.",
-    );
+    return this.readItemsGeneric<Skill>("skills", "SKILL.md", hashSkill);
   }
 
   async readMCPServers(): Promise<MCPServer[]> {
-    throw new Error(
-      "OpenCode adapter is write-only (target tool). Use as target_tool only.",
-    );
+    const jsoncPath = join(this.config.baseDir, "opencode.jsonc");
+    try {
+      const content = await readFile(jsoncPath, "utf-8");
+      const config = jsonc.parse(content) as Record<string, unknown>;
+      if (!config?.mcp || typeof config.mcp !== "object") return [];
+
+      const servers: MCPServer[] = [];
+      for (const [name, serverConfig] of Object.entries(
+        config.mcp as Record<string, unknown>,
+      )) {
+        const raw = serverConfig as Record<string, unknown>;
+        const server: MCPServer = { name, type: "stdio", hash: "" };
+        if (raw.command) server.command = raw.command as string;
+        if (raw.args) server.args = raw.args as string[];
+        if (raw.env) server.env = raw.env as Record<string, string>;
+        server.hash = hashMCPServer(server);
+        servers.push(server);
+      }
+      return servers;
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT")
+        return [];
+      return [];
+    }
   }
 
   async readAgents(): Promise<Agent[]> {
-    throw new Error(
-      "OpenCode adapter is write-only (target tool). Use as target_tool only.",
-    );
+    return this.readItemsGeneric<Agent>("agents", "AGENT.md", hashAgent);
+  }
+
+  private async readItemsGeneric<T extends Skill | Agent | Command>(
+    dirName: string,
+    fileName: string,
+    hashFn: (item: T) => string,
+  ): Promise<T[]> {
+    const itemsDir = join(this.config.baseDir, ".opencode", dirName);
+    try {
+      const entries = await readdir(itemsDir, { withFileTypes: true });
+      const items: T[] = [];
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const itemName = entry.name;
+        const itemDir = join(itemsDir, itemName);
+        const itemPath = join(itemDir, fileName);
+        try {
+          const content = await readFile(itemPath, "utf-8");
+          const parsed = matter(content);
+          const supportFiles: Record<string, string> = {};
+          const files = await readdir(itemDir, { withFileTypes: true });
+          for (const file of files) {
+            if (file.name === fileName || file.isDirectory()) continue;
+            const filePath = join(itemDir, file.name);
+            supportFiles[file.name] = await readFile(filePath, "utf-8");
+          }
+          const item: any = {
+            name: itemName,
+            content: parsed.content,
+            hash: "",
+          };
+          if (parsed.data.description)
+            item.description = parsed.data.description;
+          if (Object.keys(parsed.data).length > 0) item.metadata = parsed.data;
+          if (Object.keys(supportFiles).length > 0)
+            item.supportFiles = supportFiles;
+          item.hash = hashFn(item);
+          items.push(item);
+        } catch {
+          console.warn(`Skipping ${dirName} ${itemName}`);
+        }
+      }
+      return items;
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT")
+        return [];
+      throw error;
+    }
   }
 
   /**
@@ -516,8 +619,10 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   async readCommands(): Promise<Command[]> {
-    throw new Error(
-      "OpenCode adapter is write-only (target tool). Use as target_tool only.",
+    return this.readItemsGeneric<Command>(
+      "commands",
+      "COMMAND.md",
+      hashCommand,
     );
   }
 }

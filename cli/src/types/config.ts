@@ -3,6 +3,8 @@
  * Defines the structure of .vibe-sync.json
  */
 
+import type { ADAPTERS } from "../adapters/registry.js";
+
 /**
  * Sync mode
  * - safe: Only create/update, never delete
@@ -11,9 +13,15 @@
 export type SyncMode = "safe" | "prune";
 
 /**
- * Supported AI coding tools
+ * Infer adapter instance type from ADAPTERS array
  */
-export type ToolName = "claude-code" | "cursor" | "opencode" | "codex";
+type AdapterInstance = InstanceType<(typeof ADAPTERS)[number]>;
+
+/**
+ * Supported AI coding tools
+ * Auto-inferred from adapter registry - no manual maintenance needed!
+ */
+export type ToolName = AdapterInstance["toolName"];
 
 /**
  * Configuration level
