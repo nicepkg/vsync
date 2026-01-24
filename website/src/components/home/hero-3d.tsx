@@ -45,14 +45,14 @@ function AnimatedSphere() {
   return (
     <Sphere visible args={[1, 64, 64]} scale={2.0} ref={sphereRef}>
       <MeshDistortMaterial
-        color="#a78bfa" // Lighter purple (Purple-400)
+        color="#D946EF" // Fuchsia - primary theme color
         attach="material"
         distort={0.4}
         speed={2}
-        roughness={0.4} // Increased roughness to show color better
-        metalness={0.2} // Decreased metalness so it doesn't reflect the black void
-        emissive="#8b5cf6" // Purple-500 glow
-        emissiveIntensity={0.8} // Strong glow
+        roughness={0.4}
+        metalness={0.2}
+        emissive="#D946EF" // Fuchsia glow
+        emissiveIntensity={0.8}
         wireframe={true}
       />
     </Sphere>
@@ -66,7 +66,7 @@ export function Hero3D() {
         <PerspectiveCamera makeDefault position={[0, 0, 6]} />
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1.5} />
-        <pointLight position={[-10, -10, -10]} color="#3b82f6" intensity={1} />
+        <pointLight position={[-10, -10, -10]} color="#22D3EE" intensity={1} />
 
         <Stars
           radius={100}

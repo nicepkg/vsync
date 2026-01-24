@@ -1,10 +1,4 @@
-<!--
-  ⚠️ TEMPLATE NOTICE
-  This is a starter template. Customize for your project.
-  See CHECKLIST.md for items that need review.
--->
-
-# Contributing to [project-name]
+# Contributing to vibe-sync
 
 Thank you for your interest in contributing! This document provides guidelines and instructions for contributing.
 
@@ -16,13 +10,13 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/[github-username]/[repo-name]/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/nicepkg/vibe-sync/issues)
 2. If not, create a new issue using the bug report template
 3. Provide as much detail as possible
 
 ### Suggesting Features
 
-1. Check if the feature has already been suggested in [Issues](https://github.com/[github-username]/[repo-name]/issues)
+1. Check if the feature has already been suggested in [Issues](https://github.com/nicepkg/vibe-sync/issues)
 2. If not, create a new issue using the feature request template
 3. Explain the use case and benefits
 
@@ -40,8 +34,8 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ```bash
 # Clone the repository
-git clone https://github.com/[github-username]/[repo-name].git
-cd [repo-name]
+git clone https://github.com/nicepkg/vibe-sync.git
+cd vibe-sync
 
 # Install dependencies
 pnpm install
@@ -110,4 +104,4 @@ refactor: simplify authentication logic
 
 ## Questions?
 
-Feel free to open a [Discussion](https://github.com/[github-username]/[repo-name]/discussions) if you have any questions.
+Feel free to open a [Discussion](https://github.com/nicepkg/vibe-sync/discussions) if you have any questions.

@@ -27,7 +27,6 @@ import {
   Zap,
   BookOpen,
   TrendingUp,
-  Video,
   BarChart2,
   Presentation,
   CheckCircle,
@@ -44,97 +43,103 @@ const Hero3D = dynamic(() => import("./hero-3d").then((mod) => mod.Hero3D), {
 });
 
 // =============================================================================
-// TODO: CUSTOMIZE WORKFLOWS - These appear as feature cards on the landing page
-// Each workflow links to a documentation page. Update titles, descriptions, and links.
-// Icons are from lucide-react: https://lucide.dev/icons
+// vibe-sync Features - Core capabilities of the configuration sync tool
 // =============================================================================
 const workflows = [
   {
-    icon: BookOpen,
-    title: { en: "Content Creator", zh: "内容创作者" },
-    desc: { en: "SEO, Blog, Social Media", zh: "SEO, 博客, 社交媒体" },
-    link: "/workflows/content-creator",
-    color: "text-blue-500",
-    bg: "bg-blue-500/10",
+    icon: Zap,
+    title: { en: "One-Way Sync", zh: "单向同步" },
+    desc: {
+      en: "Source → Targets, Safe by Default",
+      zh: "源 → 目标，默认安全",
+    },
+    link: "/docs/getting-started",
+    color: "text-fuchsia-500",
+    bg: "bg-fuchsia-500/10",
   },
   {
-    icon: Zap,
-    title: { en: "Marketing Pro", zh: "营销专家" },
-    desc: { en: "Growth, Copywriting, Funnels", zh: "增长, 文案, 漏斗" },
-    link: "/workflows/marketing-pro",
+    icon: BookOpen,
+    title: { en: "Skills Sync", zh: "Skills 同步" },
+    desc: {
+      en: "Share Agent Skills Across Tools",
+      zh: "跨工具共享 Agent Skills",
+    },
+    link: "/docs/getting-started",
     color: "text-purple-500",
     bg: "bg-purple-500/10",
   },
   {
-    icon: Video,
-    title: { en: "Video Creator", zh: "视频创作者" },
-    desc: { en: "Script, Hooks, Thumbnails", zh: "脚本, 钩子, 封面" },
-    link: "/workflows/video-creator",
-    color: "text-red-500",
-    bg: "bg-red-500/10",
+    icon: TrendingUp,
+    title: { en: "MCP Sync", zh: "MCP 同步" },
+    desc: { en: "Secure MCP Server Management", zh: "安全的 MCP Server 管理" },
+    link: "/docs/getting-started",
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10",
   },
   {
-    icon: TrendingUp,
-    title: { en: "Stock Trader", zh: "股票交易员" },
-    desc: { en: "Technical Analysis, Macro", zh: "技术分析, 宏观" },
-    link: "/workflows/stock-trader",
+    icon: BarChart2,
+    title: { en: "Diff Planning", zh: "差异计划" },
+    desc: { en: "Preview Changes Before Apply", zh: "应用前预览变更" },
+    link: "/docs/getting-started",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+  },
+  {
+    icon: CheckCircle,
+    title: { en: "Safe & Prune Modes", zh: "Safe & Prune 模式" },
+    desc: { en: "Choose Your Sync Strategy", zh: "选择同步策略" },
+    link: "/docs/getting-started",
     color: "text-green-500",
     bg: "bg-green-500/10",
   },
   {
-    icon: BarChart2,
-    title: { en: "Product Manager", zh: "产品经理" },
-    desc: { en: "PRD, User Stories, Strategy", zh: "PRD, 用户故事, 策略" },
-    link: "/workflows/product-manager",
+    icon: Presentation,
+    title: { en: "Multi-Tool Support", zh: "多工具支持" },
+    desc: {
+      en: "Claude, Cursor, OpenCode, Codex",
+      zh: "Claude、Cursor、OpenCode、Codex",
+    },
+    link: "/docs/getting-started",
     color: "text-orange-500",
     bg: "bg-orange-500/10",
-  },
-  {
-    icon: Presentation,
-    title: { en: "Talk to Slidev", zh: "Talk to Slidev" },
-    desc: { en: "Presentations, Storytelling", zh: "演示文稿, 讲故事" },
-    link: "/workflows/talk-to-slidev",
-    color: "text-yellow-500",
-    bg: "bg-yellow-500/10",
   },
 ];
 
 // =============================================================================
-// TODO: CUSTOMIZE PROBLEMS - Before/After comparison cards showing your value prop
-// Each card shows a pain point (before) and the solution (after).
+// vibe-sync Pain Points - Before/After comparison showing the value proposition
 // =============================================================================
 const problems = [
   {
-    role: { en: "Content Creator", zh: "内容创作者" },
+    role: { en: "Multi-Tool User", zh: "多工具用户" },
     pain: {
-      en: "Explaining SEO basics, H2 structure, meta descriptions... every single time",
-      zh: "每次都要解释 SEO 基础、H2 结构、meta 描述...",
+      en: "Manually copying Skills and MCP configs across Claude Code, Cursor, OpenCode...",
+      zh: "在 Claude Code、Cursor、OpenCode 之间手动复制 Skills 和 MCP 配置...",
     },
     gain: {
-      en: "AI pre-loaded with SEO best practices, content frameworks",
-      zh: "AI 已预装 SEO 最佳实践、内容框架",
+      en: "One command syncs all configs automatically, no manual copying",
+      zh: "一条命令自动同步所有配置，无需手动复制",
     },
   },
   {
-    role: { en: "Marketer", zh: "营销人员" },
+    role: { en: "Configuration Manager", zh: "配置管理者" },
     pain: {
-      en: "Teaching UTM parameters, AIDA copywriting, funnel optimization...",
-      zh: "教 UTM 参数、AIDA 文案法、漏斗优化...",
+      en: "Different tools, different formats, environment variables break during migration",
+      zh: "不同工具、不同格式，迁移时环境变量总是出错",
     },
     gain: {
-      en: "AI equipped with GTM strategy, campaign templates, analytics frameworks",
-      zh: "AI 已配备 GTM 策略、活动模板、分析框架",
+      en: "vibe-sync handles format conversion and preserves environment variables safely",
+      zh: "vibe-sync 处理格式转换，安全保留环境变量",
     },
   },
   {
-    role: { en: "Stock Trader", zh: "股票交易员" },
+    role: { en: "Team Lead", zh: "团队负责人" },
     pain: {
-      en: "MACD means..., RSI indicates..., check the 200-day MA...",
-      zh: "MACD 意味着...、RSI 表示...、看 200 日均线...",
+      en: "Can't track which configs are outdated, risky to delete, no diff preview",
+      zh: "无法追踪哪些配置过时了，删除有风险，没有差异预览",
     },
     gain: {
-      en: "AI loaded with technical analysis, fundamentals, multi-market expertise",
-      zh: "AI 已加载技术分析、基本面、多市场专业知识",
+      en: "Diff planning system shows exactly what will change before applying",
+      zh: "差异计划系统在应用前准确显示将要发生的变更",
     },
   },
 ];
@@ -167,39 +172,41 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
   const t: Translation = {
     hero: {
       title:
-        lang === "en" ? "Supercharge your AI Workflow" : "AI 工作流的究极形态",
+        lang === "en"
+          ? "One Config. Many AI Tools. Zero Pain."
+          : "一处配置，多工具同步，不再折腾",
       subtitle:
         lang === "en"
-          ? "Stop repeating yourself. Start with context."
-          : "告别重复解释。让 AI 真正懂你。",
+          ? "Sync your AI coding tool configs with a single command"
+          : "一条命令，同步你所有的 AI 编程工具配置",
       desc:
         lang === "en"
-          ? "Every session starts from zero. One command adds professional skills, best practices, and project context to your AI."
-          : "每次对话都从零开始？一条命令，为你的 AI 注入专业技能、最佳实践和项目上下文。",
+          ? "vibe-sync keeps your Skills and MCP servers in perfect harmony across Claude Code, Cursor, OpenCode, and Codex. Stop copying configs manually."
+          : "vibe-sync 让你的 Skills 和 MCP servers 在 Claude Code、Cursor、OpenCode 和 Codex 之间保持完美同步。告别手动复制配置。",
       getStarted: lang === "en" ? "Get Started" : "开始使用",
       viewGithub: lang === "en" ? "Star on GitHub" : "Star on GitHub",
     },
     problem: {
       title: lang === "en" ? "The Problem We Solve" : "我们解决的痛点",
-      without: lang === "en" ? "Without AI Workflow" : "没有 AI Workflow",
-      with: lang === "en" ? "With AI Workflow" : "有了 AI Workflow",
+      without: lang === "en" ? "Without vibe-sync" : "没有 vibe-sync",
+      with: lang === "en" ? "With vibe-sync" : "有了 vibe-sync",
     },
     workflows: {
-      title: lang === "en" ? "Explore Workflows" : "探索工作流",
+      title: lang === "en" ? "Core Features" : "核心特性",
       subtitle:
         lang === "en"
-          ? " Specialized skills for every role"
-          : "为每个角色打造的专业技能",
+          ? "Everything you need for hassle-free config sync"
+          : "无忧配置同步所需的一切",
     },
     cta: {
       title:
         lang === "en"
-          ? "Ready to upgrade your AI?"
-          : "准备好升级你的 AI 了吗？",
+          ? "Ready to sync your AI tools?"
+          : "准备好同步你的 AI 工具了吗？",
       desc:
         lang === "en"
-          ? "Join the community and start building better context."
-          : "加入社区，开始构建更好的上下文。",
+          ? "Install vibe-sync and unify your AI coding experience today."
+          : "立即安装 vibe-sync，统一你的 AI 编程体验。",
       button: lang === "en" ? "Get Started Now" : "立即开始",
     },
   };
@@ -247,7 +254,7 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
                 </Link>
               </div>
 
-              {/* TODO: Update this demo command to match your project */}
+              {/* Demo command */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -259,7 +266,7 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
                     <div className="flex items-center overflow-x-auto text-left font-mono text-sm whitespace-nowrap md:text-base">
                       <span className="text-primary mr-3 select-none">$</span>
                       <span className="text-foreground">
-                        npx your-cli-command --example
+                        npx vibe-sync sync
                       </span>
                     </div>
                   </div>

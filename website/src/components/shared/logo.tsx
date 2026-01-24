@@ -42,12 +42,12 @@ export function Logo({
             x2="100%"
             y2="100%"
           >
-            <stop offset="0%" stopColor="#8b5cf6" /> {/* Purple-500 */}
-            <stop offset="100%" stopColor="#3b82f6" /> {/* Blue-500 */}
+            <stop offset="0%" stopColor="#D946EF" /> {/* Fuchsia */}
+            <stop offset="100%" stopColor="#22D3EE" /> {/* Cyan */}
           </linearGradient>
         </defs>
 
-        {/* Outer Hexagon/Circle hint */}
+        {/* Rotating sync circle */}
         <path
           d="M216,128A88,88,0,1,1,128,40,88,88,0,0,1,216,128Z"
           fill="none"
@@ -60,19 +60,22 @@ export function Logo({
           style={{ transformOrigin: "center" }}
         />
 
-        {/* The W Wave */}
+        {/* Sync arrows forming a V shape */}
         <path
-          d="M64,112l32,48l32-48l32,48l32-48"
+          d="M80,100 L128,160 L176,100"
           fill="none"
           stroke="url(#logo-gradient)"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="28"
+          strokeWidth="24"
         />
 
-        {/* Start/End Dots */}
-        <circle cx="64" cy="112" r="14" fill="url(#logo-gradient)" />
-        <circle cx="192" cy="112" r="14" fill="url(#logo-gradient)" />
+        {/* Top connection nodes */}
+        <circle cx="80" cy="100" r="12" fill="url(#logo-gradient)" />
+        <circle cx="176" cy="100" r="12" fill="url(#logo-gradient)" />
+
+        {/* Bottom sync node */}
+        <circle cx="128" cy="160" r="14" fill="url(#logo-gradient)" />
       </svg>
       <span className="font-bold text-xl tracking-tight hidden sm:inline-block">
         {siteConfig.name}

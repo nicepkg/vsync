@@ -1,16 +1,10 @@
 ---
 name: Feature Request
-about: Suggest an idea for this project
+about: Suggest an idea for vibe-sync
 title: "[Feature] "
 labels: enhancement
 assignees: ""
 ---
-
-<!--
-  ⚠️ TEMPLATE NOTICE - DELETE THIS BLOCK AFTER CUSTOMIZATION
-  This is a starter template. Customize the sections below for your project.
-  See CHECKLIST.md for items that need review.
--->
 
 ## Is your feature request related to a problem?
 

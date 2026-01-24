@@ -18,8 +18,8 @@ on:
 
 env:
   # Project Configuration - Update these values for your project
-  PROJECT_NAME: '[repo-name]'
-  SITE_DOMAIN: '[project-domain]'
+  PROJECT_NAME: 'vibe-sync'
+  SITE_DOMAIN: 'vibe-sync.xiaominglab.com'
   WEBSITE_DIR: 'website'
   BUILD_OUTPUT_DIR: 'website/out'
   BUILD_COMMAND: 'pnpm build:website'

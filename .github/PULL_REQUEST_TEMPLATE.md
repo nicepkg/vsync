@@ -1,9 +1,3 @@
-<!--
-  ⚠️ TEMPLATE NOTICE - DELETE THIS BLOCK AFTER CUSTOMIZATION
-  This is a starter template. Customize the sections below for your project.
-  See CHECKLIST.md for items that need review.
--->
-
 ## Description
 
 Please include a summary of the changes and the related issue (if any).

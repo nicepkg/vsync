@@ -1,12 +1,12 @@
 {
-  "name": "[repo-name]",
+  "name": "vibe-sync",
   "version": "1.0.1",
   "private": true,
   "type": "module",
-  "description": "[project-name] - [slogan]",
+  "description": "vibe-sync - One config. Many AI tools. Zero pain.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/[github-username]/[repo-name].git"
+    "url": "https://github.com/nicepkg/vibe-sync.git"
   },
   "license": "MIT",
   "scripts": {

@@ -28,16 +28,16 @@
 
 // ---------- Basic Site Config ----------
 export const siteConfig = {
-  name: "[project-name]",
-  description: "[project-slogan]",
-  url: "https://[project-domain]",
+  name: "vibe-sync",
+  description: "One config. Many AI tools. Zero pain.",
+  url: "https://vibe-sync.xiaominglab.com",
   locale: "en_US",
 };
 
 // ---------- GitHub Config ----------
 export const githubConfig = {
-  username: "[github-username]",
-  repo: "[repo-name]",
+  username: "nicepkg",
+  repo: "vibe-sync",
   get url() {
     return `https://github.com/${this.username}/${this.repo}`;
   },
@@ -51,9 +51,9 @@ export const githubConfig = {
 
 // ---------- Author Config ----------
 export const authorConfig = {
-  name: "[author-name]",
-  website: "[author-website]",
-  email: "[support-email]",
+  name: "Jinming Yang",
+  website: "https://github.com/2214962083",
+  email: "2214962083@qq.com",
   github: `https://github.com/${githubConfig.username}`,
 };
 
@@ -66,28 +66,28 @@ export const socialLinksConfig = {
   },
   bilibili: {
     label: "Bilibili",
-    href: "https://space.bilibili.com/[bilibili-uid]",
+    href: "https://space.bilibili.com/83540912",
   },
   douyin: {
     label: "Douyin",
-    href: "https://www.douyin.com/user/[douyin-uid]",
-    handle: "[douyin-nickname]",
+    href: "https://www.douyin.com/user/79841360454",
+    handle: "葬爱非主流小明",
   },
   twitter: {
     label: "X (Twitter)",
-    href: "https://x.com/[twitter-handle]",
+    href: "https://x.com/jinmingyang666",
   },
 };
 
 // ---------- Footer Config ----------
 export const footerConfig = {
   description: {
-    en: "Supercharge your AI coding workflow with context-aware skills and best practices. Built for developers who want to stop repeating themselves.",
-    zh: "为你的 AI 编程工作流注入上下文感知技能和最佳实践。专为不想重复自己的开发者打造。",
+    en: "Sync your AI coding tool configurations with a single command. Keep Skills and MCP servers in perfect harmony across Claude Code, Cursor, OpenCode, and Codex.",
+    zh: "一条命令同步你的 AI 编程工具配置。让 Skills 和 MCP servers 在 Claude Code、Cursor、OpenCode 和 Codex 之间保持完美和谐。",
   },
   links: [
     {
-      label: "[author-name]",
+      label: "Jinming Yang",
       href: authorConfig.website,
     },
     {
@@ -109,8 +109,8 @@ export const footerConfig = {
 export const bannerConfig = {
   storageKey: `${siteConfig.name.toLowerCase().replace(/\s+/g, "-")}-banner`,
   text: {
-    en: `🎉 ${siteConfig.name} is now open source!`,
-    zh: `🎉 ${siteConfig.name} 现已开源！`,
+    en: `🚀 ${siteConfig.name} v1.0 is here! Sync your AI tools effortlessly.`,
+    zh: `🚀 ${siteConfig.name} v1.0 发布！轻松同步你的 AI 工具。`,
   },
   linkText: {
     en: "Star us on GitHub",

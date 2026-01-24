@@ -2,370 +2,439 @@
 
 <img src="website/public/icon.svg" width="120" height="120" />
 
-# AI Vibe Coding Starter
+# vibe-sync
 
-### **From Idea to Production in One Conversation**
+### **One config. Many AI tools. Zero pain.**
 
+[![GitHub stars](https://img.shields.io/github/stars/nicepkg/vibe-sync?style=social)](https://github.com/nicepkg/vibe-sync)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/nicepkg/vibe-sync/pulls)
 
 [简体中文](./README_cn.md) | English
 
-<img src="https://img.shields.io/badge/Claude_Code-Ready-blueviolet?style=for-the-badge&logo=anthropic" />
-<img src="https://img.shields.io/badge/Codex-Ready-green?style=for-the-badge&logo=openai" />
-<img src="https://img.shields.io/badge/Cursor-Ready-blue?style=for-the-badge" />
-<img src="https://img.shields.io/badge/OpenCode-Ready-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Claude_Code-Supported-blueviolet?style=for-the-badge&logo=anthropic" />
+<img src="https://img.shields.io/badge/Cursor-Supported-blue?style=for-the-badge" />
+<img src="https://img.shields.io/badge/OpenCode-Supported-green?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Codex-Coming_Soon-orange?style=for-the-badge" />
 
 ---
 
-**The ultimate lazy developer's dream: Tell AI your idea, get a production-ready website.**
+**A multi-format configuration compiler and diff planner for AI coding tools**
 
-One template. One conversation. Zero manual setup.
+One command. Sync Skills and MCP servers across all your AI tools.
 
-[Get Started](#-quick-start) · [Features](#-features) · [How It Works](#-how-it-works)
+[Get Started](#-quick-start) · [Features](#-features) · [Documentation](https://vibe-sync.xiaominglab.com)
 
 </div>
 
 ---
 
-## ✨ What is This?
+## ✨ Why vibe-sync?
 
-**AI Vibe Coding Starter** is a hyper-modern template designed for the AI-first development era.
-
-> **"I have an idea for a project..."**
+> **Tired of manually copying Skills and MCP configs between Claude Code, Cursor, and OpenCode?**
 >
-> That's all you need to say. AI handles the rest.
+> vibe-sync is not just a file copier—it's a **multi-format configuration compiler** with diff planning that keeps your AI coding tools in perfect harmony.
 
-This isn't just another starter template. It's a **complete automation system** that lets AI coding assistants (Claude Code, Codex, OpenCode, Cursor) take you from concept to deployed website with:
+### The Problem We Solve
 
-- Zero configuration headaches
-- Zero deployment struggles
-- Zero Stack Overflow copy-pasting
-- **Pure vibe coding**
+| 😫 Without vibe-sync | 🎉 With vibe-sync |
+|:---------------------|:------------------|
+| 📋 Copy-paste configs manually between tools | ⚡ One command syncs everything automatically |
+| 🔥 Environment variables break during migration | 🛡️ Variables preserved safely across all formats |
+| 🤷 No idea which configs are outdated | 📊 Diff planning shows exactly what will change |
+| ⚠️ Risky deletions, no preview | ✅ Safe mode by default, Prune mode when needed |
+| 🔧 Different tools, different JSON formats | 🎯 Format conversion handled transparently |
 
-### 🎯 The Core Magic: PRD-Driven Automation
-
-Traditional starters make you manually update dozens of files. **Not this one.**
+### Key Benefits
 
 ```
-docs/config.md    →  Your project settings (name, domain, colors...)
-docs/prd.md       →  Your product requirements
+📚  Single Source of Truth → All tools stay in sync
+🎯  Diff Planning System  → Preview changes before applying
+⚡  Safe & Prune Modes    → Choose your sync strategy
+🔒  MCP Security Checks  → First-time confirmation for new servers
+🌈  Multi-Tool Support   → Claude Code, Cursor, OpenCode, Codex (v1.1)
 ```
-
-AI reads these files and **automatically**:
-
-- Replaces `[project-name]`, `[repo-name]`, `[github-username]` everywhere
-- Updates `site-info.ts`, `package.json`, `LICENSE`, workflows...
-- Generates README, GitHub templates, landing page content
-- Creates proper conventional commits
-- Deploys to Cloudflare Pages
-
-**You write the PRD. AI does the grunt work.**
-
-### 📊 Complete Workflow
-
-```mermaid
-flowchart LR
-    subgraph INPUT [" "]
-        A["📝 Clone + Config"]
-    end
-
-    subgraph AI ["🤖 AI Automation"]
-        B["Phase 1<br/>Core Config"] --> C["Phase 2<br/>Visual Assets"]
-        C --> D["Phase 3<br/>Documentation"]
-        D --> E["Phase 4<br/>Verify & Commit"]
-    end
-
-    subgraph OUTPUT [" "]
-        F["🚀 Deploy"]
-    end
-
-    A --> B
-    E --> F
-
-    style INPUT fill:#e1f5fe
-    style AI fill:#f3e5f5
-    style OUTPUT fill:#e8f5e9
-```
-
-<details>
-<summary>📋 Detailed Workflow (click to expand)</summary>
-
-| Phase       | What AI Does                                                                                                                |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Setup**   | Clone template → Create `docs/config.md` & `docs/prd.md` → Tell AI "Start setup"                                            |
-| **Phase 1** | Replace placeholders in `site-info.ts` → Update `package.json`, `LICENSE`, workflows → Configure theme → `pnpm typecheck` ✓ |
-| **Phase 2** | Customize landing page → Update logo & favicon → Visual review ✓                                                            |
-| **Phase 3** | Delete template READMEs → Generate project README → Create GitHub templates → No placeholders left ✓                        |
-| **Phase 4** | `pnpm lint && typecheck` → Run `validate-setup.sh` → Conventional commit ✓                                                  |
-| **Deploy**  | `git push` → GitHub Actions CI → Cloudflare Pages → Site Live! ✅                                                           |
-
-</details>
 
 ---
 
-## 🎯 The Problem We Solve
+## 🎯 Features
 
-| 😫 Traditional Starters                            | 🎉 AI Vibe Coding Starter                              |
-| :------------------------------------------------- | :----------------------------------------------------- |
-| Clone then manually edit N files with placeholders | Fill `config.md`, AI replaces all + generates files    |
-| Manually create GitHub Issues/PRs                  | `/fix-github-issue`, `/create-pr` - one command        |
-| Manually configure Cloudflare Pages deployment     | AI runs `wrangler` to create Pages, bind KV/R2/D1      |
-| Want to add MCP? Edit 4 config files manually      | `/mcp-manager add xxx` syncs all AI tools at once      |
-| Not AI Ready                                       | Claude Code / Codex / Cursor / OpenCode all supported  |
-| "How does this starter work?" Read docs for ages   | Tell AI your idea, it reads `CLAUDE.md` and guides you |
-
----
-
-## 🚀 Features
-
-### 🤖 AI-Native Architecture
-
-- **CLAUDE.md / AGENTS.md** - Comprehensive instructions for AI assistants
-- **CHECKLIST.md** - Progress tracking AI can update
-- **PRD-driven** - Write requirements, AI implements
-- **MCP configs** - Pre-configured for Claude Code, Codex, Cursor, OpenCode
-
-### 🎮 Built-in AI Commands
-
-Pre-configured slash commands for common workflows:
-
-| Command                     | Description                                       |
-| --------------------------- | ------------------------------------------------- |
-| `/create-pr`                | Create PR with Angular commit convention          |
-| `/fix-github-issue`         | Analyze and fix GitHub issues automatically       |
-| `/code-review`              | Review code for quality, security, best practices |
-| `/review-pr`                | Review pull requests with structured feedback     |
-| `/commit`                   | Create conventional commits                       |
-| `/add-changelog`            | Generate changelog entries                        |
-| `/prepare-release`          | Prepare version releases                          |
-| `/mcp-manager`              | Manage MCP configs across all 4 AI tools          |
-| `/nextjs-performance-audit` | Audit Next.js performance                         |
-
-### 🧩 Shared Skills
-
-Reusable AI capabilities (symlinked across tools):
-
-| Skill              | Description                                                |
-| ------------------ | ---------------------------------------------------------- |
-| `resource-scout`   | Search & discover MCP servers and skills from marketplaces |
-| `skill-creator`    | Guide for creating new custom skills                       |
-| `skill-downloader` | Download & install skills from GitHub or archives          |
-
-### ⚡ Production-Ready Stack
-
-| Technology   | Version | Purpose           |
-| ------------ | ------- | ----------------- |
-| Next.js      | 15      | React framework   |
-| React        | 19      | UI library        |
-| Nextra       | 4       | Documentation     |
-| Tailwind CSS | 4       | Styling           |
-| shadcn/ui    | Latest  | Component library |
-| TypeScript   | 5       | Type safety       |
-| pnpm         | 10+     | Package manager   |
-
-### 🔧 Engineering Excellence
-
-- **Husky + Commitlint** - Angular commit convention enforced
-- **ESLint + Prettier** - Code quality automated
-- **GitHub Actions** - CI/CD out of the box
-- **PR title validation** - Conventional commits for PRs too
-- **Cloudflare Pages** - Deploy on merge, preview on PR
-
-### 📁 Multi-Tool Compatibility
-
-**One codebase, all AI tools supported.**
-
-MCP configs (one per tool, synced content):
-
-```
-.mcp.json           → Claude Code
-.cursor/mcp.json    → Cursor
-.codex/config.toml  → Codex
-opencode.json       → OpenCode
-```
-
-Shared via symlinks:
-
-```
-AGENTS.md           → CLAUDE.md        # Universal AI instructions
-.cursor/skills/     → .claude/skills/  # Shared skills
-.codex/skills/      → .claude/skills/
-.opencode/skill/    → .claude/skills/
-```
-
-Write once in `.claude/`, all tools benefit.
-
----
-
-## 🎬 How It Works
-
-### Step 1: Clone & Tell AI Your Idea
-
-```bash
-git clone https://github.com/2214962083/vibe-coding-starter my-project
-cd my-project
-```
-
-Then open Claude Code (or Codex, or Cursor, or OpenCode) and say:
-
-> "I want to build a documentation site for my CLI tool called 'FastDeploy'.
-> It helps developers deploy apps faster. The domain will be fastdeploy.dev."
-
-### Step 2: AI Does Everything
-
-The AI will:
-
-1. Read `CLAUDE.md` for instructions
-2. Ask clarifying questions (colors, social links, etc.)
-3. Update `site-info.ts` with your config
-4. Customize the landing page
-5. Generate README from your PRD
-6. Create GitHub templates
-7. Run `pnpm typecheck && pnpm lint`
-8. Commit with proper conventional commits
-
-### Step 3: Deploy
-
-```bash
-# AI can do this too
-gh repo create my-project --public --push
-# Cloudflare Pages auto-deploys on push to main
-```
-
-**That's it. You're live.**
-
----
-
-## 📦 What's Included
-
-```
-├── CLAUDE.md                 # AI instruction manual (AGENTS.md symlinks here)
-├── CHECKLIST.md              # Setup progress tracker
-│
-├── .mcp.json                 # Claude Code MCP config
-├── .cursor/mcp.json          # Cursor MCP config
-├── .codex/config.toml        # Codex MCP config
-├── opencode.json             # OpenCode MCP config
-│
-├── .claude/
-│   ├── commands/             # Custom AI commands (/create-pr, /mcp-manager...)
-│   └── skills/               # Shared skills (source directory)
-│       ├── resource-scout/
-│       ├── skill-creator/
-│       └── skill-downloader/
-├── .cursor/skills/           # → symlink to .claude/skills/
-├── .codex/skills/            # → symlink to .claude/skills/
-├── .opencode/skill/          # → symlink to .claude/skills/
-│
-├── .github/
-│   ├── actions/              # Reusable composite actions
-│   ├── workflows/            # CI/CD pipelines (ci.yml, deploy-website.yml)
-│   └── *.example.*           # Issue/PR templates (copy & rename to use)
-│
-├── website/                  # Next.js 15 + Nextra 4 + shadcn/ui + Tailwind 4
-│   ├── src/
-│   │   ├── components/       # React components (landing page, shared)
-│   │   ├── lib/site-info.ts  # Central config (edit here, applies globally)
-│   │   └── styles/           # Global styles and theme colors
-│   ├── content/              # Nextra docs content (EN/ZH bilingual)
-│   └── public/               # Static assets (icon.svg, og-image...)
-│
-├── docs/
-│   ├── config.example.md     # Project config template
-│   └── prd.example.md        # PRD template
-│
-└── scripts/
-    └── validate-setup.sh     # Verify setup completeness
-```
+| Feature | Description | Status |
+|:--------|:------------|:-------|
+| **Skills Sync** | Sync Agent Skills across all tools | ✅ MVP |
+| **MCP Sync** | Sync MCP servers with security checks | ✅ MVP |
+| **Diff Planning** | Preview changes before applying | ✅ MVP |
+| **Safe Mode** | Add & update only, no deletions | ✅ MVP |
+| **Prune Mode** | Strict mirroring with deletions | ✅ MVP |
+| **Atomic Writes** | All-or-nothing file operations | ✅ MVP |
+| **Manifest Tracking** | Hash-based change detection | ✅ MVP |
+| **User Layer** | Global configs (~/.vibe-sync.json) | 🔜 v1.1 |
+| **Agents Sync** | Custom AI agents | 🔜 v1.1 |
+| **Commands Sync** | Quick commands | 🔜 v1.1 |
+| **Codex Support** | Full Codex integration | 🔜 v1.1 |
 
 ---
 
 ## ⚡ Quick Start
 
-### Prerequisites
-
-- Node.js 24+
-- pnpm 10+
-- GitHub CLI (`gh`)
-- Cloudflare CLI (`wrangler`)
-- An AI coding assistant (Claude Code, Codex, Cursor, or OpenCode)
-
-### 1. Use This Template
+### Installation
 
 ```bash
-# Clone
-git clone https://github.com/2214962083/vibe-coding-starter my-awesome-project
-cd my-awesome-project
+# Using npm (coming soon)
+npm install -g vibe-sync
 
-# Install
-pnpm install
+# Using pnpm
+pnpm add -g vibe-sync
+
+# Using yarn
+yarn global add vibe-sync
 ```
 
-### 2. Talk to AI
-
-Open your AI coding tool and say:
-
-> "Help me set up this template for my project. Here's my idea: [describe your project]"
-
-The AI will guide you through everything.
-
-### 3. Verify Setup
+### Initialize
 
 ```bash
-./scripts/validate-setup.sh
+# Project-level configuration
+vibe-sync init
+
+# User-level (global) configuration
+vibe-sync init --user
 ```
 
-### 4. Ship It
+**Interactive prompts:**
+```
+🚀 Welcome to vibe-sync!
+
+? Which AI coding tools do you use?
+  ◉ Claude Code (Recommended as source)
+  ◉ Cursor
+  ◉ OpenCode
+
+? Which tool should be the configuration source?
+  ❯ Claude Code
+
+? What do you want to sync?
+  ◉ Skills
+  ◉ MCP Servers
+
+✓ Configuration saved to .vibe-sync.json
+```
+
+### Sync Your Configs
 
 ```bash
-pnpm dev:website  # Preview locally
-gh repo create    # Create GitHub repo
-git push          # Deploy to Cloudflare
+# Safe mode (default: no deletions)
+vibe-sync sync
+
+# Preview changes without applying
+vibe-sync sync --dry-run
+
+# Strict mirroring (deletes extra items in targets)
+vibe-sync sync --prune
+```
+
+**Example output:**
+```
+📖 Reading source (claude-code)...
+  ✓ Found 3 skills
+  ✓ Found 2 MCP servers
+
+📊 Analyzing differences...
+
+📋 Sync Plan (Safe Mode)
+
+cursor:
+  CREATE:
+    • skill/deploy-prod
+  UPDATE:
+    • skill/git-release
+    • mcp/github
+
+? Proceed with sync? (Y/n) y
+
+✓ Sync completed in 1.2s
 ```
 
 ---
 
-## 🧠 For AI Assistants
+## 🛠 CLI Commands
 
-If you're an AI reading this: **check `CLAUDE.md`** for detailed instructions.
+### Core Commands
 
-Key files:
+```bash
+# Initialize configuration
+vibe-sync init [--user]
 
-- `CLAUDE.md` - Your complete guide
-- `CHECKLIST.md` - Track your progress
-- `docs/config.md` - User's pre-filled config (if exists)
-- `docs/prd.md` - User's requirements (if exists)
+# Sync configurations
+vibe-sync sync [--user] [--dry-run] [--prune]
+
+# View sync plan without executing
+vibe-sync plan [--user]
+
+# Check sync status
+vibe-sync status [--user]
+
+# List configurations
+vibe-sync list [skills|mcp] [--user]
+
+# Clean configs from targets
+vibe-sync clean [name] [--user] [--from-source]
+
+# Import from another project
+vibe-sync import <path> [--user]
+```
+
+### Example Workflows
+
+**1. Daily sync after updating Skills:**
+```bash
+# Edit your Skills in Claude Code
+vim ~/.claude/skills/my-skill/SKILL.md
+
+# Sync to all target tools
+vibe-sync sync
+```
+
+**2. Preview changes before applying:**
+```bash
+vibe-sync plan
+# Review the plan
+vibe-sync sync
+```
+
+**3. Strict mirror mode (delete outdated configs):**
+```bash
+vibe-sync sync --prune
+```
+
+**4. Clean up a skill from all targets:**
+```bash
+# From targets only (source unchanged)
+vibe-sync clean skill/old-skill
+
+# From source AND all targets (dangerous!)
+vibe-sync clean skill/old-skill --from-source
+```
+
+**5. Import configs from another project:**
+```bash
+vibe-sync import ../other-project
+```
+
+---
+
+## 📋 Configuration
+
+### .vibe-sync.json
+
+**Project-level:** `<project>/.vibe-sync.json`
+**User-level:** `~/.vibe-sync.json`
+
+```json
+{
+  "$schema": "https://vibe-sync.xiaominglab.com/schema.json",
+  "version": "3.0.0",
+  "level": "project",
+  "source_tool": "claude-code",
+  "target_tools": ["cursor", "opencode"],
+  "sync_config": {
+    "skills": true,
+    "mcp": true
+  },
+  "mcp_security": {
+    "require_confirmation": true,
+    "allowed_commands": ["npx @modelcontextprotocol/*"],
+    "allowed_domains": ["https://api.linear.app"]
+  }
+}
+```
+
+### Supported Tools & Paths
+
+| Tool | Skills Path | MCP Config Path |
+|:-----|:-----------|:---------------|
+| **Claude Code** | `.claude/skills/` | `.mcp.json` |
+| **Cursor** | `.cursor/skills/` | `.cursor/mcp.json` |
+| **OpenCode** | `.opencode/skills/` | `opencode.json` |
+| **Codex** | `.codex/skills/` | `.codex/config.json` (v1.1) |
+
+---
+
+## 🔒 MCP Security
+
+**First-time MCP sync requires confirmation:**
+
+```bash
+$ vibe-sync sync
+
+🔒 New MCP Server Detected
+
+Name:         postgres
+Type:         stdio
+Command:      npx -y @modelcontextprotocol/server-postgres
+Environment:  DATABASE_URL=${env:DATABASE_URL}
+
+⚠️  This MCP server will execute commands on your system.
+
+? Allow syncing this MCP server to cursor, opencode? (y/N)
+```
+
+**Security features:**
+- ✅ First-time confirmation required
+- ✅ Command whitelist support
+- ✅ Domain whitelist for HTTP servers
+- ✅ Environment variables preserved (never expanded)
+
+---
+
+## 🎨 Sync Modes
+
+### Safe Mode (Default)
+
+**What it does:**
+- ✅ Create new items
+- ✅ Update existing items
+- ❌ **Never deletes**
+
+```bash
+vibe-sync sync
+```
+
+### Prune Mode
+
+**What it does:**
+- ✅ Create new items
+- ✅ Update existing items
+- ⚠️ **Deletes items not in source**
+
+```bash
+vibe-sync sync --prune
+```
+
+**Use when:** You want strict mirroring (e.g., cleaning up old configs)
+
+---
+
+## 🏗 Architecture
+
+### Core Concepts
+
+```
+Source Tool (e.g., Claude Code)
+       ↓
+  Read & Normalize
+       ↓
+  Calculate Diff
+       ↓
+  Generate Plan
+       ↓
+  User Confirmation
+       ↓
+  Compile to Target Formats
+       ↓
+  Atomic Write
+       ↓
+  Update Manifest
+```
+
+### Key Technical Features
+
+- **Multi-Format Compiler**: Each tool has its own serializer
+- **Environment Variable Preservation**: Never expands `${env:VAR}`
+- **Atomic Writes**: Temp file + fsync + rename
+- **Diff Planning**: 3-way comparison (source, target, manifest)
+- **Hash-Based Tracking**: Fast change detection
+
+---
+
+## 🧪 Tech Stack
+
+- **TypeScript** - Type safety
+- **Commander.js** - CLI framework
+- **Inquirer.js** - Interactive prompts
+- **chalk** - Terminal colors
+- **ora** - Loading spinners
+- **jsonc-parser** - JSONC support (for OpenCode)
+- **gray-matter** - Frontmatter parsing (for Skills)
 
 ---
 
 ## 🤝 Contributing
 
-This is a template, so contributions that improve the AI experience are especially welcome!
+Contributions are welcome! Here's how you can help:
 
-- Improve `CLAUDE.md` instructions
-- Add more AI commands in `.claude/commands/`
-- Enhance MCP configurations
-- Better automation scripts
+- ⭐ **Star this repo** - Help others discover this project
+- 🐛 **Report bugs** - Open an issue if something isn't working
+- 💡 **Suggest features** - What would make this better for you?
+- 🔧 **Submit PRs** - Improve code, docs, or add features
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+### Development
+
+```bash
+# Clone the repo
+git clone https://github.com/nicepkg/vibe-sync.git
+cd vibe-sync
+
+# Install dependencies
+pnpm install
+
+# Run in development
+pnpm dev
+
+# Build
+pnpm build
+
+# Test
+pnpm test
+```
+
+### Contributors
+
+<a href="https://github.com/nicepkg/vibe-sync/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=nicepkg/vibe-sync" />
+</a>
+
+---
+
+## 📚 Roadmap
+
+### v1.0 (MVP) ✅ Current
+- [x] Skills sync
+- [x] MCP sync
+- [x] Safe & Prune modes
+- [x] Diff planning
+- [x] Claude Code, Cursor, OpenCode support
+
+### v1.1 🔜 Next
+- [ ] User-level configs
+- [ ] Agents sync
+- [ ] Commands sync
+- [ ] Codex support
+- [ ] Import/export enhancements
+
+### v2.0 🚀 Future
+- [ ] Web UI dashboard
+- [ ] Team sharing
+- [ ] Cloud sync
+- [ ] Configuration templates
 
 ---
 
 ## 📄 License
 
-MIT © [Jinming Yang](https://github.com/2214962083)
+MIT © [nicepkg](https://github.com/nicepkg)
 
 ---
 
 <div align="center">
 
-**Stop configuring. Start shipping.**
+**If this project helped you, please consider giving it a ⭐**
 
-The future of development is conversational. This template is your on-ramp.
+<a href="https://github.com/nicepkg/vibe-sync">
+  <img src="https://img.shields.io/github/stars/nicepkg/vibe-sync?style=for-the-badge&logo=github&color=yellow" alt="GitHub stars" />
+</a>
 
-<br />
-
-_Built for the lazy. Engineered for the ambitious._
+Made with ❤️ by [nicepkg](https://github.com/nicepkg)
 
 </div>
