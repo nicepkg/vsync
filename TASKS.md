@@ -144,26 +144,26 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.3 Cursor Adapter (Target)
 
-- [ ] Implement `cli/src/adapters/cursor.ts`
-  - [ ] `init(config)` - Initialize adapter
-  - [ ] `writeSkills(skills)` - Write to `.cursor/skills/`
-    - [ ] Create skill directory structure
-    - [ ] Write SKILL.md with frontmatter
-    - [ ] Write support files
-    - [ ] Use atomic writes
-  - [ ] `writeMCPServers(servers)` - Write to `.cursor/mcp.json`
-    - [ ] Generate mcpServers object
-    - [ ] Handle stdio, HTTP, OAuth types
-    - [ ] Preserve all Cursor variable formats (`${env:VAR}`, `${workspaceFolder}`, etc.)
-    - [ ] Use atomic write
-  - [ ] `deleteSkill(name)` - Remove skill directory
-  - [ ] `deleteMCPServer(name)` - Remove from mcp.json
-  - [ ] `validate()` - Validate Cursor configuration
-- [ ] Write unit tests
-  - [ ] Test skill writing
-  - [ ] Test MCP writing with all transfer types
-  - [ ] Test variable preservation
-  - [ ] Test atomic write behavior
+- [x] Implement `cli/src/adapters/cursor.ts`
+  - [x] `init(config)` - Initialize adapter
+  - [x] `writeSkills(skills)` - Write to `.cursor/skills/`
+    - [x] Create skill directory structure
+    - [x] Write SKILL.md with frontmatter
+    - [x] Write support files
+    - [x] Use atomic writes
+  - [x] `writeMCPServers(servers)` - Write to `.cursor/mcp.json`
+    - [x] Generate mcpServers object
+    - [x] Handle stdio, HTTP, OAuth types
+    - [x] Preserve all Cursor variable formats (`${env:VAR}`, `${workspaceFolder}`, etc.)
+    - [x] Use atomic write
+  - [x] `deleteSkill(name)` - Remove skill directory
+  - [x] `deleteMCPServer(name)` - Remove from mcp.json
+  - [x] `validate()` - Validate Cursor configuration
+- [x] Write unit tests
+  - [x] Test skill writing
+  - [x] Test MCP writing with all transfer types
+  - [x] Test variable preservation
+  - [x] Test atomic write behavior
 
 ### 2.4 OpenCode Adapter (Target)
 
