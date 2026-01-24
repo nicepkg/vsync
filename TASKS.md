@@ -266,12 +266,12 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.1 CLI Framework Setup
 
-- [ ] Implement `cli/src/cli/index.ts`
-  - [ ] Set up Commander.js
-  - [ ] Register all commands
-  - [ ] Global error handler
-  - [ ] Version flag (`--version`)
-  - [ ] Help text
+- [x] Implement `cli/src/cli/index.ts`
+  - [x] Set up Commander.js
+  - [x] Register all commands
+  - [x] Global error handler
+  - [x] Version flag (`--version`)
+  - [x] Help text
 
 ### 4.2 `vibe-sync init` Command
 
