@@ -7,8 +7,8 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
-import type { Skill, MCPServer } from "@src/types/models.js";
-import { hashSkill, hashMCPServer } from "@src/utils/hash.js";
+import type { Skill, MCPServer, Agent } from "@src/types/models.js";
+import { hashSkill, hashMCPServer, hashAgent } from "@src/utils/hash.js";
 import type {
   ToolAdapter,
   AdapterConfig,
@@ -174,6 +174,91 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   }
 
   /**
+   * Read all agents from .claude/agents/
+   * Each agent is a directory with AGENT.md and optional support files
+   */
+  async readAgents(): Promise<Agent[]> {
+    const agentsDir = join(this.config.baseDir, ".claude", "agents");
+
+    try {
+      const entries = await readdir(agentsDir, { withFileTypes: true });
+      const agents: Agent[] = [];
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) {
+          continue; // Skip non-directories
+        }
+
+        const agentName = entry.name;
+        const agentDir = join(agentsDir, agentName);
+        const agentMdPath = join(agentDir, "AGENT.md");
+
+        try {
+          // Read AGENT.md
+          const agentContent = await readFile(agentMdPath, "utf-8");
+
+          // Parse frontmatter
+          const parsed = matter(agentContent);
+
+          // Read support files
+          const supportFiles: Record<string, string> = {};
+          const agentFiles = await readdir(agentDir, { withFileTypes: true });
+
+          for (const file of agentFiles) {
+            if (file.name === "AGENT.md" || file.isDirectory()) {
+              continue;
+            }
+
+            const filePath = join(agentDir, file.name);
+            const fileContent = await readFile(filePath, "utf-8");
+            supportFiles[file.name] = fileContent;
+          }
+
+          // Create agent object (omit undefined optional fields)
+          const agent: Agent = {
+            name: agentName,
+            content: parsed.content,
+            hash: "", // Will be computed
+          };
+
+          // Add optional fields only if they have values
+          if (parsed.data.description) {
+            agent.description = parsed.data.description as string;
+          }
+          if (Object.keys(parsed.data).length > 0) {
+            agent.metadata = parsed.data;
+          }
+          if (Object.keys(supportFiles).length > 0) {
+            agent.supportFiles = supportFiles;
+          }
+
+          // Compute hash
+          agent.hash = hashAgent(agent);
+
+          agents.push(agent);
+        } catch (error) {
+          // Skip agents with missing or invalid AGENT.md
+          console.warn(
+            `Skipping agent ${agentName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
+      }
+
+      return agents;
+    } catch (error) {
+      // Agents directory doesn't exist
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Validate Claude Code configuration
    */
   async validate(): Promise<ValidationResult> {
@@ -232,6 +317,18 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   }
 
   async deleteMCPServer(_name: string): Promise<void> {
+    throw new Error(
+      "Claude Code adapter is read-only (source tool). Use as source_tool only.",
+    );
+  }
+
+  async writeAgents(_agents: Agent[]): Promise<WriteResult> {
+    throw new Error(
+      "Claude Code adapter is read-only (source tool). Use as source_tool only.",
+    );
+  }
+
+  async deleteAgent(_name: string): Promise<void> {
     throw new Error(
       "Claude Code adapter is read-only (source tool). Use as source_tool only.",
     );

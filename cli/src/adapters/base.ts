@@ -4,7 +4,7 @@
  */
 
 import type { ToolName } from "../types/config.js";
-import type { Skill, MCPServer } from "../types/models.js";
+import type { Skill, MCPServer, Agent } from "../types/models.js";
 import { getAdapter as getAdapterFromRegistry } from "./registry.js";
 
 /**
@@ -62,6 +62,12 @@ export interface ToolAdapter {
    */
   readMCPServers(): Promise<MCPServer[]>;
 
+  /**
+   * Read all agents from the tool's configuration
+   * @returns Array of agents with computed hashes
+   */
+  readAgents(): Promise<Agent[]>;
+
   // Write methods (for target tools)
   /**
    * Write skills to the tool's configuration
@@ -77,6 +83,13 @@ export interface ToolAdapter {
    */
   writeMCPServers(servers: MCPServer[]): Promise<WriteResult>;
 
+  /**
+   * Write agents to the tool's configuration
+   * @param agents - Agents to write
+   * @returns Write result
+   */
+  writeAgents(agents: Agent[]): Promise<WriteResult>;
+
   // Delete methods
   /**
    * Delete a skill from the tool's configuration
@@ -89,6 +102,12 @@ export interface ToolAdapter {
    * @param name - Server name
    */
   deleteMCPServer(name: string): Promise<void>;
+
+  /**
+   * Delete an agent from the tool's configuration
+   * @param name - Agent name
+   */
+  deleteAgent(name: string): Promise<void>;
 
   // Validation
   /**

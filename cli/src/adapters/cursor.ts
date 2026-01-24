@@ -7,7 +7,7 @@
 import { mkdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
-import type { MCPServer, Skill } from "@src/types/models.js";
+import type { MCPServer, Skill, Agent } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 import type {
   AdapterConfig,
@@ -166,6 +166,72 @@ export class CursorAdapter implements ToolAdapter {
   }
 
   /**
+   * Write agents to .cursor/agents/
+   * Each agent is a directory with AGENT.md and optional support files
+   */
+  async writeAgents(agents: Agent[]): Promise<WriteResult> {
+    const agentsDir = join(this.config.baseDir, ".cursor", "agents");
+
+    try {
+      // Ensure agents directory exists
+      await mkdir(agentsDir, { recursive: true });
+
+      for (const agent of agents) {
+        const agentDir = join(agentsDir, agent.name);
+        await mkdir(agentDir, { recursive: true });
+
+        // Generate AGENT.md content
+        let agentContent = agent.content;
+
+        // Add frontmatter if metadata or description exists
+        if (agent.metadata || agent.description) {
+          const frontmatter: Record<string, unknown> = {
+            ...(agent.metadata || {}),
+          };
+
+          // Add description to frontmatter if present
+          if (agent.description) {
+            frontmatter.description = agent.description;
+          }
+
+          // Add name to frontmatter
+          frontmatter.name = agent.name;
+
+          agentContent = matter.stringify(agent.content, frontmatter);
+        }
+
+        // Write AGENT.md
+        const agentMdPath = join(agentDir, "AGENT.md");
+        await atomicWrite(agentMdPath, agentContent);
+
+        // Write support files
+        if (agent.supportFiles) {
+          for (const [fileName, fileContent] of Object.entries(
+            agent.supportFiles,
+          )) {
+            const filePath = join(agentDir, fileName);
+            await atomicWrite(filePath, fileContent);
+          }
+        }
+      }
+
+      return {
+        success: true,
+        count: agents.length,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        count: 0,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error writing agents",
+      };
+    }
+  }
+
+  /**
    * Delete a skill from .cursor/skills/
    */
   async deleteSkill(name: string): Promise<void> {
@@ -201,6 +267,26 @@ export class CursorAdapter implements ToolAdapter {
       }
     } catch (error) {
       // Ignore errors for non-existent file
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code !== "ENOENT"
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Delete an agent from .cursor/agents/
+   */
+  async deleteAgent(name: string): Promise<void> {
+    const agentDir = join(this.config.baseDir, ".cursor", "agents", name);
+
+    try {
+      await rm(agentDir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore errors for non-existent agents
       if (
         error instanceof Error &&
         "code" in error &&
@@ -257,6 +343,12 @@ export class CursorAdapter implements ToolAdapter {
   }
 
   async readMCPServers(): Promise<MCPServer[]> {
+    throw new Error(
+      "Cursor adapter is write-only (target tool). Use as target_tool only.",
+    );
+  }
+
+  async readAgents(): Promise<Agent[]> {
     throw new Error(
       "Cursor adapter is write-only (target tool). Use as target_tool only.",
     );

@@ -66,6 +66,11 @@ describe("Plan Generator", () => {
     opencode: [],
   };
 
+  const targetAgents = {
+    cursor: [],
+    opencode: [],
+  };
+
   const manifest: Manifest = {
     version: "1.0.0",
     last_synced: "2026-01-24T10:00:00Z",
@@ -122,8 +127,10 @@ describe("Plan Generator", () => {
       const input: PlanInput = {
         sourceSkills,
         sourceMCPServers,
+        sourceAgents: [],
         targetSkills,
         targetMCPServers,
+        targetAgents,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",
@@ -142,8 +149,10 @@ describe("Plan Generator", () => {
       const input: PlanInput = {
         sourceSkills,
         sourceMCPServers,
+        sourceAgents: [],
         targetSkills,
         targetMCPServers,
+        targetAgents,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",
@@ -174,8 +183,10 @@ describe("Plan Generator", () => {
       const input: PlanInput = {
         sourceSkills,
         sourceMCPServers,
+        sourceAgents: [],
         targetSkills,
         targetMCPServers,
+        targetAgents,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",
@@ -202,8 +213,10 @@ describe("Plan Generator", () => {
       const input: PlanInput = {
         sourceSkills: [],
         sourceMCPServers: [],
+        sourceAgents: [],
         targetSkills,
         targetMCPServers,
+        targetAgents,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",
@@ -220,8 +233,10 @@ describe("Plan Generator", () => {
       const input: PlanInput = {
         sourceSkills: [],
         sourceMCPServers: [],
+        sourceAgents: [],
         targetSkills,
         targetMCPServers,
+        targetAgents,
         manifest,
         mode: "prune",
         sourceTool: "claude-code",
@@ -238,8 +253,10 @@ describe("Plan Generator", () => {
       const input: PlanInput = {
         sourceSkills,
         sourceMCPServers,
+        sourceAgents: [],
         targetSkills,
         targetMCPServers,
+        targetAgents,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",

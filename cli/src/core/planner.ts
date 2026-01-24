@@ -5,7 +5,7 @@
 
 import type { SyncMode, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
-import type { Skill, MCPServer } from "@src/types/models.js";
+import type { Skill, MCPServer, Agent } from "@src/types/models.js";
 import type { SyncPlan, DiffResult } from "@src/types/plan.js";
 import { calculateDiff, type DiffInput } from "./diff.js";
 
@@ -17,10 +17,14 @@ export interface PlanInput {
   sourceSkills: Skill[];
   /** MCP servers from source tool */
   sourceMCPServers: MCPServer[];
+  /** Agents from source tool */
+  sourceAgents: Agent[];
   /** Skills from each target tool */
   targetSkills: Partial<Record<ToolName, Skill[]>>;
   /** MCP servers from each target tool */
   targetMCPServers: Partial<Record<ToolName, MCPServer[]>>;
+  /** Agents from each target tool */
+  targetAgents: Partial<Record<ToolName, Agent[]>>;
   /** Current manifest */
   manifest: Manifest;
   /** Sync mode */
@@ -53,8 +57,10 @@ export function generatePlan(input: PlanInput): SyncPlan {
   const {
     sourceSkills,
     sourceMCPServers,
+    sourceAgents,
     targetSkills,
     targetMCPServers,
+    targetAgents,
     manifest,
     mode,
     sourceTool,
@@ -70,6 +76,8 @@ export function generatePlan(input: PlanInput): SyncPlan {
       targetSkills: targetSkills[targetTool] || [],
       sourceMCPServers,
       targetMCPServers: targetMCPServers[targetTool] || [],
+      sourceAgents,
+      targetAgents: targetAgents[targetTool] || [],
       manifest,
       mode,
       targetTool,

@@ -5,7 +5,7 @@
 
 import type { SyncMode, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
-import type { Skill, MCPServer } from "@src/types/models.js";
+import type { Skill, MCPServer, Agent } from "@src/types/models.js";
 import type { DiffResult, Operation, OperationType } from "@src/types/plan.js";
 
 /**
@@ -20,6 +20,10 @@ export interface DiffInput {
   sourceMCPServers: MCPServer[];
   /** MCP servers from target tool */
   targetMCPServers: MCPServer[];
+  /** Agents from source tool */
+  sourceAgents: Agent[];
+  /** Agents from target tool */
+  targetAgents: Agent[];
   /** Current manifest */
   manifest: Manifest;
   /** Sync mode */
@@ -118,6 +122,8 @@ export function calculateDiff(input: DiffInput): DiffResult {
     targetSkills,
     sourceMCPServers,
     targetMCPServers,
+    sourceAgents,
+    targetAgents,
     manifest,
     mode,
     targetTool,
@@ -133,6 +139,8 @@ export function calculateDiff(input: DiffInput): DiffResult {
   const sourceSkillMap = new Map(sourceSkills.map((s) => [s.name, s]));
   const targetMCPMap = new Map(targetMCPServers.map((m) => [m.name, m]));
   const sourceMCPMap = new Map(sourceMCPServers.map((m) => [m.name, m]));
+  const targetAgentMap = new Map(targetAgents.map((a) => [a.name, a]));
+  const sourceAgentMap = new Map(sourceAgents.map((a) => [a.name, a]));
 
   // Process skills from source
   for (const sourceSkill of sourceSkills) {
@@ -270,6 +278,74 @@ export function calculateDiff(input: DiffInput): DiffResult {
     }
   }
 
+  // Process agents from source
+  for (const sourceAgent of sourceAgents) {
+    const targetAgent = targetAgentMap.get(sourceAgent.name);
+    const manifestItem = manifest.items[sourceAgent.name];
+
+    const comparison = compareHashes(
+      sourceAgent.hash,
+      targetAgent?.hash ?? null,
+      manifestItem?.hash ?? null,
+      mode,
+    );
+
+    const operation: Operation = {
+      type: comparison.operation,
+      itemType: "agent",
+      name: sourceAgent.name,
+      description: comparison.reason,
+      reason: comparison.reason,
+    };
+
+    // Add newHash
+    if (sourceAgent.hash) {
+      operation.newHash = sourceAgent.hash;
+    }
+
+    // Add oldHash if exists
+    if (targetAgent?.hash) {
+      operation.oldHash = targetAgent.hash;
+    }
+
+    switch (comparison.operation) {
+      case "create":
+        toCreate.push(operation);
+        break;
+      case "update":
+        toUpdate.push(operation);
+        break;
+      case "skip":
+        toSkip.push(operation);
+        break;
+    }
+  }
+
+  // Process agents in target but not in source (potential deletes)
+  for (const targetAgent of targetAgents) {
+    if (!sourceAgentMap.has(targetAgent.name)) {
+      const manifestItem = manifest.items[targetAgent.name];
+
+      const comparison = compareHashes(
+        null,
+        targetAgent.hash,
+        manifestItem?.hash ?? null,
+        mode,
+      );
+
+      if (comparison.operation === "delete") {
+        toDelete.push({
+          type: "delete",
+          itemType: "agent",
+          name: targetAgent.name,
+          description: comparison.reason,
+          oldHash: targetAgent.hash,
+          reason: comparison.reason,
+        });
+      }
+    }
+  }
+
   // Process manifest items for this target that are not in source or target
   // This handles delete detection for write-only targets where we can't read
   for (const item of Object.values(manifest.items)) {
@@ -279,13 +355,19 @@ export function calculateDiff(input: DiffInput): DiffResult {
     }
 
     // Check if item is already processed (in source or target)
-    const isSkill = item.type === "skill";
-    const inSource = isSkill
-      ? sourceSkillMap.has(item.name)
-      : sourceMCPMap.has(item.name);
-    const inTarget = isSkill
-      ? targetSkillMap.has(item.name)
-      : targetMCPMap.has(item.name);
+    let inSource = false;
+    let inTarget = false;
+
+    if (item.type === "skill") {
+      inSource = sourceSkillMap.has(item.name);
+      inTarget = targetSkillMap.has(item.name);
+    } else if (item.type === "mcp") {
+      inSource = sourceMCPMap.has(item.name);
+      inTarget = targetMCPMap.has(item.name);
+    } else if (item.type === "agent") {
+      inSource = sourceAgentMap.has(item.name);
+      inTarget = targetAgentMap.has(item.name);
+    }
 
     // Skip if already in source or target (already processed above)
     if (inSource || inTarget) {
@@ -299,7 +381,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
     if (comparison.operation === "delete") {
       toDelete.push({
         type: "delete",
-        itemType: isSkill ? "skill" : "mcp",
+        itemType: item.type,
         name: item.name,
         description: comparison.reason,
         oldHash: item.hash,

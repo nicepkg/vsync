@@ -1,6 +1,6 @@
 /**
  * Data model type definitions for vibe-sync
- * Defines Skills and MCP Server structures
+ * Defines Skills, Agents, and MCP Server structures
  */
 
 /**
@@ -27,6 +27,25 @@ export interface Skill {
   /** Support files (relative path -> content) */
   supportFiles?: Record<string, string>;
   /** SHA256 hash of skill content + metadata */
+  hash: string;
+}
+
+/**
+ * Agent configuration
+ * Represents a custom AI agent with specific behaviors and instructions
+ */
+export interface Agent {
+  /** Agent name (directory name) */
+  name: string;
+  /** Short description (optional, from frontmatter) */
+  description?: string;
+  /** Main content from AGENT.md */
+  content: string;
+  /** Frontmatter metadata */
+  metadata?: Record<string, unknown>;
+  /** Support files (relative path -> content) */
+  supportFiles?: Record<string, string>;
+  /** SHA256 hash of agent content + metadata */
   hash: string;
 }
 

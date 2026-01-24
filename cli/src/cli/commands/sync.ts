@@ -25,8 +25,8 @@ import {
 } from "@src/core/rollback.js";
 import type { BackupInfo } from "@src/core/rollback.js";
 import type { SyncMode, ToolName, VibeConfig } from "@src/types/config.js";
-import type { Manifest } from "@src/types/manifest.js";
-import type { MCPServer, Skill } from "@src/types/models.js";
+import type { Manifest, ItemType } from "@src/types/manifest.js";
+import type { MCPServer, Skill, Agent } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
 
 /**
@@ -35,6 +35,7 @@ import type { SyncPlan } from "@src/types/plan.js";
 export interface SourceData {
   skills: Skill[];
   mcpServers: MCPServer[];
+  agents: Agent[];
 }
 
 /**
@@ -57,9 +58,9 @@ export type SyncResults = Partial<Record<ToolName, TargetSyncResult>>;
  * Operations performed during sync
  */
 export interface SyncOperations {
-  created: Array<{ type: "skill" | "mcp"; name: string; hash: string }>;
-  updated: Array<{ type: "skill" | "mcp"; name: string; hash: string }>;
-  deleted: Array<{ type: "skill" | "mcp"; name: string }>;
+  created: Array<{ type: ItemType; name: string; hash: string }>;
+  updated: Array<{ type: ItemType; name: string; hash: string }>;
+  deleted: Array<{ type: ItemType; name: string }>;
 }
 
 /**
@@ -94,10 +95,12 @@ export async function readSourceConfig(
 
   const skills = await adapter.readSkills();
   const mcpServers = await adapter.readMCPServers();
+  const agents = await adapter.readAgents();
 
   return {
     skills,
     mcpServers,
+    agents,
   };
 }
 
@@ -115,6 +118,7 @@ export async function readTargetConfigs(targetTools: ToolName[]): Promise<
       {
         skills: Skill[];
         mcpServers: MCPServer[];
+        agents: Agent[];
       }
     >
   >
@@ -125,6 +129,7 @@ export async function readTargetConfigs(targetTools: ToolName[]): Promise<
       {
         skills: Skill[];
         mcpServers: MCPServer[];
+        agents: Agent[];
       }
     >
   > = {};
@@ -137,6 +142,7 @@ export async function readTargetConfigs(targetTools: ToolName[]): Promise<
     targetData[tool] = {
       skills: [],
       mcpServers: [],
+      agents: [],
     };
   }
 
@@ -164,11 +170,15 @@ export async function calculateSyncDiff(
   const plan = generatePlan({
     sourceSkills: sourceData.skills,
     sourceMCPServers: sourceData.mcpServers,
+    sourceAgents: sourceData.agents,
     targetSkills: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.skills]),
     ),
     targetMCPServers: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.mcpServers]),
+    ),
+    targetAgents: Object.fromEntries(
+      Object.entries(targetData).map(([tool, data]) => [tool, data.agents]),
     ),
     manifest,
     mode,
@@ -267,6 +277,18 @@ export async function executeSyncPlan(
           .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
           .filter((m): m is NonNullable<typeof m> => m !== undefined);
 
+        // Collect agents to CREATE
+        const agentsToCreate = diff.toCreate
+          .filter((op) => op.itemType === "agent")
+          .map((op) => sourceData.agents.find((a) => a.name === op.name))
+          .filter((a): a is NonNullable<typeof a> => a !== undefined);
+
+        // Collect agents to UPDATE
+        const agentsToUpdate = diff.toUpdate
+          .filter((op) => op.itemType === "agent")
+          .map((op) => sourceData.agents.find((a) => a.name === op.name))
+          .filter((a): a is NonNullable<typeof a> => a !== undefined);
+
         // Write skills (CREATE + UPDATE combined)
         const allSkills = [...skillsToCreate, ...skillsToUpdate];
         if (allSkills.length > 0) {
@@ -313,6 +335,28 @@ export async function executeSyncPlan(
           }
         }
 
+        // Write agents (CREATE + UPDATE combined)
+        const allAgents = [...agentsToCreate, ...agentsToUpdate];
+        if (allAgents.length > 0) {
+          try {
+            const writeResult = await adapter.writeAgents(allAgents);
+            if (writeResult.success) {
+              result.created += agentsToCreate.length;
+              result.updated += agentsToUpdate.length;
+            } else {
+              result.errors.push(writeResult.error || "Failed to write agents");
+              result.success = false;
+              throw new Error("Agent write failed - initiating rollback");
+            }
+          } catch (error) {
+            result.errors.push(
+              `Failed to write agents: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            result.success = false;
+            throw error;
+          }
+        }
+
         // Execute DELETE operations (one at a time)
         for (const op of diff.toDelete) {
           try {
@@ -321,6 +365,9 @@ export async function executeSyncPlan(
               result.deleted++;
             } else if (op.itemType === "mcp") {
               await adapter.deleteMCPServer(op.name);
+              result.deleted++;
+            } else if (op.itemType === "agent") {
+              await adapter.deleteAgent(op.name);
               result.deleted++;
             }
           } catch (error) {
@@ -428,7 +475,7 @@ export async function syncCommand(options: {
     ).start();
     const sourceData = await readSourceConfig(config.source_tool, projectDir);
     readSpinner.succeed(
-      `Read ${sourceData.skills.length} skills, ${sourceData.mcpServers.length} MCP servers`,
+      `Read ${sourceData.skills.length} skills, ${sourceData.mcpServers.length} MCP servers, ${sourceData.agents.length} agents`,
     );
 
     // Load manifest

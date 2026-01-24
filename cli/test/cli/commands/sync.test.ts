@@ -105,6 +105,7 @@ describe("Sync Command", () => {
         {
           skills: sourceSkills,
           mcpServers: sourceMCP,
+          agents: [],
         },
         ["cursor"],
         {
@@ -146,6 +147,7 @@ describe("Sync Command", () => {
       const sourceData = {
         skills: [{ name: "test-skill", content: "# Test", hash: "hash123" }],
         mcpServers: [],
+        agents: [],
       };
 
       const result = await executeSyncPlan(plan, sourceData, "/project");
@@ -205,6 +207,7 @@ describe("Sync Command", () => {
         {
           skills: [], // No skills in source
           mcpServers: [],
+          agents: [],
         },
         ["cursor"],
         manifest,

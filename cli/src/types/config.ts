@@ -30,6 +30,8 @@ export interface SyncConfig {
   skills: boolean;
   /** Synchronize MCP servers */
   mcp: boolean;
+  /** Synchronize agents (optional, v1.1+) */
+  agents?: boolean;
 }
 
 /**

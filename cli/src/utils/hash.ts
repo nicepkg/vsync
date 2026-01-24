@@ -4,7 +4,7 @@
  */
 
 import { createHash } from "node:crypto";
-import type { Skill, MCPServer } from "@src/types/models.js";
+import type { Skill, Agent, MCPServer } from "@src/types/models.js";
 
 /**
  * Generate SHA256 hash of string content
@@ -35,6 +35,35 @@ export function hashSkill(skill: Skill): string {
   // Sort and stringify support files
   const supportFilesStr = skill.supportFiles
     ? JSON.stringify(skill.supportFiles, Object.keys(skill.supportFiles).sort())
+    : "";
+
+  // Combine all parts
+  const combined = `${normalizedContent}\n${metadataStr}\n${supportFilesStr}`;
+
+  return hashContent(combined);
+}
+
+/**
+ * Generate hash for an agent
+ * Includes content, metadata, and support files
+ * Normalizes whitespace for consistent hashing
+ * Uses the same algorithm as hashSkill since Agent and Skill have identical structure
+ *
+ * @param agent - Agent to hash
+ * @returns SHA256 hash
+ */
+export function hashAgent(agent: Agent): string {
+  // Normalize content (trim trailing whitespace)
+  const normalizedContent = agent.content.trim();
+
+  // Sort and stringify metadata for consistent hashing
+  const metadataStr = agent.metadata
+    ? JSON.stringify(agent.metadata, Object.keys(agent.metadata).sort())
+    : "";
+
+  // Sort and stringify support files
+  const supportFilesStr = agent.supportFiles
+    ? JSON.stringify(agent.supportFiles, Object.keys(agent.supportFiles).sort())
     : "";
 
   // Combine all parts

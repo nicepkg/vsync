@@ -8,7 +8,7 @@ import { mkdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import * as jsonc from "jsonc-parser";
-import type { MCPServer, Skill } from "@src/types/models.js";
+import type { MCPServer, Skill, Agent } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 import { normalizeEnvVar } from "@src/utils/env-vars.js";
 import type {
@@ -206,6 +206,72 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   /**
+   * Write agents to .opencode/agents/
+   * Same structure as Cursor
+   */
+  async writeAgents(agents: Agent[]): Promise<WriteResult> {
+    const agentsDir = join(this.config.baseDir, ".opencode", "agents");
+
+    try {
+      // Ensure agents directory exists
+      await mkdir(agentsDir, { recursive: true });
+
+      for (const agent of agents) {
+        const agentDir = join(agentsDir, agent.name);
+        await mkdir(agentDir, { recursive: true });
+
+        // Generate AGENT.md content
+        let agentContent = agent.content;
+
+        // Add frontmatter if metadata or description exists
+        if (agent.metadata || agent.description) {
+          const frontmatter: Record<string, unknown> = {
+            ...(agent.metadata || {}),
+          };
+
+          // Add description to frontmatter if present
+          if (agent.description) {
+            frontmatter.description = agent.description;
+          }
+
+          // Add name to frontmatter
+          frontmatter.name = agent.name;
+
+          agentContent = matter.stringify(agent.content, frontmatter);
+        }
+
+        // Write AGENT.md
+        const agentMdPath = join(agentDir, "AGENT.md");
+        await atomicWrite(agentMdPath, agentContent);
+
+        // Write support files
+        if (agent.supportFiles) {
+          for (const [fileName, fileContent] of Object.entries(
+            agent.supportFiles,
+          )) {
+            const filePath = join(agentDir, fileName);
+            await atomicWrite(filePath, fileContent);
+          }
+        }
+      }
+
+      return {
+        success: true,
+        count: agents.length,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        count: 0,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error writing agents",
+      };
+    }
+  }
+
+  /**
    * Convert environment variables recursively
    * ${env:VAR} -> ${VAR}
    */
@@ -287,6 +353,26 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   /**
+   * Delete an agent from .opencode/agents/
+   */
+  async deleteAgent(name: string): Promise<void> {
+    const agentDir = join(this.config.baseDir, ".opencode", "agents", name);
+
+    try {
+      await rm(agentDir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore errors for non-existent agents
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code !== "ENOENT"
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  /**
    * Validate OpenCode configuration
    */
   async validate(): Promise<ValidationResult> {
@@ -332,6 +418,12 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   async readMCPServers(): Promise<MCPServer[]> {
+    throw new Error(
+      "OpenCode adapter is write-only (target tool). Use as target_tool only.",
+    );
+  }
+
+  async readAgents(): Promise<Agent[]> {
     throw new Error(
       "OpenCode adapter is write-only (target tool). Use as target_tool only.",
     );

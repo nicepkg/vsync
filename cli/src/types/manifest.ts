@@ -9,7 +9,7 @@ import type { ToolName } from "./config.js";
 /**
  * Type of configuration item
  */
-export type ItemType = "skill" | "mcp";
+export type ItemType = "skill" | "mcp" | "agent";
 
 /**
  * Sync status for a specific target tool
@@ -26,7 +26,7 @@ export interface TargetStatus {
 }
 
 /**
- * Manifest item tracking a single skill or MCP server
+ * Manifest item tracking a single skill, agent, or MCP server
  */
 export interface ManifestItem {
   /** Item type */
