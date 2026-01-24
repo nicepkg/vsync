@@ -79,28 +79,28 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 1.3 Configuration Management
 
-- [ ] Implement `cli/src/core/config-manager.ts`
-  - [ ] `loadConfig(level)` - Load `.vibe-sync.json`
-  - [ ] `saveConfig(config, level)` - Save configuration
-  - [ ] `validateConfig(config)` - Validate schema
-  - [ ] `getConfigPath(level)` - Resolve config file path
-- [ ] Implement `cli/src/core/manifest-manager.ts`
-  - [ ] `loadManifest()` - Load manifest.json
-  - [ ] `saveManifest(manifest)` - Save manifest
-  - [ ] `updateManifest(plan, results)` - Update after sync
-  - [ ] `getItemHash(name)` - Get item hash from manifest
+- [x] Implement `cli/src/core/config-manager.ts`
+  - [x] `loadConfig(level)` - Load `.vibe-sync.json`
+  - [x] `saveConfig(config, level)` - Save configuration
+  - [x] `validateConfig(config)` - Validate schema
+  - [x] `getConfigPath(level)` - Resolve config file path
+- [x] Implement `cli/src/core/manifest-manager.ts`
+  - [x] `loadManifest()` - Load manifest.json
+  - [x] `saveManifest(manifest)` - Save manifest
+  - [x] `getItemHash(name)` - Get item hash from manifest
 
 ### 1.4 Utility Functions
 
-- [ ] Implement `cli/src/utils/hash.ts`
-  - [ ] `hashContent(content)` - SHA256 hashing
-  - [ ] `hashSkill(skill)` - Hash skill object
-  - [ ] `hashMCPServer(server)` - Hash MCP server object
-- [ ] Implement `cli/src/utils/atomic-write.ts`
-  - [ ] `atomicWrite(path, content)` - Atomic file write with fsync
-- [ ] Implement `cli/src/utils/env-vars.ts`
-  - [ ] `preserveEnvVars(content)` - Preserve ${...} variables
-  - [ ] `normalizeEnvVar(value, format)` - Convert env var formats
+- [x] Implement `cli/src/utils/hash.ts`
+  - [x] `hashContent(content)` - SHA256 hashing
+  - [x] `hashSkill(skill)` - Hash skill object
+  - [x] `hashMCPServer(server)` - Hash MCP server object
+- [x] Implement `cli/src/utils/atomic-write.ts`
+  - [x] `atomicWrite(path, content)` - Atomic file write with fsync
+- [x] Implement `cli/src/utils/env-vars.ts`
+  - [x] `preserveEnvVars(content)` - Preserve ${...} variables
+  - [x] `normalizeEnvVar(value, format)` - Convert env var formats
+  - [x] `extractEnvVars(text)` - Extract env var names
 
 **Phase 1 Deliverables**:
 
@@ -517,11 +517,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ## Progress Tracking
 
-**Overall Progress**: 0/6 phases complete
+**Overall Progress**: 1/6 phases complete
 
-| Phase   | Status         | Start Date | End Date | Notes        |
-| ------- | -------------- | ---------- | -------- | ------------ |
-| Phase 1 | 🟡 In Progress | 2026-01-24 | -        | Foundation   |
+| Phase   | Status      | Start Date | End Date   | Notes      |
+| ------- | ----------- | ---------- | ---------- | ---------- |
+| Phase 1 | 🟢 Complete | 2026-01-24 | 2026-01-24 | Foundation |
 | Phase 2 | 🔴 Not Started | -          | -        | Adapters     |
 | Phase 3 | 🔴 Not Started | -          | -        | Diff & Plan  |
 | Phase 4 | 🔴 Not Started | -          | -        | CLI Commands |

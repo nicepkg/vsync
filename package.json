@@ -14,6 +14,8 @@
     "build:website": "pnpm --filter website build",
     "start:website": "pnpm --filter website start",
     "start:static-website": "pnpm --filter website start:static",
+    "dev:cli": "pnpm --filter cli dev",
+    "build:cli": "pnpm --filter cli build",
     "test": "pnpm -r run test",
     "test:coverage": "pnpm -r run test:coverage",
     "lint": "pnpm -r run lint",
