@@ -8,10 +8,10 @@ import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
-import { getAdapter } from "../../adapters/registry.js";
-import { loadManifest, saveManifest } from "../../core/manifest-manager.js";
-import type { ToolName } from "../../types/config.js";
-import type { Manifest } from "../../types/manifest.js";
+import { getAdapter } from "@src/adapters/registry.js";
+import { loadManifest, saveManifest } from "@src/core/manifest-manager.js";
+import type { ToolName } from "@src/types/config.js";
+import type { Manifest } from "@src/types/manifest.js";
 import { loadSyncConfig, readSourceConfig } from "./sync.js";
 
 /**

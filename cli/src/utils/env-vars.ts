@@ -3,7 +3,7 @@
  * CRITICAL: Must preserve variable syntax, never expand them
  */
 
-import type { ToolName } from "../types/config.js";
+import type { ToolName } from "@src/types/config.js";
 
 /**
  * Preserve environment variables in object

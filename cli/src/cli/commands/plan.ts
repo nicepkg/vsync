@@ -7,10 +7,10 @@ import { cwd } from "node:process";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
-import { loadManifest } from "../../core/manifest-manager.js";
-import { validatePlan } from "../../core/planner.js";
-import type { SyncMode } from "../../types/config.js";
-import type { DiffResult, SyncPlan } from "../../types/plan.js";
+import { loadManifest } from "@src/core/manifest-manager.js";
+import { validatePlan } from "@src/core/planner.js";
+import type { SyncMode } from "@src/types/config.js";
+import type { DiffResult, SyncPlan } from "@src/types/plan.js";
 import { calculateSyncDiff, loadSyncConfig, readSourceConfig } from "./sync.js";
 
 /**

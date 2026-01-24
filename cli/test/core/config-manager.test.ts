@@ -6,8 +6,8 @@ import {
   saveConfig,
   validateConfig,
   getConfigPath,
-} from "../../src/core/config-manager.js";
-import type { VibeConfig } from "../../src/types/config.js";
+} from "@src/core/config-manager.js";
+import type { VibeConfig } from "@src/types/config.js";
 
 describe("Config Manager", () => {
   beforeEach(() => {

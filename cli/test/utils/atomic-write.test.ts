@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFile, access } from "node:fs/promises";
 import { constants } from "node:fs";
 import mockFs from "mock-fs";
-import { atomicWrite } from "../../src/utils/atomic-write.js";
+import { atomicWrite } from "@src/utils/atomic-write.js";
 
 describe("Atomic Write Utility", () => {
   beforeEach(() => {

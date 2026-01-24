@@ -4,7 +4,7 @@ import type {
   WriteResult,
   ValidationResult,
   ToolAdapter,
-} from "../../src/adapters/base.js";
+} from "@src/adapters/base.js";
 
 describe("Adapter Base Types", () => {
   describe("AdapterConfig", () => {

@@ -8,20 +8,20 @@ import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
-import { getAdapter } from "../../adapters/registry.js";
-import { loadConfig } from "../../core/config-manager.js";
+import { getAdapter } from "@src/adapters/registry.js";
+import { loadConfig } from "@src/core/config-manager.js";
 import {
   loadManifest,
   saveManifest,
   updateAfterCreate,
   updateAfterUpdate,
   updateAfterDelete,
-} from "../../core/manifest-manager.js";
-import { generatePlan, formatPlan, validatePlan } from "../../core/planner.js";
-import type { SyncMode, ToolName, VibeConfig } from "../../types/config.js";
-import type { Manifest } from "../../types/manifest.js";
-import type { MCPServer, Skill } from "../../types/models.js";
-import type { SyncPlan } from "../../types/plan.js";
+} from "@src/core/manifest-manager.js";
+import { generatePlan, formatPlan, validatePlan } from "@src/core/planner.js";
+import type { SyncMode, ToolName, VibeConfig } from "@src/types/config.js";
+import type { Manifest } from "@src/types/manifest.js";
+import type { MCPServer, Skill } from "@src/types/models.js";
+import type { SyncPlan } from "@src/types/plan.js";
 
 /**
  * Source configuration data

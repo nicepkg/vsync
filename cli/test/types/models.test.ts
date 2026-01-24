@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Skill, MCPServer, MCPType } from "../../src/types/models.js";
+import type { Skill, MCPServer, MCPType } from "@src/types/models.js";
 
 describe("Model Types", () => {
   describe("MCPType", () => {

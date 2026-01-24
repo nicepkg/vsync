@@ -4,10 +4,10 @@ import {
   formatPlan,
   validatePlan,
   type PlanInput,
-} from "../../src/core/planner.js";
-import type { Skill, MCPServer } from "../../src/types/models.js";
-import type { Manifest } from "../../src/types/manifest.js";
-import type { SyncPlan } from "../../src/types/plan.js";
+} from "@src/core/planner.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
+import type { Manifest } from "@src/types/manifest.js";
+import type { SyncPlan } from "@src/types/plan.js";
 
 describe("Plan Generator", () => {
   const sourceSkills: Skill[] = [

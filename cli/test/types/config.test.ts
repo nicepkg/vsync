@@ -4,7 +4,7 @@ import type {
   SyncMode,
   ToolName,
   ConfigLevel,
-} from "../../src/types/config.js";
+} from "@src/types/config.js";
 
 describe("Config Types", () => {
   describe("SyncMode", () => {

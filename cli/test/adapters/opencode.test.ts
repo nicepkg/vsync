@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import mockFs from "mock-fs";
 import { readFile, readdir } from "node:fs/promises";
 import * as jsonc from "jsonc-parser";
-import { OpenCodeAdapter } from "../../src/adapters/opencode.js";
-import type { Skill, MCPServer } from "../../src/types/models.js";
+import { OpenCodeAdapter } from "@src/adapters/opencode.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
 
 describe("OpenCodeAdapter", () => {
   let adapter: OpenCodeAdapter;

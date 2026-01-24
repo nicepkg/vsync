@@ -3,8 +3,8 @@ import {
   hashContent,
   hashSkill,
   hashMCPServer,
-} from "../../src/utils/hash.js";
-import type { Skill, MCPServer } from "../../src/types/models.js";
+} from "@src/utils/hash.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
 
 describe("Hash Utilities", () => {
   describe("hashContent", () => {

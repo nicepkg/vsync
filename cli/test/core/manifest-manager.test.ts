@@ -11,8 +11,8 @@ import {
   updateAfterUpdate,
   updateAfterDelete,
   pruneOrphanedItems,
-} from "../../src/core/manifest-manager.js";
-import type { Manifest, ManifestItem } from "../../src/types/manifest.js";
+} from "@src/core/manifest-manager.js";
+import type { Manifest, ManifestItem } from "@src/types/manifest.js";
 
 describe("Manifest Manager", () => {
   const sampleManifest: Manifest = {

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import mockFs from "mock-fs";
 import { readFile, readdir } from "node:fs/promises";
-import { CursorAdapter } from "../../src/adapters/cursor.js";
-import type { Skill, MCPServer } from "../../src/types/models.js";
+import { CursorAdapter } from "@src/adapters/cursor.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
 
 describe("CursorAdapter", () => {
   let adapter: CursorAdapter;

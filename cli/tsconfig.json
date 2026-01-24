@@ -37,8 +37,13 @@
 
     // Module Resolution
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["./src/*"],
+      "@test/*": ["./test/*"]
+    }
   },
-  "include": ["src/**/*", "*.mjs", "*.cjs", "*.js", "*.ts", "*.tsx"],
-  "exclude": ["node_modules", "dist", "test"]
+  "include": ["src/**/*", "test/**/*", "*.mjs", "*.cjs", "*.js", "*.ts", "*.tsx"],
+  "exclude": ["node_modules", "dist"]
 }

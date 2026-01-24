@@ -13,9 +13,9 @@ import ora from "ora";
 import {
   createEmptyManifest,
   saveManifest,
-} from "../../core/manifest-manager.js";
-import type { ToolName, VibeConfig, ConfigLevel } from "../../types/config.js";
-import { atomicWrite } from "../../utils/atomic-write.js";
+} from "@src/core/manifest-manager.js";
+import type { ToolName, VibeConfig, ConfigLevel } from "@src/types/config.js";
+import { atomicWrite } from "@src/utils/atomic-write.js";
 
 /**
  * Options for config generation

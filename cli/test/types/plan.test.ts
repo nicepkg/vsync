@@ -4,7 +4,7 @@ import type {
   Operation,
   OperationType,
   DiffResult,
-} from "../../src/types/plan.js";
+} from "@src/types/plan.js";
 
 describe("Plan Types", () => {
   describe("OperationType", () => {

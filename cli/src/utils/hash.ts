@@ -4,7 +4,7 @@
  */
 
 import { createHash } from "node:crypto";
-import type { Skill, MCPServer } from "../types/models.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
 
 /**
  * Generate SHA256 hash of string content

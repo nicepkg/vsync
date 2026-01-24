@@ -3,10 +3,10 @@
  * Compares source and target configurations to generate sync operations
  */
 
-import type { SyncMode, ToolName } from "../types/config.js";
-import type { Manifest } from "../types/manifest.js";
-import type { Skill, MCPServer } from "../types/models.js";
-import type { DiffResult, Operation, OperationType } from "../types/plan.js";
+import type { SyncMode, ToolName } from "@src/types/config.js";
+import type { Manifest } from "@src/types/manifest.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
+import type { DiffResult, Operation, OperationType } from "@src/types/plan.js";
 
 /**
  * Input for diff calculation

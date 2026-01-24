@@ -7,8 +7,8 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
-import type { Skill, MCPServer } from "../types/models.js";
-import { hashSkill, hashMCPServer } from "../utils/hash.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
+import { hashSkill, hashMCPServer } from "@src/utils/hash.js";
 import type {
   ToolAdapter,
   AdapterConfig,

@@ -6,9 +6,9 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { cwd } from "node:process";
-import type { ToolName } from "../types/config.js";
-import type { Manifest, ItemType } from "../types/manifest.js";
-import { atomicWrite } from "../utils/atomic-write.js";
+import type { ToolName } from "@src/types/config.js";
+import type { Manifest, ItemType } from "@src/types/manifest.js";
+import { atomicWrite } from "@src/utils/atomic-write.js";
 
 /**
  * Get manifest file path

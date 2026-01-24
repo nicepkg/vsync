@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import mockFs from "mock-fs";
-import { ClaudeCodeAdapter } from "../../src/adapters/claude-code.js";
+import { ClaudeCodeAdapter } from "@src/adapters/claude-code.js";
 
 describe("ClaudeCodeAdapter", () => {
   let adapter: ClaudeCodeAdapter;

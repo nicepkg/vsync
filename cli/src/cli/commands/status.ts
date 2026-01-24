@@ -7,9 +7,9 @@ import { cwd } from "node:process";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
-import { loadManifest } from "../../core/manifest-manager.js";
-import type { VibeConfig } from "../../types/config.js";
-import type { Manifest } from "../../types/manifest.js";
+import { loadManifest } from "@src/core/manifest-manager.js";
+import type { VibeConfig } from "@src/types/config.js";
+import type { Manifest } from "@src/types/manifest.js";
 import { loadSyncConfig, readSourceConfig, calculateSyncDiff } from "./sync.js";
 
 /**

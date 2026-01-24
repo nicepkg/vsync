@@ -8,9 +8,9 @@ import { mkdir, readFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import * as jsonc from "jsonc-parser";
-import type { MCPServer, Skill } from "../types/models.js";
-import { atomicWrite } from "../utils/atomic-write.js";
-import { normalizeEnvVar } from "../utils/env-vars.js";
+import type { MCPServer, Skill } from "@src/types/models.js";
+import { atomicWrite } from "@src/utils/atomic-write.js";
+import { normalizeEnvVar } from "@src/utils/env-vars.js";
 import type {
   AdapterConfig,
   ToolAdapter,

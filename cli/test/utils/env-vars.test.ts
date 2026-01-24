@@ -3,7 +3,7 @@ import {
   preserveEnvVars,
   normalizeEnvVar,
   extractEnvVars,
-} from "../../src/utils/env-vars.js";
+} from "@src/utils/env-vars.js";
 
 describe("Environment Variable Utilities", () => {
   describe("preserveEnvVars", () => {

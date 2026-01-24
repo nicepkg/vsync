@@ -3,10 +3,10 @@ import {
   calculateDiff,
   compareHashes,
   type DiffInput,
-} from "../../src/core/diff.js";
-import type { Skill, MCPServer } from "../../src/types/models.js";
-import type { Manifest } from "../../src/types/manifest.js";
-import type { OperationType } from "../../src/types/plan.js";
+} from "@src/core/diff.js";
+import type { Skill, MCPServer } from "@src/types/models.js";
+import type { Manifest } from "@src/types/manifest.js";
+import type { OperationType } from "@src/types/plan.js";
 
 describe("Diff Calculator", () => {
   describe("compareHashes", () => {

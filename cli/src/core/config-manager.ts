@@ -7,8 +7,8 @@ import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { cwd } from "node:process";
-import type { VibeConfig, ConfigLevel, ToolName } from "../types/config.js";
-import { atomicWrite } from "../utils/atomic-write.js";
+import type { VibeConfig, ConfigLevel, ToolName } from "@src/types/config.js";
+import { atomicWrite } from "@src/utils/atomic-write.js";
 
 /**
  * Validation result

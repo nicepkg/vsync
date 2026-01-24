@@ -3,7 +3,7 @@ import type {
   Manifest,
   ManifestItem,
   ItemType,
-} from "../../src/types/manifest.js";
+} from "@src/types/manifest.js";
 
 describe("Manifest Types", () => {
   describe("ItemType", () => {
