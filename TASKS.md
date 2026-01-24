@@ -338,15 +338,15 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.7 `vibe-sync clean` Command
 
-- [ ] Implement `cli/src/cli/commands/clean.ts`
-  - [ ] Interactive mode: multi-select items to remove
-  - [ ] Single item mode: `clean skill/name`
-  - [ ] Display removal plan
-  - [ ] Confirm before deletion
-  - [ ] Remove from targets only (not source)
-  - [ ] Support `--from-source` flag (dangerous, requires double confirmation)
-  - [ ] Update manifest
-  - [ ] Support `--user` flag
+- [x] Implement `cli/src/cli/commands/clean.ts`
+  - [x] Interactive mode: multi-select items to remove
+  - [x] Single item mode: `clean skill/name`
+  - [x] Display removal plan
+  - [x] Confirm before deletion
+  - [x] Remove from targets only (not source)
+  - [x] Support `--from-source` flag (dangerous, requires double confirmation)
+  - [x] Update manifest
+  - [x] Support `--user` flag
 
 **Phase 4 Deliverables**:
 
