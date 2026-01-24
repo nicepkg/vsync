@@ -72,12 +72,12 @@
 
 所有工具都使用相同的 Agent Skills 标准：`<skill-name>/SKILL.md`
 
-| 工具        | User 层                      | Project 层          |
-| ----------- | ---------------------------- | ------------------- |
-| Claude Code | `~/.claude/skills/`          | `.claude/skills/`   |
-| Codex       | `~/.codex/skills/`           | `.codex/skills/`    |
-| Cursor      | `~/.cursor/skills/`          | `.cursor/skills/`   |
-| OpenCode    | `~/.config/opencode/skills/` | `.opencode/skills/` |
+| 工具        | User 层               | Project 层          |
+| ----------- | --------------------- | ------------------- |
+| Claude Code | `~/.claude/skills/`   | `.claude/skills/`   |
+| Codex       | `~/.codex/skills/`    | `.codex/skills/`    |
+| Cursor      | `~/.cursor/skills/`   | `.cursor/skills/`   |
+| OpenCode    | `~/.opencode/skills/` | `.opencode/skills/` |
 
 **文件结构**:
 
@@ -108,14 +108,22 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-postgres"],
       "env": {
-        "DATABASE_URL": "${env:DATABASE_URL}"
+        "DATABASE_URL": "${DATABASE_URL}",
+        "PASSWORD": "${LOCAL_PASSWORD:-12345}"
+      }
+    },
+    "api-server": {
+      "type": "http",
+      "url": "${API_BASE_URL:-https://api.example.com}/mcp",
+      "headers": {
+        "Authorization": "Bearer ${API_KEY}"
       }
     }
   }
 }
 ```
 
-**环境变量格式**: `${env:NAME}` 或 `${NAME}`
+**环境变量格式**: `${NAME}`, `${NAME:-default}`
 
 **关键特性**:
 
@@ -129,28 +137,37 @@
 
 **位置**:
 
-- 全局: `~/.config/codex/config.json`
-- 项目: `.codex/config.json`
+- 全局: `~/.codex/config.toml`
+- 项目: `.codex/config.toml`
 
-**格式**: JSON
+**格式**: TOML
 
 **结构**:
 
-```json
-{
-  "mcpServers": {
-    "postgres": {
-      "command": "mcp-server-postgres",
-      "args": ["postgresql://localhost/mydb"]
-    },
-    "github": {
-      "command": "mcp-server-github",
-      "env": {
-        "GITHUB_TOKEN": "ghp_..."
-      }
-    }
-  }
-}
+```toml
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"] # optional
+cwd = "xxxx" # optional
+env_vars = ["CONTEXT7_API_KEY"] #optional, use system vars
+
+[mcp_servers.context7.env] # optional
+MY_ENV_VAR = "MY_ENV_VALUE"
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
+bearer_token_env_var = "FIGMA_OAUTH_TOKEN" # optional
+http_headers = { "X-Figma-Region" = "us-east-1" } # optional
+env_http_headers = {} # optional
+
+
+[mcp_servers.chrome_devtools]
+url = "http://localhost:3000/mcp"
+enabled_tools = ["open", "screenshot"] # optional
+disabled_tools = ["screenshot"] # optional, applied after enabled_tools
+startup_timeout_sec = 20 # optional
+tool_timeout_sec = 45 # optional
+enabled = true # optional
 ```
 
 **环境变量格式**: **不支持插值**，直接写值
@@ -159,7 +176,7 @@
 
 - ✅ 仅支持 stdio 传输
 - ❌ 不支持变量插值
-- ⚠️ 写入时只修改 `mcpServers` 字段，保留其他配置
+- ⚠️ 写入时只修改 `mcp_Servers` 字段，保留其他配置
 
 ---
 
@@ -179,11 +196,12 @@
   "mcpServers": {
     "postgres": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "args": ["-y", "@modelcontextprotocol/server-postgres"], // optional
       "env": {
         "PGPASSWORD": "${env:PGPASSWORD}",
         "DATA_DIR": "${workspaceFolder}/data"
-      }
+      }, // optional
+      "envFile": ".env" // optional
     }
   }
 }
@@ -198,13 +216,18 @@
       "url": "https://api.example.com/mcp",
       "headers": {
         "Authorization": "Bearer ${env:TOKEN}"
-      }
+      }, // optional
+      "auth": {
+        "CLIENT_ID": "your-oauth-client-id",
+        "CLIENT_SECRET": "your-client-secret",
+        "scopes": ["read", "write"]
+      } // optional
     }
   }
 }
 ```
 
-**支持的变量插值**:
+**Cursor 支持的变量插值**:
 
 - `${env:NAME}`: 环境变量
 - `${userHome}`: 用户主目录
@@ -224,7 +247,7 @@
 
 **位置**:
 
-- 全局: `~/.config/opencode/opencode.json`
+- 全局: `~/.opencode/opencode.json`
 - 项目: `opencode.json` 或 `opencode.jsonc`
 
 **格式**: JSON 或 JSONC（**支持注释**）
@@ -236,30 +259,37 @@
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
     "sqlite": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sqlite"],
-      "env": {
-        "DATABASE_PATH": "${workspaceFolder}/data/app.db"
-      }
+      "type": "local",
+      "enabled": true, // optional
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sqlite"],
+      "environment": {
+        "PASSWORD": "{env:LOCAL_PASSWORD}"
+      }, // optional
+      "timeout": 5000 // optional
     },
     "jira": {
       "type": "remote",
+      "enabled": true, // optional
       "url": "https://jira.example.com/mcp",
       "headers": {
         "Authorization": "Bearer ${JIRA_TOKEN}"
-      }
+      }, // optional
+      "oauth": {
+        "clientId": "{env:MY_MCP_CLIENT_ID}",
+        "clientSecret": "{env:MY_MCP_CLIENT_SECRET}",
+        "scope": "tools:read tools:execute"
+      } // optional
     }
   }
 }
 ```
 
-**环境变量格式**: `${NAME}`（无 `env:` 前缀）
+**环境变量格式**: `{env:NAME}`
 
-**关键特性**:
+**OpenCode 关键特性**:
 
 - ⚠️ **根字段名是 `mcp` 而非 `mcpServers`**
-- ✅ 必须指定 `type` 字段：`"stdio"` 或 `"remote"`
+- ✅ 必须指定 `type` 字段：`"local"` 或 `"remote"`
 - ✅ 支持 JSONC 格式（**必须保留注释**）
 - ⚠️ 写入时只修改 `mcp` 字段，保留其他配置
 
@@ -269,8 +299,8 @@
 
 | 特性             | Claude Code         | Codex         | Cursor            | OpenCode           |
 | ---------------- | ------------------- | ------------- | ----------------- | ------------------ |
-| **配置文件**     | `.mcp.json`         | `config.json` | `mcp.json`        | `opencode.json(c)` |
-| **MCP 字段名**   | `mcpServers`        | `mcpServers`  | `mcpServers`      | `mcp` ⚠️           |
+| **配置文件**     | `.mcp.json`         | `config.toml` | `mcp.json`        | `opencode.json(c)` |
+| **MCP 字段名**   | `mcpServers`        | `mcp_Servers` | `mcpServers`      | `mcp` ⚠️           |
 | **User 层支持**  | ❌                  | ✅            | ✅                | ✅                 |
 | **HTTP 传输**    | ❌                  | ❌            | ✅                | ✅                 |
 | **环境变量格式** | `${env:X}` / `${X}` | ❌ 不支持     | `${env:X}` + 5 种 | `${X}`             |

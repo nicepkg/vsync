@@ -250,9 +250,9 @@ Users who use Codex want to sync their Claude Code configs to Codex.
 
 ### Acceptance Criteria
 
-- [ ] Can read Codex config from `~/.config/codex/config.json`
-- [ ] Can write skills to `~/.config/codex/skills/`
-- [ ] Can write MCP servers to `~/.config/codex/config.json`
+- [ ] Can read Codex config from `~/.codex/config.toml`
+- [ ] Can write skills to `~/.codex/skills/`
+- [ ] Can write MCP servers to `~/.codex/config.json`
 - [ ] Handles Codex's lack of env var interpolation
 - [ ] Tests pass with >90% coverage
 
@@ -293,8 +293,8 @@ Users who use Codex want to sync their Claude Code configs to Codex.
 ### Notes
 
 - Codex does NOT support env var interpolation (see PRD Section 2)
-- Config file is `~/.config/codex/config.json` (user level only)
-- MCP field name is `mcpServers` (same as Claude Code/Cursor)
+- Config file is `~/.codex/config.toml` (user level only)
+- MCP field name is `mcp_Servers`
 
 ---
 
