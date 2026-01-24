@@ -117,11 +117,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.1 Adapter Interface
 
-- [ ] Define `cli/src/adapters/base.ts`
-  - [ ] `ToolAdapter` interface
-  - [ ] `AdapterConfig` interface
-  - [ ] `WriteResult` interface
-  - [ ] `ValidationResult` interface
+- [x] Define `cli/src/adapters/base.ts`
+  - [x] `ToolAdapter` interface
+  - [x] `AdapterConfig` interface
+  - [x] `WriteResult` interface
+  - [x] `ValidationResult` interface
 
 ### 2.2 Claude Code Adapter (Source)
 
