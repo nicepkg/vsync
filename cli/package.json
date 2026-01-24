@@ -20,6 +20,7 @@
     "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
+    "@iarna/toml": "^2.2.5",
     "@types/mock-fs": "^4.13.4",
     "@types/node": "^25.0.10",
     "@vitest/coverage-v8": "^4.0.18",
@@ -46,8 +47,5 @@
   "engines": {
     "node": ">=24.0.0",
     "pnpm": ">=10.0.0"
-  },
-  "dependencies": {
-    "@iarna/toml": "^2.2.5"
   }
 }

@@ -3,11 +3,8 @@
  * Sets up Commander.js with all commands and global error handling
  */
 
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { Command } from "commander";
+import packageJson from "../../package.json";
 import { createCleanCommand } from "./commands/clean.js";
 import { createImportCommand } from "./commands/import.js";
 import { createInitCommand } from "./commands/init.js";
@@ -15,7 +12,6 @@ import { createListCommand } from "./commands/list.js";
 import { createPlanCommand } from "./commands/plan.js";
 import { createStatusCommand } from "./commands/status.js";
 import { createSyncCommand } from "./commands/sync.js";
-
 /**
  * Get package.json version
  *
@@ -23,12 +19,14 @@ import { createSyncCommand } from "./commands/sync.js";
  */
 async function getVersion(): Promise<string> {
   try {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    const packagePath = join(__dirname, "../../package.json");
-    const packageJson = await readFile(packagePath, "utf-8");
-    const parsed = JSON.parse(packageJson);
-    return parsed.version || "1.0.0";
+    // const filename = fileURLToPath(import.meta.url);
+    // const dir = dirname(filename);
+    // const packagePath = join(dir, "../../package.json");
+    // const packageJson = await readFile(packagePath, "utf-8");
+    // const parsed = JSON.parse(packageJson);
+    // return parsed.version || "1.0.0";
+
+    return packageJson.version || "1.0.0";
   } catch {
     return "1.0.0";
   }

@@ -4,10 +4,11 @@
  * This adapter is read-only (source tool)
  */
 
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
+import * as fileOps from "@src/utils/file-ops.js";
 import {
   hashSkill,
   hashMCPServer,
@@ -85,7 +86,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
     const skillsDir = join(this.config.baseDir, ".claude", "skills");
 
     try {
-      const entries = await readdir(skillsDir, { withFileTypes: true });
+      const entries = await fileOps.readdir(skillsDir, { withFileTypes: true });
       const skills: Skill[] = [];
 
       for (const entry of entries) {
@@ -106,7 +107,9 @@ export class ClaudeCodeAdapter implements ToolAdapter {
 
           // Read support files
           const supportFiles: Record<string, string> = {};
-          const skillFiles = await readdir(skillDir, { withFileTypes: true });
+          const skillFiles = await fileOps.readdir(skillDir, {
+            withFileTypes: true,
+          });
 
           for (const file of skillFiles) {
             if (file.name === "SKILL.md" || file.isDirectory()) {
@@ -170,10 +173,11 @@ export class ClaudeCodeAdapter implements ToolAdapter {
     const mcpJsonPath = join(this.config.baseDir, ".mcp.json");
 
     try {
-      const content = await readFile(mcpJsonPath, "utf-8");
-      const config = JSON.parse(content);
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>(mcpJsonPath);
 
-      if (!config.mcpServers || typeof config.mcpServers !== "object") {
+      if (!config?.mcpServers || typeof config.mcpServers !== "object") {
         return [];
       }
 
@@ -208,14 +212,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
 
       return servers;
     } catch (error) {
-      // .mcp.json doesn't exist or invalid JSON
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        return [];
-      }
+      // Invalid JSON
       console.warn(
         `Failed to read .mcp.json: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -231,7 +228,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
     const agentsDir = join(this.config.baseDir, ".claude", "agents");
 
     try {
-      const entries = await readdir(agentsDir, { withFileTypes: true });
+      const entries = await fileOps.readdir(agentsDir, { withFileTypes: true });
       const agents: Agent[] = [];
 
       for (const entry of entries) {
@@ -252,7 +249,9 @@ export class ClaudeCodeAdapter implements ToolAdapter {
 
           // Read support files
           const supportFiles: Record<string, string> = {};
-          const agentFiles = await readdir(agentDir, { withFileTypes: true });
+          const agentFiles = await fileOps.readdir(agentDir, {
+            withFileTypes: true,
+          });
 
           for (const file of agentFiles) {
             if (file.name === "AGENT.md" || file.isDirectory()) {
@@ -316,7 +315,9 @@ export class ClaudeCodeAdapter implements ToolAdapter {
     const commandsDir = join(this.config.baseDir, ".claude", "commands");
 
     try {
-      const entries = await readdir(commandsDir, { withFileTypes: true });
+      const entries = await fileOps.readdir(commandsDir, {
+        withFileTypes: true,
+      });
       const commands: Command[] = [];
 
       for (const entry of entries) {
@@ -337,7 +338,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
 
           // Read support files
           const supportFiles: Record<string, string> = {};
-          const commandFiles = await readdir(commandDir, {
+          const commandFiles = await fileOps.readdir(commandDir, {
             withFileTypes: true,
           });
 
@@ -404,20 +405,17 @@ export class ClaudeCodeAdapter implements ToolAdapter {
 
     // Check if .claude directory exists
     const claudeDir = join(this.config.baseDir, ".claude");
-    try {
-      const stats = await stat(claudeDir);
-      if (!stats.isDirectory()) {
-        warnings.push(".claude exists but is not a directory");
-      }
-    } catch {
+    const claudeDirStats = await fileOps.stat(claudeDir);
+    if (!claudeDirStats) {
       warnings.push(".claude directory not found");
+    } else if (!claudeDirStats.isDirectory()) {
+      warnings.push(".claude exists but is not a directory");
     }
 
     // Check if .mcp.json exists
     const mcpJsonPath = join(this.config.baseDir, ".mcp.json");
-    try {
-      await stat(mcpJsonPath);
-    } catch {
+    const mcpJsonStats = await fileOps.stat(mcpJsonPath);
+    if (!mcpJsonStats) {
       warnings.push(".mcp.json not found");
     }
 

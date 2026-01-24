@@ -4,12 +4,13 @@
  * This adapter is write-only (target tool)
  */
 
-import { mkdir, readdir, readFile, rm, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import * as jsonc from "jsonc-parser";
 import type { MCPServer, Skill, Agent, Command } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+import * as fileOps from "@src/utils/file-ops.js";
 import {
   hashSkill,
   hashMCPServer,
@@ -73,11 +74,11 @@ export class OpenCodeAdapter implements ToolAdapter {
 
     try {
       // Ensure skills directory exists
-      await mkdir(skillsDir, { recursive: true });
+      await fileOps.ensureDir(skillsDir);
 
       for (const skill of skills) {
         const skillDir = join(skillsDir, skill.name);
-        await mkdir(skillDir, { recursive: true });
+        await fileOps.ensureDir(skillDir);
 
         // Generate SKILL.md content
         let skillContent = skill.content;
@@ -142,21 +143,15 @@ export class OpenCodeAdapter implements ToolAdapter {
 
     try {
       // Read existing config or create new one
-      let jsoncText = "{}";
-
-      try {
-        jsoncText = await readFile(jsoncPath, "utf-8");
-      } catch {
-        // File doesn't exist, use empty config
-      }
-
-      // Parse to get current structure
-      const config = jsonc.parse(jsoncText) || {};
+      const { data: config, text: jsoncText } =
+        await fileOps.readJSONC<Record<string, unknown>>(jsoncPath);
+      let currentText = jsoncText || "{}";
+      const currentConfig = config || {};
 
       // Ensure mcp object exists by applying edit if needed
-      if (!config.mcp || typeof config.mcp !== "object") {
+      if (!currentConfig.mcp || typeof currentConfig.mcp !== "object") {
         const edits = jsonc.modify(
-          jsoncText,
+          currentText,
           ["mcp"],
           {},
           {
@@ -166,7 +161,7 @@ export class OpenCodeAdapter implements ToolAdapter {
             },
           },
         );
-        jsoncText = jsonc.applyEdits(jsoncText, edits);
+        currentText = jsonc.applyEdits(currentText, edits);
       }
 
       // Add/update each server using targeted edits
@@ -208,7 +203,7 @@ export class OpenCodeAdapter implements ToolAdapter {
 
         // Apply edit for this specific server (preserves comments)
         const edits = jsonc.modify(
-          jsoncText,
+          currentText,
           ["mcp", server.name],
           serverConfig,
           {
@@ -218,11 +213,11 @@ export class OpenCodeAdapter implements ToolAdapter {
             },
           },
         );
-        jsoncText = jsonc.applyEdits(jsoncText, edits);
+        currentText = jsonc.applyEdits(currentText, edits);
       }
 
-      // Write config
-      await atomicWrite(jsoncPath, jsoncText);
+      // Write config (currentText already has all modifications applied)
+      await atomicWrite(jsoncPath, currentText);
 
       return {
         success: true,
@@ -249,11 +244,11 @@ export class OpenCodeAdapter implements ToolAdapter {
 
     try {
       // Ensure agents directory exists
-      await mkdir(agentsDir, { recursive: true });
+      await fileOps.ensureDir(agentsDir);
 
       for (const agent of agents) {
         const agentDir = join(agentsDir, agent.name);
-        await mkdir(agentDir, { recursive: true });
+        await fileOps.ensureDir(agentDir);
 
         // Generate AGENT.md content
         let agentContent = agent.content;
@@ -337,7 +332,7 @@ export class OpenCodeAdapter implements ToolAdapter {
     const skillDir = join(this.config.baseDir, ".opencode", "skills", name);
 
     try {
-      await rm(skillDir, { recursive: true, force: true });
+      await fileOps.remove(skillDir);
     } catch (error) {
       // Ignore errors for non-existent skills
       if (
@@ -356,35 +351,24 @@ export class OpenCodeAdapter implements ToolAdapter {
   async deleteMCPServer(name: string): Promise<void> {
     const jsoncPath = join(this.config.baseDir, "opencode.jsonc");
 
-    try {
-      let jsoncText = await readFile(jsoncPath, "utf-8");
-      const config = jsonc.parse(jsoncText) || {};
+    const { data: config, text: jsoncText } =
+      await fileOps.readJSONC<Record<string, unknown>>(jsoncPath);
 
-      if (config.mcp && typeof config.mcp === "object") {
-        const mcpObj = config.mcp as Record<string, unknown>;
+    if (config?.mcp && typeof config.mcp === "object") {
+      const mcpObj = config.mcp as Record<string, unknown>;
 
-        // Check if server exists
-        if (mcpObj[name] !== undefined) {
-          // Use jsonc.modify to remove the server (preserves comments)
-          const edits = jsonc.modify(jsoncText, ["mcp", name], undefined, {
-            formattingOptions: {
-              insertSpaces: true,
-              tabSize: 2,
-            },
-          });
-          jsoncText = jsonc.applyEdits(jsoncText, edits);
+      // Check if server exists
+      if (mcpObj[name] !== undefined) {
+        // Use jsonc.modify to remove the server (preserves comments)
+        const edits = jsonc.modify(jsoncText, ["mcp", name], undefined, {
+          formattingOptions: {
+            insertSpaces: true,
+            tabSize: 2,
+          },
+        });
+        const updatedText = jsonc.applyEdits(jsoncText, edits);
 
-          await atomicWrite(jsoncPath, jsoncText);
-        }
-      }
-    } catch (error) {
-      // Ignore errors for non-existent file
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
+        await atomicWrite(jsoncPath, updatedText);
       }
     }
   }
@@ -398,11 +382,11 @@ export class OpenCodeAdapter implements ToolAdapter {
 
     try {
       // Ensure commands directory exists
-      await mkdir(commandsDir, { recursive: true });
+      await fileOps.ensureDir(commandsDir);
 
       for (const command of commands) {
         const commandDir = join(commandsDir, command.name);
-        await mkdir(commandDir, { recursive: true });
+        await fileOps.ensureDir(commandDir);
 
         // Generate COMMAND.md content
         let commandContent = command.content;
@@ -462,7 +446,7 @@ export class OpenCodeAdapter implements ToolAdapter {
     const agentDir = join(this.config.baseDir, ".opencode", "agents", name);
 
     try {
-      await rm(agentDir, { recursive: true, force: true });
+      await fileOps.remove(agentDir);
     } catch (error) {
       // Ignore errors for non-existent agents
       if (
@@ -484,20 +468,17 @@ export class OpenCodeAdapter implements ToolAdapter {
 
     // Check if .opencode directory exists
     const opencodeDir = join(this.config.baseDir, ".opencode");
-    try {
-      const stats = await stat(opencodeDir);
-      if (!stats.isDirectory()) {
-        warnings.push(".opencode exists but is not a directory");
-      }
-    } catch {
+    const opencodeDirStats = await fileOps.stat(opencodeDir);
+    if (!opencodeDirStats) {
       warnings.push(".opencode directory not found");
+    } else if (!opencodeDirStats.isDirectory()) {
+      warnings.push(".opencode exists but is not a directory");
     }
 
     // Check if opencode.jsonc exists
     const jsoncPath = join(this.config.baseDir, "opencode.jsonc");
-    try {
-      await stat(jsoncPath);
-    } catch {
+    const jsoncStats = await fileOps.stat(jsoncPath);
+    if (!jsoncStats) {
       warnings.push("opencode.jsonc not found");
     }
 
@@ -521,29 +502,27 @@ export class OpenCodeAdapter implements ToolAdapter {
 
   async readMCPServers(): Promise<MCPServer[]> {
     const jsoncPath = join(this.config.baseDir, "opencode.jsonc");
-    try {
-      const content = await readFile(jsoncPath, "utf-8");
-      const config = jsonc.parse(content) as Record<string, unknown>;
-      if (!config?.mcp || typeof config.mcp !== "object") return [];
 
-      const servers: MCPServer[] = [];
-      for (const [name, serverConfig] of Object.entries(
-        config.mcp as Record<string, unknown>,
-      )) {
-        const raw = serverConfig as Record<string, unknown>;
-        const server: MCPServer = { name, type: "stdio", hash: "" };
-        if (raw.command) server.command = raw.command as string;
-        if (raw.args) server.args = raw.args as string[];
-        if (raw.env) server.env = raw.env as Record<string, string>;
-        server.hash = hashMCPServer(server);
-        servers.push(server);
-      }
-      return servers;
-    } catch (error) {
-      if (error instanceof Error && "code" in error && error.code === "ENOENT")
-        return [];
+    const { data: config } =
+      await fileOps.readJSONC<Record<string, unknown>>(jsoncPath);
+
+    if (!config?.mcp || typeof config.mcp !== "object") {
       return [];
     }
+
+    const servers: MCPServer[] = [];
+    for (const [name, serverConfig] of Object.entries(
+      config.mcp as Record<string, unknown>,
+    )) {
+      const raw = serverConfig as Record<string, unknown>;
+      const server: MCPServer = { name, type: "stdio", hash: "" };
+      if (raw.command) server.command = raw.command as string;
+      if (raw.args) server.args = raw.args as string[];
+      if (raw.env) server.env = raw.env as Record<string, string>;
+      server.hash = hashMCPServer(server);
+      servers.push(server);
+    }
+    return servers;
   }
 
   async readAgents(): Promise<Agent[]> {
@@ -557,7 +536,7 @@ export class OpenCodeAdapter implements ToolAdapter {
   ): Promise<T[]> {
     const itemsDir = join(this.config.baseDir, ".opencode", dirName);
     try {
-      const entries = await readdir(itemsDir, { withFileTypes: true });
+      const entries = await fileOps.readdir(itemsDir, { withFileTypes: true });
       const items: T[] = [];
       for (const entry of entries) {
         if (!entry.isDirectory()) continue;
@@ -568,7 +547,7 @@ export class OpenCodeAdapter implements ToolAdapter {
           const content = await readFile(itemPath, "utf-8");
           const parsed = matter(content);
           const supportFiles: Record<string, string> = {};
-          const files = await readdir(itemDir, { withFileTypes: true });
+          const files = await fileOps.readdir(itemDir, { withFileTypes: true });
           for (const file of files) {
             if (file.name === fileName || file.isDirectory()) continue;
             const filePath = join(itemDir, file.name);
@@ -605,7 +584,7 @@ export class OpenCodeAdapter implements ToolAdapter {
     const commandDir = join(this.config.baseDir, ".opencode", "commands", name);
 
     try {
-      await rm(commandDir, { recursive: true, force: true });
+      await fileOps.remove(commandDir);
     } catch (error) {
       // Ignore errors for non-existent commands
       if (

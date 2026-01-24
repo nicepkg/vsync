@@ -112,10 +112,6 @@ class AdapterRegistry {
  */
 const registry = AdapterRegistry.getInstance();
 
-/**
- * Legacy function for backward compatibility
- * @deprecated Use registry.create() instead
- */
 export function getAdapter(config: AdapterConfig): ToolAdapter {
   return registry.create(config.tool, config);
 }

@@ -4,12 +4,12 @@
  * This adapter supports both read and write operations
  */
 
-import { mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import * as TOML from "@iarna/toml";
 import matter from "gray-matter";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+import * as fileOps from "@src/utils/file-ops.js";
 import {
   hashSkill,
   hashMCPServer,
@@ -88,7 +88,7 @@ export class CodexAdapter implements ToolAdapter {
     const skillsDir = join(this.getCodexDir(), "skills");
 
     try {
-      const entries = await readdir(skillsDir, { withFileTypes: true });
+      const entries = await fileOps.readdir(skillsDir, { withFileTypes: true });
       const skills: Skill[] = [];
 
       for (const entry of entries) {
@@ -106,7 +106,9 @@ export class CodexAdapter implements ToolAdapter {
 
           // Read support files
           const supportFiles: Record<string, string> = {};
-          const skillFiles = await readdir(skillDir, { withFileTypes: true });
+          const skillFiles = await fileOps.readdir(skillDir, {
+            withFileTypes: true,
+          });
 
           for (const file of skillFiles) {
             if (file.name === "SKILL.md" || file.isDirectory()) {
@@ -163,14 +165,13 @@ export class CodexAdapter implements ToolAdapter {
   async readMCPServers(): Promise<MCPServer[]> {
     const configPath = this.getConfigPath();
 
+    const config = await fileOps.readTOML<Record<string, unknown>>(configPath);
+
+    if (!config?.mcp_servers || typeof config.mcp_servers !== "object") {
+      return [];
+    }
+
     try {
-      const content = await readFile(configPath, "utf-8");
-      const config = TOML.parse(content) as Record<string, unknown>;
-
-      if (!config.mcp_servers || typeof config.mcp_servers !== "object") {
-        return [];
-      }
-
       const servers: MCPServer[] = [];
       const mcpServers = config.mcp_servers as Record<string, unknown>;
 
@@ -199,13 +200,7 @@ export class CodexAdapter implements ToolAdapter {
 
       return servers;
     } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        return [];
-      }
+      // Invalid TOML
       console.warn(
         `Failed to read config.toml: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -220,7 +215,7 @@ export class CodexAdapter implements ToolAdapter {
     const agentsDir = join(this.getCodexDir(), "agents");
 
     try {
-      const entries = await readdir(agentsDir, { withFileTypes: true });
+      const entries = await fileOps.readdir(agentsDir, { withFileTypes: true });
       const agents: Agent[] = [];
 
       for (const entry of entries) {
@@ -237,7 +232,9 @@ export class CodexAdapter implements ToolAdapter {
           const parsed = matter(agentContent);
 
           const supportFiles: Record<string, string> = {};
-          const agentFiles = await readdir(agentDir, { withFileTypes: true });
+          const agentFiles = await fileOps.readdir(agentDir, {
+            withFileTypes: true,
+          });
 
           for (const file of agentFiles) {
             if (file.name === "AGENT.md" || file.isDirectory()) {
@@ -294,7 +291,9 @@ export class CodexAdapter implements ToolAdapter {
     const commandsDir = join(this.getCodexDir(), "commands");
 
     try {
-      const entries = await readdir(commandsDir, { withFileTypes: true });
+      const entries = await fileOps.readdir(commandsDir, {
+        withFileTypes: true,
+      });
       const commands: Command[] = [];
 
       for (const entry of entries) {
@@ -311,7 +310,7 @@ export class CodexAdapter implements ToolAdapter {
           const parsed = matter(commandContent);
 
           const supportFiles: Record<string, string> = {};
-          const commandFiles = await readdir(commandDir, {
+          const commandFiles = await fileOps.readdir(commandDir, {
             withFileTypes: true,
           });
 
@@ -370,11 +369,11 @@ export class CodexAdapter implements ToolAdapter {
     const skillsDir = join(this.getCodexDir(), "skills");
 
     try {
-      await mkdir(skillsDir, { recursive: true });
+      await fileOps.ensureDir(skillsDir);
 
       for (const skill of skills) {
         const skillDir = join(skillsDir, skill.name);
-        await mkdir(skillDir, { recursive: true });
+        await fileOps.ensureDir(skillDir);
 
         let skillContent = skill.content;
 
@@ -428,17 +427,12 @@ export class CodexAdapter implements ToolAdapter {
 
     try {
       // Ensure .codex directory exists
-      await mkdir(this.getCodexDir(), { recursive: true });
+      await fileOps.ensureDir(this.getCodexDir());
 
       // Read existing config or create new one
-      let config: Record<string, unknown> = {};
-
-      try {
-        const content = await readFile(configPath, "utf-8");
-        config = TOML.parse(content) as Record<string, unknown>;
-      } catch {
-        // File doesn't exist, use empty config
-      }
+      const existingConfig =
+        await fileOps.readTOML<Record<string, unknown>>(configPath);
+      const config: Record<string, unknown> = existingConfig || {};
 
       // Ensure mcp_servers section exists
       if (!config.mcp_servers || typeof config.mcp_servers !== "object") {
@@ -465,8 +459,7 @@ export class CodexAdapter implements ToolAdapter {
       }
 
       // Write config back as TOML
-      const tomlContent = TOML.stringify(config as TOML.JsonMap);
-      await atomicWrite(configPath, tomlContent);
+      await fileOps.writeTOML(configPath, config);
 
       return {
         success: true,
@@ -491,11 +484,11 @@ export class CodexAdapter implements ToolAdapter {
     const agentsDir = join(this.getCodexDir(), "agents");
 
     try {
-      await mkdir(agentsDir, { recursive: true });
+      await fileOps.ensureDir(agentsDir);
 
       for (const agent of agents) {
         const agentDir = join(agentsDir, agent.name);
-        await mkdir(agentDir, { recursive: true });
+        await fileOps.ensureDir(agentDir);
 
         let agentContent = agent.content;
 
@@ -548,11 +541,11 @@ export class CodexAdapter implements ToolAdapter {
     const commandsDir = join(this.getCodexDir(), "commands");
 
     try {
-      await mkdir(commandsDir, { recursive: true });
+      await fileOps.ensureDir(commandsDir);
 
       for (const command of commands) {
         const commandDir = join(commandsDir, command.name);
-        await mkdir(commandDir, { recursive: true });
+        await fileOps.ensureDir(commandDir);
 
         let commandContent = command.content;
 
@@ -605,7 +598,7 @@ export class CodexAdapter implements ToolAdapter {
     const skillDir = join(this.getCodexDir(), "skills", name);
 
     try {
-      await rm(skillDir, { recursive: true, force: true });
+      await fileOps.remove(skillDir);
     } catch (error) {
       if (
         error instanceof Error &&
@@ -623,27 +616,14 @@ export class CodexAdapter implements ToolAdapter {
   async deleteMCPServer(name: string): Promise<void> {
     const configPath = this.getConfigPath();
 
-    try {
-      const content = await readFile(configPath, "utf-8");
-      const config = TOML.parse(content) as Record<string, unknown>;
+    const config = await fileOps.readTOML<Record<string, unknown>>(configPath);
 
-      if (config.mcp_servers && typeof config.mcp_servers === "object") {
-        const mcpServers = config.mcp_servers as Record<string, unknown>;
+    if (config?.mcp_servers && typeof config.mcp_servers === "object") {
+      const mcpServers = config.mcp_servers as Record<string, unknown>;
 
-        if (mcpServers[name] !== undefined) {
-          delete mcpServers[name];
-
-          const tomlContent = TOML.stringify(config as TOML.JsonMap);
-          await atomicWrite(configPath, tomlContent);
-        }
-      }
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
+      if (mcpServers[name] !== undefined) {
+        delete mcpServers[name];
+        await fileOps.writeTOML(configPath, config);
       }
     }
   }
@@ -655,7 +635,7 @@ export class CodexAdapter implements ToolAdapter {
     const agentDir = join(this.getCodexDir(), "agents", name);
 
     try {
-      await rm(agentDir, { recursive: true, force: true });
+      await fileOps.remove(agentDir);
     } catch (error) {
       if (
         error instanceof Error &&
@@ -674,7 +654,7 @@ export class CodexAdapter implements ToolAdapter {
     const commandDir = join(this.getCodexDir(), "commands", name);
 
     try {
-      await rm(commandDir, { recursive: true, force: true });
+      await fileOps.remove(commandDir);
     } catch (error) {
       if (
         error instanceof Error &&
@@ -694,19 +674,16 @@ export class CodexAdapter implements ToolAdapter {
     const warnings: string[] = [];
 
     const codexDir = this.getCodexDir();
-    try {
-      const stats = await stat(codexDir);
-      if (!stats.isDirectory()) {
-        warnings.push(".codex exists but is not a directory");
-      }
-    } catch {
+    const codexDirStats = await fileOps.stat(codexDir);
+    if (!codexDirStats) {
       warnings.push(".codex directory not found");
+    } else if (!codexDirStats.isDirectory()) {
+      warnings.push(".codex exists but is not a directory");
     }
 
     const configPath = this.getConfigPath();
-    try {
-      await stat(configPath);
-    } catch {
+    const configStats = await fileOps.stat(configPath);
+    if (!configStats) {
       warnings.push("config.toml not found");
     }
 

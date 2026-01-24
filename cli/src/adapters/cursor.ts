@@ -4,7 +4,7 @@
  * This adapter is write-only (target tool)
  */
 
-import { mkdir, readdir, readFile, rm, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import type {
@@ -15,6 +15,7 @@ import type {
   Command,
 } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+import * as fileOps from "@src/utils/file-ops.js";
 import {
   hashSkill,
   hashMCPServer,
@@ -78,11 +79,11 @@ export class CursorAdapter implements ToolAdapter {
 
     try {
       // Ensure skills directory exists
-      await mkdir(skillsDir, { recursive: true });
+      await fileOps.ensureDir(skillsDir);
 
       for (const skill of skills) {
         const skillDir = join(skillsDir, skill.name);
-        await mkdir(skillDir, { recursive: true });
+        await fileOps.ensureDir(skillDir);
 
         // Generate SKILL.md content
         let skillContent = skill.content;
@@ -144,22 +145,15 @@ export class CursorAdapter implements ToolAdapter {
 
     try {
       // Ensure .cursor directory exists
-      await mkdir(join(this.config.baseDir, ".cursor"), { recursive: true });
+      await fileOps.ensureDir(join(this.config.baseDir, ".cursor"));
 
       // Read existing config or create new one
-      let config: { mcpServers: Record<string, unknown> } = {
-        mcpServers: {},
+      const existingConfig = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>(mcpJsonPath);
+      const config: { mcpServers: Record<string, unknown> } = {
+        mcpServers: existingConfig?.mcpServers || {},
       };
-
-      try {
-        const existingContent = await readFile(mcpJsonPath, "utf-8");
-        config = JSON.parse(existingContent);
-        if (!config.mcpServers || typeof config.mcpServers !== "object") {
-          config.mcpServers = {};
-        }
-      } catch {
-        // File doesn't exist or invalid JSON, use empty config
-      }
 
       // Add/update servers
       for (const server of servers) {
@@ -189,7 +183,7 @@ export class CursorAdapter implements ToolAdapter {
       }
 
       // Write config
-      await atomicWrite(mcpJsonPath, JSON.stringify(config, null, 2));
+      await fileOps.writeJSON(mcpJsonPath, config);
 
       return {
         success: true,
@@ -216,11 +210,11 @@ export class CursorAdapter implements ToolAdapter {
 
     try {
       // Ensure agents directory exists
-      await mkdir(agentsDir, { recursive: true });
+      await fileOps.ensureDir(agentsDir);
 
       for (const agent of agents) {
         const agentDir = join(agentsDir, agent.name);
-        await mkdir(agentDir, { recursive: true });
+        await fileOps.ensureDir(agentDir);
 
         // Generate AGENT.md content
         let agentContent = agent.content;
@@ -280,7 +274,7 @@ export class CursorAdapter implements ToolAdapter {
     const skillDir = join(this.config.baseDir, ".cursor", "skills", name);
 
     try {
-      await rm(skillDir, { recursive: true, force: true });
+      await fileOps.remove(skillDir);
     } catch (error) {
       // Ignore errors for non-existent skills
       if (
@@ -299,23 +293,13 @@ export class CursorAdapter implements ToolAdapter {
   async deleteMCPServer(name: string): Promise<void> {
     const mcpJsonPath = join(this.config.baseDir, ".cursor", "mcp.json");
 
-    try {
-      const content = await readFile(mcpJsonPath, "utf-8");
-      const config = JSON.parse(content);
+    const config = await fileOps.readJSON<{
+      mcpServers?: Record<string, unknown>;
+    }>(mcpJsonPath);
 
-      if (config.mcpServers && typeof config.mcpServers === "object") {
-        delete config.mcpServers[name];
-        await atomicWrite(mcpJsonPath, JSON.stringify(config, null, 2));
-      }
-    } catch (error) {
-      // Ignore errors for non-existent file
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
-      }
+    if (config?.mcpServers && typeof config.mcpServers === "object") {
+      delete config.mcpServers[name];
+      await fileOps.writeJSON(mcpJsonPath, config);
     }
   }
 
@@ -328,11 +312,11 @@ export class CursorAdapter implements ToolAdapter {
 
     try {
       // Ensure commands directory exists
-      await mkdir(commandsDir, { recursive: true });
+      await fileOps.ensureDir(commandsDir);
 
       for (const command of commands) {
         const commandDir = join(commandsDir, command.name);
-        await mkdir(commandDir, { recursive: true });
+        await fileOps.ensureDir(commandDir);
 
         // Generate COMMAND.md content
         let commandContent = command.content;
@@ -392,7 +376,7 @@ export class CursorAdapter implements ToolAdapter {
     const agentDir = join(this.config.baseDir, ".cursor", "agents", name);
 
     try {
-      await rm(agentDir, { recursive: true, force: true });
+      await fileOps.remove(agentDir);
     } catch (error) {
       // Ignore errors for non-existent agents
       if (
@@ -647,7 +631,7 @@ export class CursorAdapter implements ToolAdapter {
     const commandDir = join(this.config.baseDir, ".cursor", "commands", name);
 
     try {
-      await rm(commandDir, { recursive: true, force: true });
+      await fileOps.remove(commandDir);
     } catch (error) {
       // Ignore errors for non-existent commands
       if (
