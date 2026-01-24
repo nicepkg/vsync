@@ -125,22 +125,22 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 2.2 Claude Code Adapter (Source)
 
-- [ ] Implement `cli/src/adapters/claude-code.ts`
-  - [ ] `init(config)` - Initialize adapter
-  - [ ] `readSkills()` - Read from `.claude/skills/`
-    - [ ] Parse `SKILL.md` frontmatter + content
-    - [ ] Include support files
-    - [ ] Calculate hash for each skill
-  - [ ] `readMCPServers()` - Read from `.mcp.json`
-    - [ ] Parse JSON
-    - [ ] Extract mcpServers object
-    - [ ] Preserve `${env:VAR}` and `${VAR}` variables
-    - [ ] Calculate hash for each server
-  - [ ] `validate()` - Validate Claude Code configuration
-- [ ] Write unit tests with mock-fs
-  - [ ] Test skill reading with various frontmatter formats
-  - [ ] Test MCP reading with env variables
-  - [ ] Test error handling (missing files, invalid JSON)
+- [x] Implement `cli/src/adapters/claude-code.ts`
+  - [x] `init(config)` - Initialize adapter
+  - [x] `readSkills()` - Read from `.claude/skills/`
+    - [x] Parse `SKILL.md` frontmatter + content
+    - [x] Include support files
+    - [x] Calculate hash for each skill
+  - [x] `readMCPServers()` - Read from `.mcp.json`
+    - [x] Parse JSON
+    - [x] Extract mcpServers object
+    - [x] Preserve `${env:VAR}` and `${VAR}` variables
+    - [x] Calculate hash for each server
+  - [x] `validate()` - Validate Claude Code configuration
+- [x] Write unit tests with mock-fs
+  - [x] Test skill reading with various frontmatter formats
+  - [x] Test MCP reading with env variables
+  - [x] Test error handling (missing files, invalid JSON)
 
 ### 2.3 Cursor Adapter (Target)
 
