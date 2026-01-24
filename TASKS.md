@@ -11,8 +11,8 @@
 
 This document tracks all implementation tasks for vibe-sync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
 
-**Current Status**: 🟡 Not Started
-**Next Phase**: Phase 1 - Foundation
+**Current Status**: 🟢 Phase 3 Complete
+**Next Phase**: Phase 4 - CLI Commands
 
 ---
 
@@ -245,11 +245,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 3.4 Manifest Updates
 
-- [ ] Implement manifest update logic in `cli/src/core/manifest-manager.ts`
-  - [ ] `updateAfterCreate(item)` - Add new item to manifest
-  - [ ] `updateAfterUpdate(item, newHash)` - Update hash
-  - [ ] `updateAfterDelete(item, tool)` - Remove target entry
-  - [ ] `pruneOrphanedItems()` - Clean up manifest
+- [x] Implement manifest update logic in `cli/src/core/manifest-manager.ts`
+  - [x] `updateAfterCreate(item)` - Add new item to manifest
+  - [x] `updateAfterUpdate(item, newHash)` - Update hash
+  - [x] `updateAfterDelete(item, tool)` - Remove target entry
+  - [x] `pruneOrphanedItems()` - Clean up manifest
 
 **Phase 3 Deliverables**:
 
