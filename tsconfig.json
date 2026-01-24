@@ -1,6 +1,4 @@
 {
   "files": [],
-  "references": [
-    { "path": "./website" }
-  ]
+  "references": [{ "path": "./website" }, { "path": "./cli" }]
 }

@@ -24,24 +24,24 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ⚠️ **IMPORTANT**: pnpm monorepo - `pnpm-workspace.yaml` at root, CLI code in `cli/`
 
-- [ ] Initialize pnpm monorepo structure
-  - [ ] Create `pnpm-workspace.yaml` at project root
-  - [ ] Initialize `cli/package.json` with type: "module"
-  - [ ] Configure `cli/tsconfig.json` (strict mode, ES2022, Node20)
-  - [ ] Configure build scripts (tsup for bundling)
-- [ ] Install core dependencies
-  - [ ] `commander` - CLI framework
-  - [ ] `inquirer` - Interactive prompts
-  - [ ] `chalk` - Terminal colors
-  - [ ] `ora` - Loading spinners
-  - [ ] `jsonc-parser` - JSONC support
-  - [ ] `gray-matter` - Frontmatter parsing
-- [ ] Install dev dependencies
-  - [ ] `vitest` - Testing framework
-  - [ ] `@types/node` - Node types
-  - [ ] `tsx` - TypeScript execution
-  - [ ] `mock-fs` - File system mocking
-- [ ] Set up directory structure
+- [x] Initialize pnpm monorepo structure
+  - [x] Create `pnpm-workspace.yaml` at project root
+  - [x] Initialize `cli/package.json` with type: "module"
+  - [x] Configure `cli/tsconfig.json` (strict mode, ES2022, Node16)
+  - [x] Configure build scripts (tsup for bundling)
+- [x] Install core dependencies
+  - [x] `commander` - CLI framework
+  - [x] `inquirer` - Interactive prompts
+  - [x] `chalk` - Terminal colors
+  - [x] `ora` - Loading spinners
+  - [x] `jsonc-parser` - JSONC support
+  - [x] `gray-matter` - Frontmatter parsing
+- [x] Install dev dependencies
+  - [x] `vitest` - Testing framework
+  - [x] `@types/node` - Node types
+  - [x] `tsx` - TypeScript execution
+  - [x] `mock-fs` - File system mocking
+- [x] Set up directory structure
   ```
   vibe-sync/                # Project root
   ├── pnpm-workspace.yaml   # Workspace config (root level)
@@ -521,7 +521,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 | Phase   | Status         | Start Date | End Date | Notes        |
 | ------- | -------------- | ---------- | -------- | ------------ |
-| Phase 1 | 🔴 Not Started | -          | -        | Foundation   |
+| Phase 1 | 🟡 In Progress | 2026-01-24 | -        | Foundation   |
 | Phase 2 | 🔴 Not Started | -          | -        | Adapters     |
 | Phase 3 | 🔴 Not Started | -          | -        | Diff & Plan  |
 | Phase 4 | 🔴 Not Started | -          | -        | CLI Commands |
