@@ -275,17 +275,17 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.2 `vibe-sync init` Command
 
-- [ ] Implement `cli/src/cli/commands/init.ts`
-  - [ ] Detect existing tools (check for `.claude/`, `.cursor/`, `.opencode/`)
-  - [ ] Interactive prompts:
-    - [ ] Multi-select: Which tools do you use?
-    - [ ] Select: Which tool is the source?
-    - [ ] Multi-select: What to sync? (Skills, MCP)
-  - [ ] Generate `.vibe-sync.json`
-  - [ ] Create `.vibe-sync-cache/` directory
-  - [ ] Initialize empty manifest.json
-  - [ ] Support `--user` flag for global config
-- [ ] Add user-friendly output with chalk + ora
+- [x] Implement `cli/src/cli/commands/init.ts`
+  - [x] Detect existing tools (check for `.claude/`, `.cursor/`, `.opencode/`)
+  - [x] Interactive prompts:
+    - [x] Multi-select: Which tools do you use?
+    - [x] Select: Which tool is the source?
+    - [x] Multi-select: What to sync? (Skills, MCP)
+  - [x] Generate `.vibe-sync.json`
+  - [x] Create `.vibe-sync-cache/` directory
+  - [x] Initialize empty manifest.json
+  - [x] Support `--user` flag for global config
+- [x] Add user-friendly output with chalk + ora
 
 ### 4.3 `vibe-sync sync` Command
 
