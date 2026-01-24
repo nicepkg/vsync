@@ -60,22 +60,22 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 1.2 Core Type Definitions
 
-- [ ] Define `cli/src/types/config.ts`
-  - [ ] `VibeConfig` interface (`.vibe-sync.json` structure)
-  - [ ] `SyncMode` type (`"safe" | "prune"`)
-  - [ ] `ToolName` type (`"claude-code" | "cursor" | "opencode"`)
-  - [ ] `ConfigLevel` type (`"project" | "user"`)
-- [ ] Define `cli/src/types/models.ts`
-  - [ ] `Skill` interface (name, description, content, metadata, hash)
-  - [ ] `MCPServer` interface (name, type, command, args, env, url, headers, auth, hash)
-  - [ ] `MCPType` type (`"stdio" | "http" | "oauth"`)
-- [ ] Define `cli/src/types/manifest.ts`
-  - [ ] `Manifest` interface (version, last_sync, items)
-  - [ ] `ManifestItem` interface (hash, last_synced, targets)
-- [ ] Define `cli/src/types/plan.ts`
-  - [ ] `SyncPlan` interface (tool, operations)
-  - [ ] `Operation` types (create, update, delete, skip)
-  - [ ] `DiffResult` interface
+- [x] Define `cli/src/types/config.ts`
+  - [x] `VibeConfig` interface (`.vibe-sync.json` structure)
+  - [x] `SyncMode` type (`"safe" | "prune"`)
+  - [x] `ToolName` type (`"claude-code" | "cursor" | "opencode"`)
+  - [x] `ConfigLevel` type (`"project" | "user"`)
+- [x] Define `cli/src/types/models.ts`
+  - [x] `Skill` interface (name, description, content, metadata, hash)
+  - [x] `MCPServer` interface (name, type, command, args, env, url, headers, auth, hash)
+  - [x] `MCPType` type (`"stdio" | "http" | "oauth"`)
+- [x] Define `cli/src/types/manifest.ts`
+  - [x] `Manifest` interface (version, last_sync, items)
+  - [x] `ManifestItem` interface (hash, last_synced, targets)
+- [x] Define `cli/src/types/plan.ts`
+  - [x] `SyncPlan` interface (tool, operations)
+  - [x] `Operation` types (create, update, delete, skip)
+  - [x] `DiffResult` interface
 
 ### 1.3 Configuration Management
 
