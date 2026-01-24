@@ -13,4 +13,6 @@ export default defineConfig({
   outDir: "dist",
   target: "node24",
   platform: "node",
+  // Bundle all dependencies for faster npx usage
+  noExternal: [/.*/],
 });
