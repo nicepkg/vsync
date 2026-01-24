@@ -112,6 +112,89 @@ export async function saveConfig(
 }
 
 /**
+ * Merge user and project configurations
+ * Project config takes precedence over user config
+ *
+ * @param userConfig - User-level configuration (optional)
+ * @param projectConfig - Project-level configuration (optional)
+ * @returns Merged configuration
+ * @throws Error if both configs are undefined
+ */
+export function mergeConfigs(
+  userConfig?: VibeConfig,
+  projectConfig?: VibeConfig,
+): VibeConfig {
+  if (!userConfig && !projectConfig) {
+    throw new Error("At least one config must be provided");
+  }
+
+  // If only one config exists, return it
+  if (!userConfig) return projectConfig!;
+  if (!projectConfig) return userConfig;
+
+  // Merge with project taking precedence
+  const merged: VibeConfig = {
+    version: projectConfig.version || userConfig.version,
+    level: projectConfig.level, // Always use project level when merging
+    source_tool: projectConfig.source_tool || userConfig.source_tool,
+    target_tools: projectConfig.target_tools || userConfig.target_tools,
+    sync_config: {
+      skills:
+        projectConfig.sync_config?.skills ?? userConfig.sync_config?.skills,
+      mcp: projectConfig.sync_config?.mcp ?? userConfig.sync_config?.mcp,
+    },
+  };
+
+  // Add last_sync if either config has it (project takes precedence)
+  const lastSync = projectConfig.last_sync ?? userConfig.last_sync;
+  if (lastSync) {
+    merged.last_sync = lastSync;
+  }
+
+  return merged;
+}
+
+/**
+ * Load and merge user and project configurations
+ * Attempts to load both configs and merges them with project taking precedence
+ *
+ * @param projectDir - Project directory
+ * @param userDir - User home directory (optional)
+ * @returns Merged configuration
+ * @throws Error if neither config exists
+ */
+export async function loadMergedConfig(
+  projectDir: string,
+  userDir?: string,
+): Promise<VibeConfig> {
+  let userConfig: VibeConfig | undefined;
+  let projectConfig: VibeConfig | undefined;
+
+  // Try to load user config
+  try {
+    userConfig = await loadConfig("user", undefined, userDir);
+  } catch {
+    // User config doesn't exist or is invalid - continue
+  }
+
+  // Try to load project config
+  try {
+    projectConfig = await loadConfig("project", projectDir);
+  } catch {
+    // Project config doesn't exist or is invalid - continue
+  }
+
+  // If neither exists, throw error
+  if (!userConfig && !projectConfig) {
+    throw new Error(
+      "No configuration found. Run 'vibe-sync init' to create one.",
+    );
+  }
+
+  return mergeConfigs(userConfig, projectConfig);
+}
+
+/**
  * Validate configuration structure and values
  *
  * @param config - Configuration to validate

@@ -491,17 +491,17 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 7.1 User-Level Configuration
 
-- [ ] Extend config system for user-level
-  - [ ] Update `cli/src/types/config.ts` - add user config path
-  - [ ] Update `cli/src/core/config-manager.ts`
-    - [ ] `getUserConfigPath()` - Get ~/.vibe-sync.json path
-    - [ ] Support both project and user configs
-    - [ ] Merge user + project configs (project overrides user)
-  - [ ] Update all CLI commands to support `--user` flag
-- [ ] Write unit tests
-  - [ ] Test user config loading
-  - [ ] Test config merging
-  - [ ] Test precedence rules
+- [x] Extend config system for user-level
+  - [x] Update `cli/src/types/config.ts` - add user config path
+  - [x] Update `cli/src/core/config-manager.ts`
+    - [x] `getConfigPath()` already supports user level
+    - [x] Support both project and user configs
+    - [x] Merge user + project configs (project overrides user)
+  - [x] CLI commands already support `--user` flag
+- [x] Write unit tests
+  - [x] Test user config loading
+  - [x] Test config merging (8 new tests)
+  - [x] Test precedence rules
 
 ### 7.2 Agents Synchronization
 
