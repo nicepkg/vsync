@@ -4,7 +4,7 @@
  */
 
 import { randomBytes } from "node:crypto";
-import { writeFile, rename, mkdir, unlink } from "node:fs/promises";
+import { writeFile, rename, mkdir, unlink, open } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 /**
@@ -27,6 +27,7 @@ export async function atomicWrite(
   const tmpSuffix = randomBytes(8).toString("hex");
   const tmpPath = join(dir, `.tmp-${tmpSuffix}`);
 
+  let fileHandle;
   try {
     // Ensure parent directory exists
     await mkdir(dir, { recursive: true });
@@ -34,10 +35,25 @@ export async function atomicWrite(
     // Write to temporary file
     await writeFile(tmpPath, content, { encoding: "utf-8", flag: "w" });
 
+    // Fsync to ensure data is written to disk
+    fileHandle = await open(tmpPath, "r+");
+    await fileHandle.sync();
+    await fileHandle.close();
+    fileHandle = undefined;
+
     // Atomically rename temp file to target
     // This is atomic on POSIX systems and modern Windows
     await rename(tmpPath, filePath);
   } catch (error) {
+    // Close file handle if still open
+    if (fileHandle) {
+      try {
+        await fileHandle.close();
+      } catch {
+        // Ignore close errors
+      }
+    }
+
     // Clean up temp file on error
     try {
       await unlink(tmpPath);

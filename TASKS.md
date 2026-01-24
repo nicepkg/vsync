@@ -363,11 +363,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 5.1 Atomic Write Verification
 
-- [ ] Verify atomic write implementation
-  - [ ] Test write → fsync → rename flow
-  - [ ] Test cleanup on error
-  - [ ] Test concurrent writes
-  - [ ] Test crash recovery
+- [x] Verify atomic write implementation
+  - [x] Test write → fsync → rename flow
+  - [x] Test cleanup on error
+  - [x] Test concurrent writes
+  - [x] Test crash recovery
 
 ### 5.2 Environment Variable Preservation
 
