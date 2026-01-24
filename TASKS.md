@@ -11,7 +11,7 @@
 
 This document tracks all implementation tasks for vibe-sync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
 
-**Current Status**: 🟢 Phase 5 Complete
+**Current Status**: 🟢 Phases 1-5 Complete
 **Next Phase**: Phase 6 - Testing & Polish
 
 ---
@@ -305,7 +305,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Support `--prune` flag (enable deletes)
   - [x] Support `--user` flag
 - [x] Add progress indicators with ora
-- [ ] Add error recovery (rollback on failure)
+- [x] Add error recovery (rollback on failure)
 
 ### 4.4 `vibe-sync plan` Command
 
@@ -503,14 +503,14 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Overall Progress**: 1/6 phases complete
 
-| Phase   | Status         | Start Date | End Date   | Notes                  |
-| ------- | -------------- | ---------- | ---------- | ---------------------- |
-| Phase 1 | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Foundation             |
-| Phase 2 | 🔴 Not Started | -          | -          | Adapters               |
-| Phase 3 | 🔴 Not Started | -          | -          | Diff & Plan            |
-| Phase 4 | 🔴 Not Started | -          | -          | CLI Commands           |
-| Phase 5 | 🟢 Complete    | 2026-01-25 | 2026-01-25 | Safety & Reliability   |
-| Phase 6 | 🔴 Not Started | -          | -          | Testing                |
+| Phase   | Status      | Start Date | End Date   | Notes                |
+| ------- | ----------- | ---------- | ---------- | -------------------- |
+| Phase 1 | 🟢 Complete | 2026-01-24 | 2026-01-24 | Foundation           |
+| Phase 2 | 🟢 Complete | 2026-01-24 | 2026-01-24 | Adapters             |
+| Phase 3 | 🟢 Complete | 2026-01-24 | 2026-01-24 | Diff & Plan          |
+| Phase 4 | 🟢 Complete | 2026-01-24 | 2026-01-25 | CLI Commands         |
+| Phase 5 | 🟢 Complete | 2026-01-25 | 2026-01-25 | Safety & Reliability |
+| Phase 6 | 🔴 Not Started | -          | -          | Testing              |
 
 **Legend**:
 

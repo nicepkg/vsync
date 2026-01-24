@@ -18,6 +18,12 @@ import {
   updateAfterDelete,
 } from "@src/core/manifest-manager.js";
 import { generatePlan, formatPlan, validatePlan } from "@src/core/planner.js";
+import {
+  createBackup,
+  restoreBackup,
+  cleanupBackup,
+} from "@src/core/rollback.js";
+import type { BackupInfo } from "@src/core/rollback.js";
 import type { SyncMode, ToolName, VibeConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import type { MCPServer, Skill } from "@src/types/models.js";
@@ -174,6 +180,28 @@ export async function calculateSyncDiff(
 }
 
 /**
+ * Get file paths that will be modified during sync
+ *
+ * @param tool - Tool name
+ * @param baseDir - Base directory
+ * @returns Array of file paths that may be modified
+ */
+function getTargetFilePaths(tool: ToolName, baseDir: string): string[] {
+  const paths: string[] = [];
+
+  if (tool === "cursor") {
+    paths.push(`${baseDir}/.cursor/mcp.json`);
+    // Note: Individual skill files would be backed up separately if needed
+  } else if (tool === "opencode") {
+    paths.push(`${baseDir}/.opencode/opencode.jsonc`);
+  } else if (tool === "claude-code") {
+    paths.push(`${baseDir}/.mcp.json`);
+  }
+
+  return paths;
+}
+
+/**
  * Execute sync plan for all targets
  *
  * @param plan - Sync plan
@@ -187,111 +215,157 @@ export async function executeSyncPlan(
   projectDir: string,
 ): Promise<SyncResults> {
   const results: SyncResults = {};
+  const allBackups: BackupInfo[] = [];
 
-  for (const [toolName, diff] of Object.entries(plan.diffs)) {
-    if (!diff) continue;
+  try {
+    // Phase 1: Create backups for all target files
+    for (const toolName of Object.keys(plan.diffs)) {
+      const tool = toolName as ToolName;
+      const filePaths = getTargetFilePaths(tool, projectDir);
 
-    const tool = toolName as ToolName;
-    const adapter = getAdapter({ tool, baseDir: projectDir });
-
-    const result: TargetSyncResult = {
-      success: true,
-      created: 0,
-      updated: 0,
-      deleted: 0,
-      errors: [],
-    };
-
-    try {
-      // Collect skills and MCP servers to CREATE
-      const skillsToCreate = diff.toCreate
-        .filter((op) => op.itemType === "skill")
-        .map((op) => sourceData.skills.find((s) => s.name === op.name))
-        .filter((s): s is NonNullable<typeof s> => s !== undefined);
-
-      const mcpToCreate = diff.toCreate
-        .filter((op) => op.itemType === "mcp")
-        .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
-        .filter((m): m is NonNullable<typeof m> => m !== undefined);
-
-      // Collect skills and MCP servers to UPDATE
-      const skillsToUpdate = diff.toUpdate
-        .filter((op) => op.itemType === "skill")
-        .map((op) => sourceData.skills.find((s) => s.name === op.name))
-        .filter((s): s is NonNullable<typeof s> => s !== undefined);
-
-      const mcpToUpdate = diff.toUpdate
-        .filter((op) => op.itemType === "mcp")
-        .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
-        .filter((m): m is NonNullable<typeof m> => m !== undefined);
-
-      // Write skills (CREATE + UPDATE combined)
-      const allSkills = [...skillsToCreate, ...skillsToUpdate];
-      if (allSkills.length > 0) {
-        try {
-          const writeResult = await adapter.writeSkills(allSkills);
-          if (writeResult.success) {
-            result.created += skillsToCreate.length;
-            result.updated += skillsToUpdate.length;
-          } else {
-            result.errors.push(writeResult.error || "Failed to write skills");
-            result.success = false;
-          }
-        } catch (error) {
-          result.errors.push(
-            `Failed to write skills: ${error instanceof Error ? error.message : String(error)}`,
-          );
-          result.success = false;
-        }
+      for (const filePath of filePaths) {
+        const backup = await createBackup(filePath);
+        allBackups.push(backup);
       }
-
-      // Write MCP servers (CREATE + UPDATE combined)
-      const allMCP = [...mcpToCreate, ...mcpToUpdate];
-      if (allMCP.length > 0) {
-        try {
-          const writeResult = await adapter.writeMCPServers(allMCP);
-          if (writeResult.success) {
-            result.created += mcpToCreate.length;
-            result.updated += mcpToUpdate.length;
-          } else {
-            result.errors.push(
-              writeResult.error || "Failed to write MCP servers",
-            );
-            result.success = false;
-          }
-        } catch (error) {
-          result.errors.push(
-            `Failed to write MCP servers: ${error instanceof Error ? error.message : String(error)}`,
-          );
-          result.success = false;
-        }
-      }
-
-      // Execute DELETE operations (one at a time)
-      for (const op of diff.toDelete) {
-        try {
-          if (op.itemType === "skill") {
-            await adapter.deleteSkill(op.name);
-            result.deleted++;
-          } else if (op.itemType === "mcp") {
-            await adapter.deleteMCPServer(op.name);
-            result.deleted++;
-          }
-        } catch (error) {
-          result.errors.push(
-            `Failed to delete ${op.itemType} ${op.name}: ${error instanceof Error ? error.message : String(error)}`,
-          );
-          result.success = false;
-        }
-      }
-    } catch (error) {
-      result.success = false;
-      result.errors.push(
-        `Fatal error syncing to ${tool}: ${error instanceof Error ? error.message : String(error)}`,
-      );
     }
 
-    results[tool] = result;
+    // Phase 2: Execute sync operations for each target
+    for (const [toolName, diff] of Object.entries(plan.diffs)) {
+      if (!diff) continue;
+
+      const tool = toolName as ToolName;
+      const adapter = getAdapter({ tool, baseDir: projectDir });
+
+      const result: TargetSyncResult = {
+        success: true,
+        created: 0,
+        updated: 0,
+        deleted: 0,
+        errors: [],
+      };
+
+      try {
+        // Collect skills and MCP servers to CREATE
+        const skillsToCreate = diff.toCreate
+          .filter((op) => op.itemType === "skill")
+          .map((op) => sourceData.skills.find((s) => s.name === op.name))
+          .filter((s): s is NonNullable<typeof s> => s !== undefined);
+
+        const mcpToCreate = diff.toCreate
+          .filter((op) => op.itemType === "mcp")
+          .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
+          .filter((m): m is NonNullable<typeof m> => m !== undefined);
+
+        // Collect skills and MCP servers to UPDATE
+        const skillsToUpdate = diff.toUpdate
+          .filter((op) => op.itemType === "skill")
+          .map((op) => sourceData.skills.find((s) => s.name === op.name))
+          .filter((s): s is NonNullable<typeof s> => s !== undefined);
+
+        const mcpToUpdate = diff.toUpdate
+          .filter((op) => op.itemType === "mcp")
+          .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
+          .filter((m): m is NonNullable<typeof m> => m !== undefined);
+
+        // Write skills (CREATE + UPDATE combined)
+        const allSkills = [...skillsToCreate, ...skillsToUpdate];
+        if (allSkills.length > 0) {
+          try {
+            const writeResult = await adapter.writeSkills(allSkills);
+            if (writeResult.success) {
+              result.created += skillsToCreate.length;
+              result.updated += skillsToUpdate.length;
+            } else {
+              result.errors.push(writeResult.error || "Failed to write skills");
+              result.success = false;
+              throw new Error("Skill write failed - initiating rollback");
+            }
+          } catch (error) {
+            result.errors.push(
+              `Failed to write skills: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            result.success = false;
+            throw error;
+          }
+        }
+
+        // Write MCP servers (CREATE + UPDATE combined)
+        const allMCP = [...mcpToCreate, ...mcpToUpdate];
+        if (allMCP.length > 0) {
+          try {
+            const writeResult = await adapter.writeMCPServers(allMCP);
+            if (writeResult.success) {
+              result.created += mcpToCreate.length;
+              result.updated += mcpToUpdate.length;
+            } else {
+              result.errors.push(
+                writeResult.error || "Failed to write MCP servers",
+              );
+              result.success = false;
+              throw new Error("MCP write failed - initiating rollback");
+            }
+          } catch (error) {
+            result.errors.push(
+              `Failed to write MCP servers: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            result.success = false;
+            throw error;
+          }
+        }
+
+        // Execute DELETE operations (one at a time)
+        for (const op of diff.toDelete) {
+          try {
+            if (op.itemType === "skill") {
+              await adapter.deleteSkill(op.name);
+              result.deleted++;
+            } else if (op.itemType === "mcp") {
+              await adapter.deleteMCPServer(op.name);
+              result.deleted++;
+            }
+          } catch (error) {
+            result.errors.push(
+              `Failed to delete ${op.itemType} ${op.name}: ${error instanceof Error ? error.message : String(error)}`,
+            );
+            result.success = false;
+            throw error;
+          }
+        }
+      } catch (error) {
+        result.success = false;
+        if (!result.errors.some((e) => e.includes("Fatal error"))) {
+          result.errors.push(
+            `Fatal error syncing to ${tool}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+
+        // Rollback all changes on error
+        console.error(
+          chalk.yellow(`\n⚠️  Error occurred - rolling back changes...`),
+        );
+        for (const backup of allBackups) {
+          await restoreBackup(backup);
+        }
+        console.error(chalk.green("✅ Rollback completed"));
+
+        // Clean up backups after rollback
+        for (const backup of allBackups) {
+          await cleanupBackup(backup);
+        }
+
+        throw error; // Re-throw to exit sync
+      }
+
+      results[tool] = result;
+    }
+
+    // Phase 3: Success - cleanup all backups
+    for (const backup of allBackups) {
+      await cleanupBackup(backup);
+    }
+  } catch (error) {
+    // Error already handled and rolled back
+    throw error;
   }
 
   return results;
