@@ -317,16 +317,16 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 4.5 `vibe-sync status` Command
 
-- [ ] Implement `cli/src/cli/commands/status.ts`
-  - [ ] Read configuration
-  - [ ] Read manifest
-  - [ ] Display:
-    - [ ] Source and target tools
-    - [ ] Last sync time
-    - [ ] Synced item counts
-    - [ ] Tool health status
-  - [ ] Check for pending changes
-  - [ ] Support `--user` flag
+- [x] Implement `cli/src/cli/commands/status.ts`
+  - [x] Read configuration
+  - [x] Read manifest
+  - [x] Display:
+    - [x] Source and target tools
+    - [x] Last sync time
+    - [x] Synced item counts
+    - [x] Tool health status
+  - [x] Check for pending changes
+  - [x] Support `--user` flag
 
 ### 4.6 `vibe-sync list` Command
 
