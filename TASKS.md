@@ -434,10 +434,16 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 - [x] Set up test fixtures
   - [x] Minimal Claude Code source configuration
   - [x] Sample skills with frontmatter
-- [x] Test complete workflows (basic-workflow.test.ts)
-  - [x] Sync from Claude Code to Cursor
+  - [x] E2ETestHelper utility class (DRY, high cohesion)
+  - [x] E2ETestFixture builder class (low coupling)
+- [x] Test complete workflows (basic-workflow.test.ts) ✅ 15/15 passing
+  - [x] Basic sync from Claude Code to Cursor
   - [x] Sync to multiple targets (Cursor + OpenCode)
   - [x] Prune mode deletion
+  - [x] Symlink mode (5 tests: creation, target, access, real-time, multi-target)
+  - [x] MCP server sync (3 tests: basic, env vars, OpenCode format)
+  - [x] Agents sync (2 tests: single target, multi-target)
+  - [x] Commands sync (2 tests: single target, multi-target)
 - [ ] Test CLI output (deferred - basic functionality verified)
   - [ ] Colors and formatting
   - [ ] Progress indicators
@@ -496,9 +502,9 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Phase 6 Deliverables**:
 
-- [x] Unit tests complete (26 test files, 352 tests passing) ✅
+- [x] Unit tests complete (44 test files, 589 tests passing) ✅
 - [x] Integration tests (1 test file, 9 tests passing) ✅
-- [x] E2E tests (1 test file, 3 tests passing) ✅
+- [x] E2E tests (1 test file, 15 tests passing) ✅
 - [ ] Documentation (README, API docs not written - deferred)
 - [x] Error handling (error formatter + debug logging complete) ✅
 
