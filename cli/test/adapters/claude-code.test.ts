@@ -21,6 +21,9 @@ version: 1.0.0
 
 This skill helps create releases.`,
               "template.md": "Release template content",
+              scripts: {
+                "helper.sh": "echo helper",
+              },
             },
             "code-review": {
               "SKILL.md": `# Code Review
@@ -91,6 +94,9 @@ No frontmatter, just content.`,
       expect(gitRelease?.supportFiles).toBeDefined();
       expect(gitRelease?.supportFiles?.["template.md"]).toBe(
         "Release template content",
+      );
+      expect(gitRelease?.supportFiles?.["scripts/helper.sh"]).toBe(
+        "echo helper",
       );
     });
 
@@ -191,6 +197,33 @@ No frontmatter, just content.`,
 
       const servers = await emptyAdapter.readMCPServers();
       expect(servers).toEqual([]);
+    });
+
+    it("should read user-level MCP servers from .claude.json", async () => {
+      mockFs.restore();
+      mockFs({
+        "/home": {
+          ".claude.json": JSON.stringify({
+            mcpServers: {
+              userPostgres: {
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-postgres"],
+              },
+            },
+          }),
+        },
+      });
+
+      const userAdapter = new ClaudeCodeAdapter({
+        tool: "claude-code",
+        baseDir: "/home",
+        level: "user",
+      });
+
+      const servers = await userAdapter.readMCPServers();
+
+      expect(servers).toHaveLength(1);
+      expect(servers[0]?.name).toBe("userPostgres");
     });
 
     it("should handle invalid JSON gracefully", async () => {

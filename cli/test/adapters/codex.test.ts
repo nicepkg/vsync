@@ -40,7 +40,9 @@ describe("CodexAdapter", () => {
 description: Test skill
 ---
 Skill content here`,
-                "support.txt": "Support file",
+                scripts: {
+                  "helper.sh": "Support file",
+                },
               },
             },
           },
@@ -53,7 +55,7 @@ Skill content here`,
       expect(skills[0]!.name).toBe("test-skill");
       expect(skills[0]!.content).toBe("Skill content here");
       expect(skills[0]!.description).toBe("Test skill");
-      expect(skills[0]!.supportFiles).toHaveProperty("support.txt");
+      expect(skills[0]!.supportFiles).toHaveProperty("scripts/helper.sh");
     });
 
     it("should return empty array if skills directory doesn't exist", async () => {
@@ -70,6 +72,7 @@ Skill content here`,
           hash: "hash1",
           supportFiles: {
             "example.txt": "Example content",
+            "scripts/helper.sh": "echo helper",
           },
         },
       ];
@@ -92,6 +95,12 @@ Skill content here`,
         "utf-8",
       );
       expect(supportFile).toBe("Example content");
+
+      const helperFile = await readFile(
+        `${baseDir}/.codex/skills/new-skill/scripts/helper.sh`,
+        "utf-8",
+      );
+      expect(helperFile).toBe("echo helper");
     });
 
     it("should delete skill from .codex/skills/", async () => {

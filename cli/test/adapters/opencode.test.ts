@@ -79,6 +79,7 @@ describe("OpenCodeAdapter", () => {
           supportFiles: {
             "template.md": "Template content",
             "config.json": '{"key": "value"}',
+            "scripts/helper.sh": "echo helper",
           },
           hash: "def456",
         },
@@ -100,6 +101,12 @@ describe("OpenCodeAdapter", () => {
         "utf-8",
       );
       expect(config).toBe('{"key": "value"}');
+
+      const helper = await readFile(
+        "/project/.opencode/skills/complex-skill/scripts/helper.sh",
+        "utf-8",
+      );
+      expect(helper).toBe("echo helper");
     });
 
     it("should create .opencode/skills directory if missing", async () => {

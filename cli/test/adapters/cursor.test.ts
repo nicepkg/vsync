@@ -71,6 +71,7 @@ describe("CursorAdapter", () => {
           supportFiles: {
             "template.md": "Template content",
             "config.json": '{"key": "value"}',
+            "scripts/helper.sh": "echo helper",
           },
           hash: "def456",
         },
@@ -92,6 +93,12 @@ describe("CursorAdapter", () => {
         "utf-8",
       );
       expect(config).toBe('{"key": "value"}');
+
+      const helper = await readFile(
+        "/project/.cursor/skills/complex-skill/scripts/helper.sh",
+        "utf-8",
+      );
+      expect(helper).toBe("echo helper");
     });
 
     it("should handle skills without frontmatter metadata", async () => {
@@ -280,7 +287,7 @@ describe("CursorAdapter", () => {
       const config = JSON.parse(mcpJson);
 
       expect(config.mcpServers["oauth-service"].auth).toBeDefined();
-      expect(config.mcpServers["oauth-service"].auth.client_id).toBe(
+      expect(config.mcpServers["oauth-service"].auth.CLIENT_ID).toBe(
         "${env:CLIENT_ID}",
       );
     });
@@ -310,10 +317,10 @@ describe("CursorAdapter", () => {
       expect(config.mcpServers["remote-auth"].headers.Authorization).toBe(
         "Bearer ${env:API_TOKEN}",
       );
-      expect(config.mcpServers["remote-auth"].auth.client_id).toBe(
+      expect(config.mcpServers["remote-auth"].auth.CLIENT_ID).toBe(
         "${env:CLIENT_ID}",
       );
-      expect(config.mcpServers["remote-auth"].auth.client_secret).toBe(
+      expect(config.mcpServers["remote-auth"].auth.CLIENT_SECRET).toBe(
         "${env:CLIENT_SECRET}",
       );
     });
@@ -577,8 +584,9 @@ Command content`,
                 oauth: {
                   url: "https://oauth.example.com/mcp",
                   auth: {
-                    client_id: "id",
-                    client_secret: "secret",
+                    CLIENT_ID: "id",
+                    CLIENT_SECRET: "secret",
+                    scopes: ["read", "write"],
                   },
                 },
               },
@@ -602,6 +610,9 @@ Command content`,
       expect(stdio?.type).toBe("stdio");
       expect(http?.type).toBe("http");
       expect(oauth?.type).toBe("oauth");
+      expect(oauth?.auth?.client_id).toBe("id");
+      expect(oauth?.auth?.client_secret).toBe("secret");
+      expect(oauth?.auth?.scopes).toEqual(["read", "write"]);
     });
   });
 

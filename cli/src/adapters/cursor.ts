@@ -22,6 +22,10 @@ import {
   hashAgent,
   hashCommand,
 } from "@src/utils/hash.js";
+import {
+  readSupportFiles,
+  writeSupportFiles,
+} from "@src/utils/support-files.js";
 import type {
   AdapterConfig,
   ToolAdapter,
@@ -67,13 +71,11 @@ export class CursorAdapter implements ToolAdapter {
   }
 
   private async getMcpConfigExitFullPath(): Promise<string> {
-    const mcpConfigPath = await fileOps.findFirstExistingPath(
-      this.getMCPConfigPaths().map((p) => join(this.config.baseDir, p)),
+    const paths = this.getMCPConfigPaths().map((p) =>
+      join(this.config.baseDir, p),
     );
-    if (!mcpConfigPath) {
-      throw new Error("Cursor MCP config path is not configured");
-    }
-    return mcpConfigPath;
+    const existingPath = await fileOps.findFirstExistingPath(paths);
+    return existingPath ?? paths[0]!;
   }
 
   /**
@@ -116,14 +118,7 @@ export class CursorAdapter implements ToolAdapter {
         await atomicWrite(skillMdPath, skillContent);
 
         // Write support files
-        if (skill.supportFiles) {
-          for (const [fileName, fileContent] of Object.entries(
-            skill.supportFiles,
-          )) {
-            const filePath = join(skillDir, fileName);
-            await atomicWrite(filePath, fileContent);
-          }
-        }
+        await writeSupportFiles(skillDir, skill.supportFiles);
       }
 
       return {
@@ -187,7 +182,7 @@ export class CursorAdapter implements ToolAdapter {
           ) as Record<string, string>;
         }
         if (server.auth) {
-          serverConfig.auth = this.normalizeCursorVars(server.auth) as MCPOAuth;
+          serverConfig.auth = this.toCursorAuth(server.auth);
         }
 
         config.mcpServers[server.name] = serverConfig;
@@ -417,6 +412,55 @@ export class CursorAdapter implements ToolAdapter {
     );
   }
 
+  private toCursorAuth(auth: MCPOAuth): Record<string, unknown> {
+    const cursorAuth: Record<string, unknown> = {};
+
+    if (auth.client_id) {
+      cursorAuth.CLIENT_ID = auth.client_id;
+    }
+    if (auth.client_secret) {
+      cursorAuth.CLIENT_SECRET = auth.client_secret;
+    }
+    if (auth.scopes && auth.scopes.length > 0) {
+      cursorAuth.scopes = auth.scopes;
+    }
+
+    return this.normalizeCursorVars(cursorAuth) as Record<string, unknown>;
+  }
+
+  private fromCursorAuth(
+    rawAuth: Record<string, unknown>,
+  ): MCPOAuth | undefined {
+    const auth: MCPOAuth = {
+      client_id: "",
+      client_secret: "",
+    };
+
+    const clientId = rawAuth.CLIENT_ID ?? rawAuth.client_id;
+    const clientSecret = rawAuth.CLIENT_SECRET ?? rawAuth.client_secret;
+
+    if (typeof clientId === "string") {
+      auth.client_id = clientId;
+    }
+    if (typeof clientSecret === "string") {
+      auth.client_secret = clientSecret;
+    }
+
+    if (Array.isArray(rawAuth.scopes)) {
+      auth.scopes = rawAuth.scopes.filter(
+        (scope): scope is string => typeof scope === "string",
+      );
+    } else if (typeof rawAuth.scopes === "string") {
+      auth.scopes = rawAuth.scopes.split(/\s+/).filter(Boolean);
+    }
+
+    if (!auth.client_id && !auth.client_secret && !auth.scopes?.length) {
+      return undefined;
+    }
+
+    return auth;
+  }
+
   /**
    * Validate Cursor configuration
    */
@@ -477,17 +521,9 @@ export class CursorAdapter implements ToolAdapter {
           const skillContent = await readFile(skillMdPath, "utf-8");
           const parsed = matter(skillContent);
 
-          // Read support files
-          const supportFiles: Record<string, string> = {};
-          const skillFiles = await readdir(skillDir, { withFileTypes: true });
-
-          for (const file of skillFiles) {
-            if (file.name === "SKILL.md" || file.isDirectory()) continue;
-
-            const filePath = join(skillDir, file.name);
-            const fileContent = await readFile(filePath, "utf-8");
-            supportFiles[file.name] = fileContent;
-          }
+          const supportFiles = await readSupportFiles(skillDir, {
+            exclude: (relativePath) => relativePath === "SKILL.md",
+          });
 
           // Build skill object
           const skill: Skill = {
@@ -573,7 +609,14 @@ export class CursorAdapter implements ToolAdapter {
         if (rawConfig.url) server.url = rawConfig.url as string;
         if (rawConfig.headers)
           server.headers = rawConfig.headers as Record<string, string>;
-        if (rawConfig.auth) server.auth = rawConfig.auth as unknown as MCPOAuth;
+        if (rawConfig.auth && typeof rawConfig.auth === "object") {
+          const normalized = this.fromCursorAuth(
+            rawConfig.auth as Record<string, unknown>,
+          );
+          if (normalized) {
+            server.auth = normalized;
+          }
+        }
 
         server.hash = hashMCPServer(server);
         servers.push(server);

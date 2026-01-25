@@ -11,6 +11,10 @@ import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashSkill, hashMCPServer } from "@src/utils/hash.js";
+import {
+  readSupportFiles,
+  writeSupportFiles,
+} from "@src/utils/support-files.js";
 import type {
   AdapterConfig,
   ToolAdapter,
@@ -57,13 +61,11 @@ export class CodexAdapter implements ToolAdapter {
   }
 
   private async getMcpConfigExitFullPath(): Promise<string> {
-    const mcpConfigPath = await fileOps.findFirstExistingPath(
-      this.getMCPConfigPaths().map((p) => join(this.config.baseDir, p)),
+    const paths = this.getMCPConfigPaths().map((p) =>
+      join(this.config.baseDir, p),
     );
-    if (!mcpConfigPath) {
-      throw new Error("Codex MCP config path is not configured");
-    }
-    return mcpConfigPath;
+    const existingPath = await fileOps.findFirstExistingPath(paths);
+    return existingPath ?? paths[0]!;
   }
 
   /**
@@ -90,21 +92,9 @@ export class CodexAdapter implements ToolAdapter {
           const skillContent = await readFile(skillMdPath, "utf-8");
           const parsed = matter(skillContent);
 
-          // Read support files
-          const supportFiles: Record<string, string> = {};
-          const skillFiles = await fileOps.readdir(skillDir, {
-            withFileTypes: true,
+          const supportFiles = await readSupportFiles(skillDir, {
+            exclude: (relativePath) => relativePath === "SKILL.md",
           });
-
-          for (const file of skillFiles) {
-            if (file.name === "SKILL.md" || file.isDirectory()) {
-              continue;
-            }
-
-            const filePath = join(skillDir, file.name);
-            const fileContent = await readFile(filePath, "utf-8");
-            supportFiles[file.name] = fileContent;
-          }
 
           const skill: Skill = {
             name: skillName,
@@ -294,14 +284,7 @@ export class CodexAdapter implements ToolAdapter {
         const skillMdPath = join(skillDir, "SKILL.md");
         await atomicWrite(skillMdPath, skillContent);
 
-        if (skill.supportFiles) {
-          for (const [fileName, fileContent] of Object.entries(
-            skill.supportFiles,
-          )) {
-            const filePath = join(skillDir, fileName);
-            await atomicWrite(filePath, fileContent);
-          }
-        }
+        await writeSupportFiles(skillDir, skill.supportFiles);
       }
 
       return {
@@ -538,7 +521,7 @@ export class CodexAdapter implements ToolAdapter {
     const mcpConfigPath = await this.getMcpConfigExitFullPath();
     const mcpConfigStats = await fileOps.stat(mcpConfigPath);
     if (!mcpConfigStats) {
-      warnings.push("config.toml mcp config file not found");
+      warnings.push("config.toml not found");
     }
 
     const result: ValidationResult = {

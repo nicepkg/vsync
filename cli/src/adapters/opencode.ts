@@ -23,6 +23,10 @@ import {
   hashAgent,
   hashCommand,
 } from "@src/utils/hash.js";
+import {
+  readSupportFiles,
+  writeSupportFiles,
+} from "@src/utils/support-files.js";
 import type {
   AdapterConfig,
   ToolAdapter,
@@ -71,13 +75,11 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   private async getMcpConfigExitFullPath(): Promise<string> {
-    const mcpConfigPath = await fileOps.findFirstExistingPath(
-      this.getMCPConfigPaths().map((p) => join(this.config.baseDir, p)),
+    const paths = this.getMCPConfigPaths().map((p) =>
+      join(this.config.baseDir, p),
     );
-    if (!mcpConfigPath) {
-      throw new Error("OpenCode MCP config path is not configured");
-    }
-    return mcpConfigPath;
+    const existingPath = await fileOps.findFirstExistingPath(paths);
+    return existingPath ?? paths[0]!;
   }
 
   /**
@@ -120,14 +122,7 @@ export class OpenCodeAdapter implements ToolAdapter {
         await atomicWrite(skillMdPath, skillContent);
 
         // Write support files
-        if (skill.supportFiles) {
-          for (const [fileName, fileContent] of Object.entries(
-            skill.supportFiles,
-          )) {
-            const filePath = join(skillDir, fileName);
-            await atomicWrite(filePath, fileContent);
-          }
-        }
+        await writeSupportFiles(skillDir, skill.supportFiles);
       }
 
       return {
@@ -680,13 +675,9 @@ export class OpenCodeAdapter implements ToolAdapter {
         try {
           const content = await readFile(itemPath, "utf-8");
           const parsed = matter(content);
-          const supportFiles: Record<string, string> = {};
-          const files = await fileOps.readdir(itemDir, { withFileTypes: true });
-          for (const file of files) {
-            if (file.name === fileName || file.isDirectory()) continue;
-            const filePath = join(itemDir, file.name);
-            supportFiles[file.name] = await readFile(filePath, "utf-8");
-          }
+          const supportFiles = await readSupportFiles(itemDir, {
+            exclude: (relativePath) => relativePath === fileName,
+          });
           const item = {
             name: itemName,
             content: parsed.content,

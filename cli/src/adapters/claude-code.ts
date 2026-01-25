@@ -15,6 +15,7 @@ import {
   hashAgent,
   hashCommand,
 } from "@src/utils/hash.js";
+import { readSupportFiles } from "@src/utils/support-files.js";
 import type {
   ToolAdapter,
   AdapterConfig,
@@ -51,7 +52,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
    */
   getMCPConfigPaths(): string[] {
     if (this.config.level === "user") {
-      return [join(this.getConfigDir(), "mcp.json")];
+      return [".claude.json"];
     }
 
     return [".mcp.json"];
@@ -79,13 +80,11 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   }
 
   private async getMcpConfigExitFullPath(): Promise<string> {
-    const mcpConfigPath = await fileOps.findFirstExistingPath(
-      this.getMCPConfigPaths().map((p) => join(this.config.baseDir, p)),
+    const paths = this.getMCPConfigPaths().map((p) =>
+      join(this.config.baseDir, p),
     );
-    if (!mcpConfigPath) {
-      throw new Error("Claude Code MCP config path is not configured");
-    }
-    return mcpConfigPath;
+    const existingPath = await fileOps.findFirstExistingPath(paths);
+    return existingPath ?? paths[0]!;
   }
 
   /**
@@ -116,20 +115,9 @@ export class ClaudeCodeAdapter implements ToolAdapter {
           const parsed = matter(skillContent);
 
           // Read support files
-          const supportFiles: Record<string, string> = {};
-          const skillFiles = await fileOps.readdir(skillDir, {
-            withFileTypes: true,
+          const supportFiles = await readSupportFiles(skillDir, {
+            exclude: (relativePath) => relativePath === "SKILL.md",
           });
-
-          for (const file of skillFiles) {
-            if (file.name === "SKILL.md" || file.isDirectory()) {
-              continue;
-            }
-
-            const filePath = join(skillDir, file.name);
-            const fileContent = await readFile(filePath, "utf-8");
-            supportFiles[file.name] = fileContent;
-          }
 
           // Create skill object (omit undefined optional fields)
           const skill: Skill = {
