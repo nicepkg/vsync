@@ -84,8 +84,8 @@ describe("Init Command", () => {
 
       expect(config.source_tool).toBe("claude-code");
       expect(config.target_tools).toEqual(["cursor"]);
-      expect(config.sync_config.skills).toBe(true);
-      expect(config.sync_config.mcp).toBe(true);
+      expect(config.sync_config!.skills).toBe(true);
+      expect(config.sync_config!.mcp).toBe(true);
       expect(config.level).toBe("project");
     });
 
@@ -118,8 +118,8 @@ describe("Init Command", () => {
         m.generateConfig(options),
       );
 
-      expect(config.sync_config.skills).toBe(true);
-      expect(config.sync_config.mcp).toBe(false);
+      expect(config.sync_config!.skills).toBe(true);
+      expect(config.sync_config!.mcp).toBe(false);
     });
   });
 

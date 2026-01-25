@@ -374,8 +374,8 @@ describe("Config Manager", () => {
       // Project config should override user config
       expect(merged.source_tool).toBe("claude-code");
       expect(merged.target_tools).toEqual(["cursor"]);
-      expect(merged.sync_config.skills).toBe(true);
-      expect(merged.sync_config.mcp).toBe(true);
+      expect(merged.sync_config!.skills).toBe(true);
+      expect(merged.sync_config!.mcp).toBe(true);
       expect(merged.level).toBe("project");
     });
 
@@ -395,8 +395,8 @@ describe("Config Manager", () => {
 
       expect(merged.source_tool).toBe("cursor");
       expect(merged.target_tools).toEqual(["opencode"]);
-      expect(merged.sync_config.skills).toBe(true);
-      expect(merged.sync_config.mcp).toBe(false);
+      expect(merged.sync_config!.skills).toBe(true);
+      expect(merged.sync_config!.mcp).toBe(false);
       expect(merged.level).toBe("user");
     });
 
@@ -576,7 +576,7 @@ describe("Config Manager", () => {
       // Project config should take precedence
       expect(merged.source_tool).toBe("claude-code");
       expect(merged.target_tools).toEqual(["cursor"]);
-      expect(merged.sync_config.skills).toBe(true);
+      expect(merged.sync_config!.skills).toBe(true);
     });
 
     it("should work with only project config", async () => {

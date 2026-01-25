@@ -12,9 +12,9 @@ import ora from "ora";
 import { loadManifest, getManifestPath } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 import { t } from "@src/utils/i18n.js";
 import { readSourceConfig, calculateSyncDiff } from "./sync.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
 
 /**
  * Status display data
@@ -89,11 +89,11 @@ export function formatStatus(data: StatusData): string {
   // Configuration info
   lines.push(
     chalk.cyan(`${t("commands.status.sourceTool")}:       `) +
-      data.config.source_tool,
+      data.config.source_tool!,
   );
   lines.push(
     chalk.cyan(`${t("commands.status.targetTools")}:      `) +
-      data.config.target_tools.join(", "),
+      data.config.target_tools!.join(", "),
   );
 
   const lastSync = data.manifest.last_synced
@@ -134,11 +134,11 @@ export function formatStatus(data: StatusData): string {
   lines.push(chalk.bold(t("commands.status.toolStatus")));
   lines.push(
     chalk.green(
-      `  ✓ ${data.config.source_tool}    ${t("commands.status.sourceIndicator")}`,
+      `  ✓ ${data.config.source_tool!}    ${t("commands.status.sourceIndicator")}`,
     ),
   );
 
-  for (const tool of data.config.target_tools) {
+  for (const tool of data.config.target_tools!) {
     lines.push(
       chalk.green(`  ✓ ${tool}         ${t("commands.status.syncedUpToDate")}`),
     );
@@ -173,8 +173,12 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
 
     // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.status.loadingConfig")).start();
-    const config = await ensureConfig(projectDir, options.user || false, spinner);
+    const config = await ensureConfig(projectDir, options.user || false, {
+      spinner,
+      requireFields: ["source_tool", "target_tools", "sync_config"],
+    });
     spinner.succeed(t("commands.status.configLoaded"));
+    // Config fields are guaranteed by ensureConfig validation
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
@@ -187,16 +191,16 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
     // Check for pending changes
     const checkSpinner = ora(t("commands.status.checkingChanges")).start();
     const sourceData = await readSourceConfig(
-      config.source_tool,
+      config.source_tool!,
       projectDir,
       config.level,
     );
     const plan = await calculateSyncDiff(
       sourceData,
-      config.target_tools,
+      config.target_tools!,
       manifest,
       "safe",
-      config.sync_config,
+      config.sync_config!,
       projectDir,
       config.level,
     );

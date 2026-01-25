@@ -10,7 +10,6 @@ import { Command } from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
 import { getAdapter, getToolConfigFiles } from "@src/adapters/registry.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
 import {
   loadManifest,
   saveManifest,
@@ -45,6 +44,7 @@ import type {
   Command as VibeCommand,
 } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 import { isUnsupportedFeature } from "@src/utils/errors.js";
 import { t } from "@src/utils/i18n.js";
 import {
@@ -157,7 +157,7 @@ export function shouldPromptForSymlinks(
   }
 
   // Don't prompt if skills not in sync config
-  if (!config.sync_config.skills) {
+  if (!config.sync_config?.skills) {
     return false;
   }
 
@@ -302,10 +302,10 @@ export async function calculateSyncDiff(
   // Filter source data based on sync_config
   // Only include items that are enabled in configuration
   const plan = generatePlan({
-    sourceSkills: syncConfig.skills ? sourceData.skills : [],
-    sourceMCPServers: syncConfig.mcp ? sourceData.mcpServers : [],
-    sourceAgents: syncConfig.agents ? sourceData.agents : [],
-    sourceCommands: syncConfig.commands ? sourceData.commands : [],
+    sourceSkills: syncConfig?.skills ? sourceData.skills : [],
+    sourceMCPServers: syncConfig?.mcp ? sourceData.mcpServers : [],
+    sourceAgents: syncConfig?.agents ? sourceData.agents : [],
+    sourceCommands: syncConfig?.commands ? sourceData.commands : [],
     targetSkills: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.skills]),
     ),
@@ -701,8 +701,9 @@ export async function syncWithSymlinks(
   }
 
   // Get source adapter to determine source skills directory
+  // Config fields are guaranteed by ensureConfig validation
   const sourceAdapter = getAdapter({
-    tool: config.source_tool,
+    tool: config.source_tool!,
     baseDir: projectDir,
     level: config.level,
   });
@@ -759,15 +760,16 @@ async function promptForSymlinkUsage(
   projectDir: string,
 ): Promise<void> {
   // Display info
+  // Config fields are guaranteed by ensureConfig validation
   console.log(chalk.cyan(t("commands.sync.symlinkPromptTitle")));
   console.log(
     chalk.gray(
-      `  ${t("commands.sync.symlinkPromptSource", { tool: config.source_tool })}`,
+      `  ${t("commands.sync.symlinkPromptSource", { tool: config.source_tool! })}`,
     ),
   );
   console.log(
     chalk.gray(
-      `  ${t("commands.sync.symlinkPromptTargets", { tools: config.target_tools.join(", ") })}`,
+      `  ${t("commands.sync.symlinkPromptTargets", { tools: config.target_tools!.join(", ") })}`,
     ),
   );
   console.log();
@@ -830,16 +832,19 @@ export async function syncCommand(options: {
 
     // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.sync.loadingConfig")).start();
-    const config = await ensureConfig(projectDir, options.user || false, spinner);
+    const config = await ensureConfig(projectDir, options.user || false, {
+      spinner,
+      requireFields: ["source_tool", "target_tools", "sync_config"],
+    });
     debugObject("Loaded config", config);
     spinner.succeed(t("commands.sync.configLoaded"));
 
     // Read source configuration
     const readSpinner = ora(
-      t("commands.sync.reading", { tool: config.source_tool }),
+      t("commands.sync.reading", { tool: config.source_tool! }),
     ).start();
     const sourceData = await readSourceConfig(
-      config.source_tool,
+      config.source_tool!,
       projectDir,
       config.level,
     );
@@ -856,7 +861,8 @@ export async function syncCommand(options: {
     const manifest = await loadManifest(projectDir);
 
     // Check if we should prompt for symlink usage (only on first skills sync)
-    if (shouldPromptForSymlinks(config, manifest, config.target_tools)) {
+    // Config fields are guaranteed by ensureConfig validation
+    if (shouldPromptForSymlinks(config, manifest, config.target_tools!)) {
       await promptForSymlinkUsage(config, projectDir);
     }
 
@@ -873,10 +879,10 @@ export async function syncCommand(options: {
     const planSpinner = ora(t("commands.sync.calculating")).start();
     const plan = await calculateSyncDiff(
       sourceData,
-      config.target_tools,
+      config.target_tools!,
       manifest,
       mode,
-      config.sync_config,
+      config.sync_config!,
       projectDir,
       config.level,
     );

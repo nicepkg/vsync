@@ -11,26 +11,88 @@ import type { VibeConfig } from "@src/types/config.js";
 import { ensureLanguageConfig } from "@src/utils/language-config.js";
 
 /**
- * Ensure configuration exists, prompting user to initialize if not found
+ * Fields that can be required in configuration
+ */
+export type RequiredConfigField =
+  | "source_tool"
+  | "target_tools"
+  | "sync_config";
+
+/**
+ * Options for ensureConfig
+ */
+export interface EnsureConfigOptions {
+  /** Spinner to update during process */
+  spinner?: ReturnType<typeof ora>;
+  /** Fields that must be present in config */
+  requireFields?: RequiredConfigField[];
+}
+
+/**
+ * Ensure configuration exists and has required fields, prompting user to initialize if needed
  *
  * @param projectDir - Project directory
  * @param isUserLevel - Whether to use user-level config
- * @param spinner - Optional spinner to update during process
+ * @param options - Configuration options
  * @returns Loaded or newly created config
  */
 export async function ensureConfig(
   projectDir: string,
   isUserLevel: boolean,
-  spinner?: ReturnType<typeof ora>,
+  options?: EnsureConfigOptions,
 ): Promise<VibeConfig> {
   // Always ensure language is configured first (user-level)
   await ensureLanguageConfig();
 
   const level = isUserLevel ? "user" : "project";
+  const spinner = options?.spinner;
+  const requireFields = options?.requireFields || [];
 
   try {
     const config = await loadConfig(level, projectDir);
-    return config;
+
+    // Check if required fields are present
+    const missingFields: string[] = [];
+    for (const field of requireFields) {
+      if (config[field] === undefined) {
+        missingFields.push(field);
+      }
+    }
+
+    // If all required fields are present, return config
+    if (missingFields.length === 0) {
+      return config;
+    }
+
+    // Config exists but missing required fields - prompt to run init
+    if (spinner) {
+      spinner.fail(
+        `Configuration is missing required fields: ${missingFields.join(", ")}`,
+      );
+    }
+
+    const { shouldInit } = await inquirer.prompt<{ shouldInit: boolean }>([
+      {
+        type: "confirm",
+        name: "shouldInit",
+        message: chalk.yellow(
+          `⚠️  Configuration is missing required fields (${missingFields.join(", ")}). Would you like to run init to complete the configuration?`,
+        ),
+        default: true,
+      },
+    ]);
+
+    if (!shouldInit) {
+      console.log(
+        chalk.gray(
+          "\n💡 You can run 'vibe-sync init' later to complete the configuration.\n",
+        ),
+      );
+      process.exit(0);
+    }
+
+    // Run init flow to complete missing fields
+    return await runInitFlow(projectDir, isUserLevel);
   } catch (error) {
     // Check if it's a "config not found" error
     if (
@@ -63,106 +125,117 @@ export async function ensureConfig(
       }
 
       // Run init flow
-      console.log(chalk.bold("\n🚀 Let's set up vibe-sync!\n"));
-
-      // Import init functions
-      const {
-        detectTools,
-        generateConfig,
-        saveConfig: saveInitConfig,
-      } = await import("@src/commands/init.js");
-      const { getToolChoices } = await import("@src/adapters/registry.js");
-      const { t } = await import("@src/utils/i18n.js");
-
-      // Detect existing tools
-      const detectSpinner = ora(t("commands.init.detectingTools")).start();
-      const detected = await detectTools(projectDir);
-      detectSpinner.succeed(
-        t("commands.init.detectedTools", {
-          tools: detected.length > 0 ? detected.join(", ") : "none",
-        }),
-      );
-
-      // Prompt for tools
-      const toolsAnswer = await inquirer.prompt<{ tools: string[] }>([
-        {
-          type: "checkbox",
-          name: "tools",
-          message: t("commands.init.selectTools"),
-          choices: getToolChoices(detected),
-          validate: (input: string[]) => {
-            if (input.length === 0) {
-              return t("commands.init.selectToolsValidation");
-            }
-            return true;
-          },
-        },
-      ]);
-
-      // Prompt for source tool
-      const sourceAnswer = await inquirer.prompt<{ source: string }>([
-        {
-          type: "select",
-          name: "source",
-          message: t("commands.init.selectSource"),
-          choices: toolsAnswer.tools.map((tool) => ({
-            name: tool,
-            value: tool,
-          })),
-        },
-      ]);
-
-      // Prompt for sync items
-      const syncAnswer = await inquirer.prompt<{ syncItems: string[] }>([
-        {
-          type: "checkbox",
-          name: "syncItems",
-          message: t("commands.init.selectSyncItems"),
-          choices: [
-            {
-              name: t("commands.init.skillsChoice"),
-              value: "skills",
-              checked: true,
-            },
-            { name: t("commands.init.mcpChoice"), value: "mcp", checked: true },
-            {
-              name: t("commands.init.agentsChoiceInit"),
-              value: "agents",
-              checked: true,
-            },
-            {
-              name: t("commands.init.commandsChoiceInit"),
-              value: "commands",
-              checked: true,
-            },
-          ],
-          validate: (input: string[]) => {
-            if (input.length === 0) {
-              return t("commands.init.selectSyncItemsValidation");
-            }
-            return true;
-          },
-        },
-      ]);
-
-      // Generate and save config
-      const config = await generateConfig({
-        tools: toolsAnswer.tools as any,
-        source: sourceAnswer.source as any,
-        syncItems: syncAnswer.syncItems,
-        isUserLevel,
-      });
-
-      const saveSpinner = ora(t("commands.init.creatingConfig")).start();
-      await saveInitConfig(config, projectDir);
-      saveSpinner.succeed(t("commands.init.configCreated"));
-
-      console.log(chalk.green("\n✅ Configuration complete! Continuing...\n"));
-
-      return config;
+      return await runInitFlow(projectDir, isUserLevel);
     } else {
       // Re-throw other errors
       throw error;
     }
   }
+}
+
+/**
+ * Run initialization flow
+ * Extracted to avoid duplication
+ */
+async function runInitFlow(
+  projectDir: string,
+  isUserLevel: boolean,
+): Promise<VibeConfig> {
+  console.log(chalk.bold("\n🚀 Let's set up vibe-sync!\n"));
+
+  // Import init functions
+  const {
+    detectTools,
+    generateConfig,
+    saveConfig: saveInitConfig,
+  } = await import("@src/commands/init.js");
+  const { getToolChoices } = await import("@src/adapters/registry.js");
+  const { t } = await import("@src/utils/i18n.js");
+
+  // Detect existing tools
+  const detectSpinner = ora(t("commands.init.detectingTools")).start();
+  const detected = await detectTools(projectDir);
+  detectSpinner.succeed(
+    t("commands.init.detectedTools", {
+      tools: detected.length > 0 ? detected.join(", ") : "none",
+    }),
+  );
+
+  // Prompt for tools
+  const toolsAnswer = await inquirer.prompt<{ tools: string[] }>([
+    {
+      type: "checkbox",
+      name: "tools",
+      message: t("commands.init.selectTools"),
+      choices: getToolChoices(detected),
+      validate: (input: string[]) => {
+        if (input.length === 0) {
+          return t("commands.init.selectToolsValidation");
+        }
+        return true;
+      },
+    },
+  ]);
+
+  // Prompt for source tool
+  const sourceAnswer = await inquirer.prompt<{ source: string }>([
+    {
+      type: "select",
+      name: "source",
+      message: t("commands.init.selectSource"),
+      choices: toolsAnswer.tools.map((tool) => ({
+        name: tool,
+        value: tool,
+      })),
+    },
+  ]);
+
+  // Prompt for sync items
+  const syncAnswer = await inquirer.prompt<{ syncItems: string[] }>([
+    {
+      type: "checkbox",
+      name: "syncItems",
+      message: t("commands.init.selectSyncItems"),
+      choices: [
+        {
+          name: t("commands.init.skillsChoice"),
+          value: "skills",
+          checked: true,
+        },
+        { name: t("commands.init.mcpChoice"), value: "mcp", checked: true },
+        {
+          name: t("commands.init.agentsChoiceInit"),
+          value: "agents",
+          checked: true,
+        },
+        {
+          name: t("commands.init.commandsChoiceInit"),
+          value: "commands",
+          checked: true,
+        },
+      ],
+      validate: (input: string[]) => {
+        if (input.length === 0) {
+          return t("commands.init.selectSyncItemsValidation");
+        }
+        return true;
+      },
+    },
+  ]);
+
+  // Generate and save config
+  const config = await generateConfig({
+    tools: toolsAnswer.tools as any,
+    source: sourceAnswer.source as any,
+    syncItems: syncAnswer.syncItems,
+    isUserLevel,
+  });
+
+  const saveSpinner = ora(t("commands.init.creatingConfig")).start();
+  await saveInitConfig(config, projectDir);
+  saveSpinner.succeed(t("commands.init.configCreated"));
+
+  console.log(chalk.green("\n✅ Configuration complete! Continuing...\n"));
+
+  return config;
 }

@@ -3,11 +3,11 @@
  * Generates sync plans by calculating diffs for all target tools
  */
 
+import type { AdapterCapabilities } from "@src/adapters/base.js";
 import type { SyncMode, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { SyncPlan, DiffResult } from "@src/types/plan.js";
-import type { AdapterCapabilities } from "@src/adapters/base.js";
 import { t } from "@src/utils/i18n.js";
 import { calculateDiff, type DiffInput } from "./diff.js";
 

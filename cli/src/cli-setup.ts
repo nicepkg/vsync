@@ -12,7 +12,7 @@ import { createListCommand } from "./commands/list.js";
 import { createPlanCommand } from "./commands/plan.js";
 import { createStatusCommand } from "./commands/status.js";
 import { createSyncCommand } from "./commands/sync.js";
-import { initializeLanguage } from "./utils/language-prompt.js";
+import { ensureLanguageConfig } from "./utils/language-config.js";
 import { setDebugMode } from "./utils/logger.js";
 /**
  * Get package.json version
@@ -74,7 +74,7 @@ export async function runCLI(): Promise<void> {
   try {
     // Initialize i18n BEFORE creating CLI
     // This detects language from user config or system, prompts if needed
-    await initializeLanguage();
+    await ensureLanguageConfig();
 
     const program = createCLI();
 

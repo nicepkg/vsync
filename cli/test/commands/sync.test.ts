@@ -10,8 +10,8 @@ import {
   syncCommand,
   updateManifestAfterSync,
 } from "@src/commands/sync.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
 import type { VibeConfig, ToolName } from "@src/types/config.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 
 // Cross-platform test paths
 const TEST_HOME =

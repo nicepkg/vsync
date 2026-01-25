@@ -138,14 +138,30 @@ export function mergeConfigs(
   const merged: VibeConfig = {
     version: projectConfig.version || userConfig.version,
     level: projectConfig.level, // Always use project level when merging
-    source_tool: projectConfig.source_tool || userConfig.source_tool,
-    target_tools: projectConfig.target_tools || userConfig.target_tools,
-    sync_config: {
-      skills:
-        projectConfig.sync_config?.skills ?? userConfig.sync_config?.skills,
-      mcp: projectConfig.sync_config?.mcp ?? userConfig.sync_config?.mcp,
-    },
   };
+
+  // Add optional fields if present
+  const sourceTool = projectConfig.source_tool || userConfig.source_tool;
+  if (sourceTool) {
+    merged.source_tool = sourceTool;
+  }
+
+  const targetTools = projectConfig.target_tools || userConfig.target_tools;
+  if (targetTools) {
+    merged.target_tools = targetTools;
+  }
+
+  // Only add sync_config if at least one config has it
+  if (projectConfig.sync_config || userConfig.sync_config) {
+    merged.sync_config = {
+      skills:
+        projectConfig.sync_config?.skills ??
+        userConfig.sync_config?.skills ??
+        true,
+      mcp:
+        projectConfig.sync_config?.mcp ?? userConfig.sync_config?.mcp ?? true,
+    };
+  }
 
   // Add last_sync if either config has it (project takes precedence)
   const lastSync = projectConfig.last_sync ?? userConfig.last_sync;
@@ -221,8 +237,10 @@ export function validateConfig(config: VibeConfig): ValidationResult {
   // This is a special case for first-run language selection
   const isMinimalUserConfig =
     config.level === "user" &&
-    config.target_tools?.length === 0 &&
-    config.language !== undefined;
+    config.language !== undefined &&
+    !config.source_tool &&
+    !config.target_tools &&
+    !config.sync_config;
 
   // Check required fields
   if (!config.version) {
@@ -235,72 +253,91 @@ export function validateConfig(config: VibeConfig): ValidationResult {
     errors.push(`Invalid level: ${config.level}`);
   }
 
-  // For minimal user config, source_tool can be a placeholder
-  if (!config.source_tool) {
-    if (!isMinimalUserConfig) {
+  // For project-level configs, all fields are required
+  // For user-level minimal configs, these fields are optional
+  if (config.level === "project" || !isMinimalUserConfig) {
+    if (!config.source_tool) {
       errors.push("Missing required field: source_tool");
-    }
-  } else {
-    // Get valid tools from registry (no hardcoding!)
-    const validTools = getAvailableTools();
-    if (!validTools.includes(config.source_tool)) {
-      if (!isMinimalUserConfig) {
-        errors.push(`Invalid source_tool: ${config.source_tool}`);
-      }
-    }
-  }
-
-  if (!config.target_tools) {
-    errors.push("Missing required field: target_tools");
-  } else {
-    if (!Array.isArray(config.target_tools)) {
-      errors.push("target_tools must be an array");
-    } else if (config.target_tools.length === 0) {
-      // Allow empty target_tools for minimal user config (language preference only)
-      if (!isMinimalUserConfig) {
-        errors.push("target_tools cannot be empty");
-      }
     } else {
       // Get valid tools from registry (no hardcoding!)
       const validTools = getAvailableTools();
-      for (const tool of config.target_tools) {
-        if (!validTools.includes(tool)) {
-          errors.push(`Invalid target tool: ${tool}`);
+      if (!validTools.includes(config.source_tool)) {
+        errors.push(`Invalid source_tool: ${config.source_tool}`);
+      }
+    }
+
+    if (!config.target_tools) {
+      errors.push("Missing required field: target_tools");
+    } else {
+      if (!Array.isArray(config.target_tools)) {
+        errors.push("target_tools must be an array");
+      } else if (config.target_tools.length === 0) {
+        errors.push("target_tools cannot be empty");
+      } else {
+        // Get valid tools from registry (no hardcoding!)
+        const validTools = getAvailableTools();
+        for (const tool of config.target_tools) {
+          if (!validTools.includes(tool)) {
+            errors.push(`Invalid target tool: ${tool}`);
+          }
+        }
+
+        // Source tool cannot be in target tools
+        if (
+          config.source_tool &&
+          config.target_tools.includes(config.source_tool)
+        ) {
+          errors.push(
+            "source_tool cannot be included in target_tools (would create a loop)",
+          );
         }
       }
+    }
 
-      // Source tool cannot be in target tools
-      if (
-        config.source_tool &&
-        config.target_tools.includes(config.source_tool)
-      ) {
-        errors.push(
-          "source_tool cannot be included in target_tools (would create a loop)",
-        );
+    if (!config.sync_config) {
+      errors.push("Missing required field: sync_config");
+    } else {
+      if (typeof config.sync_config.skills !== "boolean") {
+        errors.push("sync_config.skills must be a boolean");
+      }
+      if (typeof config.sync_config.mcp !== "boolean") {
+        errors.push("sync_config.mcp must be a boolean");
+      }
+
+      // At least one sync type must be enabled
+      if (!config.sync_config.skills && !config.sync_config.mcp) {
+        errors.push("At least one sync type must be enabled (skills or mcp)");
       }
     }
-  }
-
-  // For minimal user config, sync_config can have placeholder values
-  if (!config.sync_config) {
-    if (!isMinimalUserConfig) {
-      errors.push("Missing required field: sync_config");
-    }
   } else {
-    if (typeof config.sync_config.skills !== "boolean") {
-      errors.push("sync_config.skills must be a boolean");
-    }
-    if (typeof config.sync_config.mcp !== "boolean") {
-      errors.push("sync_config.mcp must be a boolean");
+    // Minimal user config - validate fields if present but don't require them
+    if (config.source_tool) {
+      const validTools = getAvailableTools();
+      if (!validTools.includes(config.source_tool)) {
+        errors.push(`Invalid source_tool: ${config.source_tool}`);
+      }
     }
 
-    // At least one sync type must be enabled (skip for minimal user config)
-    if (
-      !isMinimalUserConfig &&
-      !config.sync_config.skills &&
-      !config.sync_config.mcp
-    ) {
-      errors.push("At least one sync type must be enabled (skills or mcp)");
+    if (config.target_tools) {
+      if (!Array.isArray(config.target_tools)) {
+        errors.push("target_tools must be an array");
+      } else if (config.target_tools.length > 0) {
+        const validTools = getAvailableTools();
+        for (const tool of config.target_tools) {
+          if (!validTools.includes(tool)) {
+            errors.push(`Invalid target tool: ${tool}`);
+          }
+        }
+      }
+    }
+
+    if (config.sync_config) {
+      if (typeof config.sync_config.skills !== "boolean") {
+        errors.push("sync_config.skills must be a boolean");
+      }
+      if (typeof config.sync_config.mcp !== "boolean") {
+        errors.push("sync_config.mcp must be a boolean");
+      }
     }
   }
 

@@ -11,9 +11,9 @@ import { loadManifest } from "@src/core/manifest-manager.js";
 import { validatePlan } from "@src/core/planner.js";
 import type { SyncMode } from "@src/types/config.js";
 import type { DiffResult, SyncPlan } from "@src/types/plan.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 import { t } from "@src/utils/i18n.js";
 import { calculateSyncDiff, readSourceConfig } from "./sync.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
 
 /**
  * Format detailed plan with hash comparisons and reasons
@@ -131,15 +131,19 @@ async function planCommand(options: {
 
     // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.plan.loadingConfig")).start();
-    const config = await ensureConfig(projectDir, options.user || false, spinner);
+    const config = await ensureConfig(projectDir, options.user || false, {
+      spinner,
+      requireFields: ["source_tool", "target_tools", "sync_config"],
+    });
     spinner.succeed(t("commands.plan.configLoaded"));
+    // Config fields are guaranteed by ensureConfig validation
 
     // Read source configuration
     const readSpinner = ora(
-      t("commands.plan.reading", { tool: config.source_tool }),
+      t("commands.plan.reading", { tool: config.source_tool! }),
     ).start();
     const sourceData = await readSourceConfig(
-      config.source_tool,
+      config.source_tool!,
       projectDir,
       config.level,
     );
@@ -157,10 +161,10 @@ async function planCommand(options: {
     const planSpinner = ora(t("commands.plan.calculating")).start();
     const plan = await calculateSyncDiff(
       sourceData,
-      config.target_tools,
+      config.target_tools!,
       manifest,
       mode,
-      config.sync_config,
+      config.sync_config!,
       projectDir,
       config.level,
     );

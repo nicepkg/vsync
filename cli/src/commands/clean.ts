@@ -12,9 +12,9 @@ import { getAdapter } from "@src/adapters/registry.js";
 import { loadManifest, saveManifest } from "@src/core/manifest-manager.js";
 import type { ConfigLevel, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 import { t } from "@src/utils/i18n.js";
 import { readSourceConfig } from "./sync.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
 
 /**
  * Parsed item name
@@ -264,8 +264,12 @@ async function cleanCommand(
 
     // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.clean.loadingConfig")).start();
-    const config = await ensureConfig(projectDir, options.user || false, spinner);
+    const config = await ensureConfig(projectDir, options.user || false, {
+      spinner,
+      requireFields: ["source_tool", "target_tools"],
+    });
     spinner.succeed(t("commands.clean.configLoaded"));
+    // Config fields are guaranteed by ensureConfig validation
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
@@ -295,7 +299,7 @@ async function cleanCommand(
         name: parsed.name,
         targetTools,
         fromSource: options.fromSource || false,
-        sourceTool: config.source_tool,
+        sourceTool: config.source_tool!,
       };
 
       // Display plan
@@ -364,7 +368,7 @@ async function cleanCommand(
         parsed,
         targetTools,
         options.fromSource || false,
-        config.source_tool,
+        config.source_tool!,
         projectDir,
         level,
       );
@@ -380,7 +384,7 @@ async function cleanCommand(
     } else {
       // Interactive mode
       const sourceData = await readSourceConfig(
-        config.source_tool,
+        config.source_tool!,
         projectDir,
         level,
       );
@@ -489,7 +493,7 @@ async function cleanCommand(
           { type, name },
           targetTools,
           false,
-          config.source_tool,
+          config.source_tool!,
           projectDir,
           level,
         );

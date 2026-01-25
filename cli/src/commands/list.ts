@@ -10,9 +10,9 @@ import ora from "ora";
 import { loadManifest } from "@src/core/manifest-manager.js";
 import type { Manifest } from "@src/types/manifest.js";
 import type { MCPServer, Skill } from "@src/types/models.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 import { t } from "@src/utils/i18n.js";
 import { readSourceConfig } from "./sync.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
 
 /**
  * Extract description from skill content
@@ -263,18 +263,22 @@ async function listCommand(
 
     // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.list.loadingConfig")).start();
-    const config = await ensureConfig(projectDir, options.user || false, spinner);
+    const config = await ensureConfig(projectDir, options.user || false, {
+      spinner,
+      requireFields: ["source_tool"],
+    });
     spinner.succeed(t("commands.list.configLoaded"));
+    // Config fields are guaranteed by ensureConfig validation
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
 
     // Read source data
     const readSpinner = ora(
-      t("commands.list.reading", { tool: config.source_tool }),
+      t("commands.list.reading", { tool: config.source_tool! }),
     ).start();
     const sourceData = await readSourceConfig(
-      config.source_tool,
+      config.source_tool!,
       projectDir,
       config.level,
     );
@@ -285,7 +289,7 @@ async function listCommand(
       const table = formatSkillsTable(
         sourceData.skills,
         manifest,
-        config.source_tool,
+        config.source_tool!,
       );
       console.log(table);
     }
@@ -294,7 +298,7 @@ async function listCommand(
       const table = formatMCPTable(
         sourceData.mcpServers,
         manifest,
-        config.source_tool,
+        config.source_tool!,
       );
       console.log(table);
     }

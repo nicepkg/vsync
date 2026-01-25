@@ -55,12 +55,12 @@ export interface VibeConfig {
   version: string;
   /** Configuration level */
   level: ConfigLevel;
-  /** Source tool to read configuration from */
-  source_tool: ToolName;
-  /** Target tools to sync configuration to */
-  target_tools: ToolName[];
-  /** What to synchronize */
-  sync_config: SyncConfig;
+  /** Source tool to read configuration from (optional for user-level language-only config) */
+  source_tool?: ToolName;
+  /** Target tools to sync configuration to (optional for user-level language-only config) */
+  target_tools?: ToolName[];
+  /** What to synchronize (optional for user-level language-only config) */
+  sync_config?: SyncConfig;
   /** Last successful sync timestamp (ISO 8601) */
   last_sync?: string;
   /**

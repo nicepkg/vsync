@@ -1,14 +1,13 @@
 /**
  * Language preference management
- * Stores user language preference independently from project config
+ * Ensures user-level language configuration exists
  */
 
-import { readFile, mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, dirname } from "node:path";
 import chalk from "chalk";
 import inquirer from "inquirer";
-import { atomicWrite } from "@src/utils/atomic-write.js";
+import { loadConfig, saveConfig } from "@src/core/config-manager.js";
+import type { VibeConfig } from "@src/types/config.js";
 import {
   detectSystemLanguage,
   setLanguage,
@@ -16,62 +15,28 @@ import {
 } from "@src/utils/i18n.js";
 
 /**
- * Get language preference file path
- * Stored in ~/.vibe-sync/language.json
- */
-function getLanguageFilePath(): string {
-  return join(homedir(), ".vibe-sync", "language.json");
-}
-
-/**
- * Load saved language preference
- * Returns null if not found
- */
-async function loadLanguagePreference(): Promise<Language | null> {
-  const filePath = getLanguageFilePath();
-
-  try {
-    const content = await readFile(filePath, "utf-8");
-    const data = JSON.parse(content) as { language: Language };
-    return data.language;
-  } catch (error) {
-    // File doesn't exist or invalid JSON
-    return null;
-  }
-}
-
-/**
- * Save language preference
- */
-async function saveLanguagePreference(language: Language): Promise<void> {
-  const filePath = getLanguageFilePath();
-  const dir = dirname(filePath);
-
-  // Ensure directory exists
-  await mkdir(dir, { recursive: true });
-
-  // Save preference
-  const content = JSON.stringify({ language }, null, 2);
-  await atomicWrite(filePath, content);
-}
-
-/**
- * Ensure language is configured
- * Prompts user to select language if not already set
+ * Ensure user-level language configuration exists
+ * Checks ~/.vibe-sync.json for language preference
+ * If not found, prompts user and creates minimal user config
  *
  * @returns Configured language
  */
 export async function ensureLanguageConfig(): Promise<Language> {
-  // Try to load saved preference
-  const savedLang = await loadLanguagePreference();
+  try {
+    // Try to load user-level config
+    const userConfig = await loadConfig("user", homedir());
 
-  if (savedLang) {
-    // Language already configured, use it
-    await setLanguage(savedLang);
-    return savedLang;
+    // If language is set, use it
+    if (userConfig.language) {
+      await setLanguage(userConfig.language);
+      return userConfig.language;
+    }
+  } catch {
+    // User config doesn't exist or can't be loaded
+    // Will create minimal config below
   }
 
-  // No preference saved, detect system language
+  // No language configured, detect system language
   const systemLang = detectSystemLanguage();
 
   // Ask user to confirm or choose language
@@ -94,15 +59,26 @@ export async function ensureLanguageConfig(): Promise<Language> {
     },
   ]);
 
-  // Save preference
-  await saveLanguagePreference(language);
+  // Try to update existing user config
+  try {
+    const existingConfig = await loadConfig("user", homedir());
+    existingConfig.language = language;
+    await saveConfig(existingConfig, "user", homedir());
+  } catch {
+    // User config doesn't exist, create minimal config with language only
+    const minimalConfig: VibeConfig = {
+      version: "1.0.0",
+      level: "user",
+      language,
+    };
+
+    await saveConfig(minimalConfig, "user", homedir());
+    console.log(
+      chalk.gray(`\n✓ Language preference saved to ~/.vibe-sync.json\n`),
+    );
+  }
 
   // Set language
   await setLanguage(language);
-
-  console.log(
-    chalk.green(`\n✓ Language preference saved to ${getLanguageFilePath()}\n`),
-  );
-
   return language;
 }
