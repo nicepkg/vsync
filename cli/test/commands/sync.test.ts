@@ -38,6 +38,16 @@ vi.mock("inquirer", () => ({
   },
 }));
 
+// Mock i18n to skip language prompt
+vi.mock("@src/utils/i18n.js", async () => {
+  const actual = await vi.importActual("@src/utils/i18n.js");
+  return {
+    ...actual,
+    detectSystemLanguage: vi.fn().mockReturnValue("en"),
+    setLanguage: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 describe("Sync Command", () => {
   const sampleConfig: VibeConfig = {
     version: "1.0.0",

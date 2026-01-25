@@ -3,11 +3,68 @@
  * Ensures configuration exists before running commands
  */
 
+import { homedir } from "node:os";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import ora from "ora";
-import { loadConfig } from "@src/core/config-manager.js";
+import { loadConfig, saveConfig } from "@src/core/config-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
+import {
+  detectSystemLanguage,
+  setLanguage,
+  type Language,
+} from "@src/utils/i18n.js";
+
+/**
+ * Ensure user-level language configuration exists
+ * Prompts user to select language if not configured
+ *
+ * @returns Configured language
+ */
+async function ensureLanguageConfig(): Promise<Language> {
+  try {
+    // Try to load user-level config
+    const userConfig = await loadConfig("user", homedir());
+
+    // If language is set, use it
+    if (userConfig.language) {
+      await setLanguage(userConfig.language);
+      return userConfig.language;
+    }
+  } catch (error) {
+    // User config doesn't exist or can't be loaded - will create it below
+  }
+
+  // No language configured, detect system language
+  const systemLang = detectSystemLanguage();
+
+  // Ask user to confirm or choose language
+  const { language } = await inquirer.prompt<{ language: Language }>([
+    {
+      type: "select",
+      name: "language",
+      message: "Choose your preferred language / 选择你的语言偏好:",
+      choices: [
+        { name: `English (detected: ${systemLang === "en" ? "✓" : "×"})`, value: "en" },
+        { name: `中文 (detected: ${systemLang === "zh" ? "✓" : "×"})`, value: "zh" },
+      ],
+      default: systemLang,
+    },
+  ]);
+
+  // Save language preference to user-level config
+  try {
+    const existingConfig = await loadConfig("user", homedir());
+    existingConfig.language = language;
+    await saveConfig(existingConfig, "user", homedir());
+  } catch (error) {
+    // User config doesn't exist, just set language without saving
+    // (will be saved when user runs init or creates project config)
+  }
+
+  await setLanguage(language);
+  return language;
+}
 
 /**
  * Ensure configuration exists, prompting user to initialize if not found
@@ -22,6 +79,9 @@ export async function ensureConfig(
   isUserLevel: boolean,
   spinner?: ReturnType<typeof ora>,
 ): Promise<VibeConfig> {
+  // Always ensure language is configured first (user-level)
+  await ensureLanguageConfig();
+
   const level = isUserLevel ? "user" : "project";
 
   try {
