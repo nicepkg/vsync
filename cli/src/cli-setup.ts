@@ -13,6 +13,7 @@ import { createPlanCommand } from "./commands/plan.js";
 import { createStatusCommand } from "./commands/status.js";
 import { createSyncCommand } from "./commands/sync.js";
 import { initializeLanguage } from "./utils/language-prompt.js";
+import { setDebugMode } from "./utils/logger.js";
 /**
  * Get package.json version
  *
@@ -40,7 +41,8 @@ export function createCLI(): Command {
       "AI Coding Tool Config Synchronizer\n" +
         "Single source of truth → Compile to multiple formats → Diff-based sync",
     )
-    .version("1.0.0", "-v, --version", "Display version number");
+    .version("1.0.0", "-v, --version", "Display version number")
+    .option("--debug", "Enable debug logging with stack traces");
 
   // Register all commands
   program.addCommand(createInitCommand());
@@ -90,6 +92,12 @@ export async function runCLI(): Promise<void> {
     }
 
     await program.parseAsync(process.argv);
+
+    // Enable debug mode if --debug flag is present
+    const opts = program.opts();
+    if (opts.debug) {
+      setDebugMode(true);
+    }
   } catch (error) {
     if (error instanceof Error) {
       if (error.message !== "process.exit called") {

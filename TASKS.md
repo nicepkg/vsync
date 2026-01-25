@@ -472,7 +472,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 ### 6.6 UX Polish
 
 - [ ] Improve CLI output
-  - [ ] Better table formatting
+  - [ ] Better table formatting (use third-party lib format)
   - [ ] Clearer progress messages
   - [ ] Emoji indicators (optional, configurable)
 - [ ] Add confirmation timeouts

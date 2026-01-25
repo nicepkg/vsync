@@ -46,6 +46,12 @@ import type {
 } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
 import { t } from "@src/utils/i18n.js";
+import {
+  debug,
+  debugError,
+  debugObject,
+  debugTiming,
+} from "@src/utils/logger.js";
 
 /**
  * Source configuration data
@@ -705,13 +711,18 @@ export async function syncCommand(options: {
   user?: boolean;
   yes?: boolean;
 }): Promise<void> {
+  const endTiming = debugTiming("sync command");
+
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
     const mode: SyncMode = options.prune ? "prune" : "safe";
 
+    debug("Sync command started", { projectDir, mode, options });
+
     // Load configuration
     const spinner = ora(t("commands.sync.loadingConfig")).start();
     const config = await loadSyncConfig(projectDir, options.user || false);
+    debugObject("Loaded config", config);
     spinner.succeed(t("commands.sync.configLoaded"));
 
     // Read source configuration
@@ -879,13 +890,18 @@ export async function syncCommand(options: {
     const allSuccess = Object.values(results).every((r) => r?.success);
     if (allSuccess) {
       console.log(chalk.green(`\n✅ ${t("commands.sync.syncSuccess")}\n`));
+      endTiming();
     } else {
       console.log(
         chalk.yellow(`\n⚠️  ${t("commands.sync.completedWithErrors")}\n`),
       );
+      debugObject("Sync results with errors", results);
+      endTiming();
       process.exit(1);
     }
   } catch (error) {
+    debugError("Sync command failed", error);
+    endTiming();
     if (error instanceof Error) {
       console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
       process.exit(1);
