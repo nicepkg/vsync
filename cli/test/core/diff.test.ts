@@ -58,8 +58,22 @@ describe("Diff Calculator", () => {
       expect(result.reason).toContain("content changed");
     });
 
-    it("should return CREATE when manifest exists but target missing", () => {
+    it("should return SKIP when manifest hash matches source and target missing (write-only adapter)", () => {
       const result = compareHashes("hash123", null, "hash123", "safe");
+
+      expect(result.operation).toBe("skip");
+      expect(result.reason).toContain("already synced");
+    });
+
+    it("should return CREATE when manifest exists but doesn't match source and target missing", () => {
+      const result = compareHashes("hash123", null, "hash456", "safe");
+
+      expect(result.operation).toBe("create");
+      expect(result.reason).toContain("not in target");
+    });
+
+    it("should return CREATE when manifest missing and target missing", () => {
+      const result = compareHashes("hash123", null, null, "safe");
 
       expect(result.operation).toBe("create");
       expect(result.reason).toContain("not in target");

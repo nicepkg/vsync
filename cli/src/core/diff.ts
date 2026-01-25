@@ -77,6 +77,13 @@ export function compareHashes(
 
   // Case 2: Item not in target
   if (targetHash === null) {
+    // For write-only targets, check manifest to see if item is already synced
+    if (manifestHash !== null && manifestHash === sourceHash) {
+      return {
+        operation: "skip" as OperationType,
+        reason: "Item already synced (verified via manifest)",
+      };
+    }
     return {
       operation: "create" as OperationType,
       reason: "Item not in target",
@@ -158,7 +165,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
     const comparison = compareHashes(
       sourceSkill.hash,
       targetSkill?.hash ?? null,
-      manifestItem?.hash ?? null,
+      manifestItem?.targets[targetTool]?.hash ?? null,
       mode,
     );
 
@@ -201,7 +208,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
       const comparison = compareHashes(
         null,
         targetSkill.hash,
-        manifestItem?.hash ?? null,
+        manifestItem?.targets[targetTool]?.hash ?? null,
         mode,
       );
 
@@ -226,7 +233,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
     const comparison = compareHashes(
       sourceMCP.hash,
       targetMCP?.hash ?? null,
-      manifestItem?.hash ?? null,
+      manifestItem?.targets[targetTool]?.hash ?? null,
       mode,
     );
 
@@ -269,7 +276,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
       const comparison = compareHashes(
         null,
         targetMCP.hash,
-        manifestItem?.hash ?? null,
+        manifestItem?.targets[targetTool]?.hash ?? null,
         mode,
       );
 
@@ -294,7 +301,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
     const comparison = compareHashes(
       sourceAgent.hash,
       targetAgent?.hash ?? null,
-      manifestItem?.hash ?? null,
+      manifestItem?.targets[targetTool]?.hash ?? null,
       mode,
     );
 
@@ -337,7 +344,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
       const comparison = compareHashes(
         null,
         targetAgent.hash,
-        manifestItem?.hash ?? null,
+        manifestItem?.targets[targetTool]?.hash ?? null,
         mode,
       );
 
@@ -362,7 +369,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
     const comparison = compareHashes(
       sourceCommand.hash,
       targetCommand?.hash ?? null,
-      manifestItem?.hash ?? null,
+      manifestItem?.targets[targetTool]?.hash ?? null,
       mode,
     );
 
@@ -405,7 +412,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
       const comparison = compareHashes(
         null,
         targetCommand.hash,
-        manifestItem?.hash ?? null,
+        manifestItem?.targets[targetTool]?.hash ?? null,
         mode,
       );
 

@@ -23,7 +23,13 @@ import { atomicWrite } from "@src/utils/atomic-write.js";
 export function getProjectCacheDir(projectDir?: string): string {
   const dir = resolve(projectDir ?? cwd());
   // Resolve symlinks to ensure consistent hashing (e.g., /var vs /private/var on macOS)
-  const realDir = realpathSync(dir);
+  let realDir: string;
+  try {
+    realDir = realpathSync(dir);
+  } catch {
+    // If realpath fails (e.g., dir doesn't exist yet), use the resolved path
+    realDir = dir;
+  }
   const hash = createHash("sha256").update(realDir).digest("hex").slice(0, 16);
   return join(homedir(), ".vibe-sync", "cache", hash);
 }
