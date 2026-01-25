@@ -16,6 +16,7 @@
 import type { ToolAdapter } from "@src/adapters/base.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { DiffResult } from "@src/types/plan.js";
+import { isUnsupportedFeature } from "@src/utils/errors.js";
 
 /**
  * Source data containing all items from the source tool
@@ -264,6 +265,12 @@ export class SyncExecutor {
         result.created += createCount;
         result.updated += updateCount;
       } else {
+        // Skip gracefully if the tool doesn't support this feature
+        if (isUnsupportedFeature(writeResult)) {
+          // Tool doesn't support this feature - skip silently
+          return;
+        }
+
         const errorMsg = writeResult.error || `Failed to write ${itemTypeName}`;
         result.errors.push(errorMsg);
         result.success = false;

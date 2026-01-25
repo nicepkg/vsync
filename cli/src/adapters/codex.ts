@@ -6,6 +6,7 @@
 
 import { join } from "node:path";
 import type { MCPServer, Agent, Command } from "@src/types/models.js";
+import { NotSupportError } from "@src/utils/errors.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
 import type { WriteResult } from "./base.js";
@@ -278,10 +279,11 @@ export class CodexAdapter extends BaseAdapter {
    */
   override async writeAgents(agents: Agent[]): Promise<WriteResult> {
     void agents;
+    const error = new NotSupportError(this.toolName, "agents");
     return {
       success: false,
       count: 0,
-      error: "Codex does not support agents",
+      error: error.message,
     };
   }
 
@@ -289,7 +291,8 @@ export class CodexAdapter extends BaseAdapter {
    * Delete an agent from .codex/agents/
    */
   override async deleteAgent(name: string): Promise<void> {
-    throw new Error(`Codex does not support agents: ${name}`);
+    void name;
+    throw new NotSupportError(this.toolName, "agents");
   }
 
   /**
@@ -304,10 +307,11 @@ export class CodexAdapter extends BaseAdapter {
    */
   override async writeCommands(commands: Command[]): Promise<WriteResult> {
     void commands;
+    const error = new NotSupportError(this.toolName, "commands");
     return {
       success: false,
       count: 0,
-      error: "Codex does not support commands",
+      error: error.message,
     };
   }
 
@@ -315,7 +319,8 @@ export class CodexAdapter extends BaseAdapter {
    * Delete a command from .codex/commands/
    */
   override async deleteCommand(name: string): Promise<void> {
-    throw new Error(`Codex does not support commands: ${name}`);
+    void name;
+    throw new NotSupportError(this.toolName, "commands");
   }
 
   private extractEnvVarName(value: string): string | null {

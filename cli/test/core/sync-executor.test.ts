@@ -353,5 +353,47 @@ describe("SyncExecutor", () => {
       expect(mockAdapter.writeSkills).toHaveBeenCalled();
       expect(mockAdapter.writeMCPServers).not.toHaveBeenCalled();
     });
+
+    it("should skip gracefully when tool does not support a feature", async () => {
+      // Mock Codex-like behavior: supports skills but not commands
+      vi.mocked(mockAdapter.writeCommands).mockResolvedValue({
+        success: false,
+        count: 0,
+        error: "codex does not support commands",
+      });
+
+      const diff: DiffResult = {
+        tool: "codex",
+        toCreate: [
+          {
+            type: "create",
+            itemType: "skill",
+            name: "skill1",
+            description: "new",
+            reason: "new",
+          },
+          {
+            type: "create",
+            itemType: "command",
+            name: "cmd1",
+            description: "new",
+            reason: "new",
+          },
+        ],
+        toUpdate: [],
+        toDelete: [],
+        toSkip: [],
+      };
+
+      const executor = new SyncExecutor(mockAdapter, sourceData);
+      const result = await executor.execute(diff);
+
+      // Should succeed (not rollback) and only count the skill
+      expect(result.success).toBe(true);
+      expect(result.created).toBe(1); // Only skill counted
+      expect(result.errors).toHaveLength(0); // No errors logged
+      expect(mockAdapter.writeSkills).toHaveBeenCalled();
+      expect(mockAdapter.writeCommands).toHaveBeenCalled();
+    });
   });
 });
