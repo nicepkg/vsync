@@ -17,6 +17,7 @@ import {
 } from "@src/core/manifest-manager.js";
 import type { ToolName, VibeConfig, ConfigLevel } from "@src/types/config.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+import { t } from "@src/utils/i18n.js";
 
 /**
  * Options for config generation
@@ -143,13 +144,15 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
 
-    console.log(chalk.bold("\n🎯 vibe-sync initialization\n"));
+    console.log(chalk.bold(`\n${t("commands.init.welcome")}\n`));
 
     // Detect existing tools
-    const spinner = ora("Detecting installed tools...").start();
+    const spinner = ora(t("commands.init.detectingTools")).start();
     const detected = await detectTools(projectDir);
     spinner.succeed(
-      `Detected tools: ${detected.length > 0 ? detected.join(", ") : "none"}`,
+      t("commands.init.detectedTools", {
+        tools: detected.length > 0 ? detected.join(", ") : "none",
+      }),
     );
 
     // Prompt for tools
@@ -157,12 +160,12 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
       {
         type: "checkbox",
         name: "tools",
-        message: "Which tools do you want to sync?",
+        message: t("commands.init.selectTools"),
         // Get choices from registry (no hardcoding!)
         choices: getToolChoices(detected),
         validate: (input: string[]) => {
           if (input.length === 0) {
-            return "Please select at least one tool";
+            return t("commands.init.selectToolsValidation");
           }
           return true;
         },
@@ -174,7 +177,7 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
       {
         type: "list",
         name: "source",
-        message: "Which tool should be the source of truth?",
+        message: t("commands.init.selectSource"),
         choices: toolsAnswer.tools.map((tool) => ({
           name: tool,
           value: tool,
@@ -187,14 +190,18 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
       {
         type: "checkbox",
         name: "syncItems",
-        message: "What would you like to sync?",
+        message: t("commands.init.selectSyncItems"),
         choices: [
-          { name: "Skills", value: "skills", checked: true },
-          { name: "MCP Servers", value: "mcp", checked: true },
+          {
+            name: t("commands.init.skillsChoice"),
+            value: "skills",
+            checked: true,
+          },
+          { name: t("commands.init.mcpChoice"), value: "mcp", checked: true },
         ],
         validate: (input: string[]) => {
           if (input.length === 0) {
-            return "Please select at least one item to sync";
+            return t("commands.init.selectSyncItemsValidation");
           }
           return true;
         },
@@ -210,28 +217,30 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
     });
 
     // Save config
-    const saveSpinner = ora("Creating configuration...").start();
+    const saveSpinner = ora(t("commands.init.creatingConfig")).start();
     await saveConfig(config, projectDir);
-    saveSpinner.succeed("Created .vibe-sync.json");
+    saveSpinner.succeed(t("commands.init.configCreated"));
 
     // Create cache directory
-    const cacheSpinner = ora("Creating cache directory...").start();
+    const cacheSpinner = ora(t("commands.init.creatingCache")).start();
     await createCacheDirectory(projectDir);
-    cacheSpinner.succeed("Created .vibe-sync-cache/");
+    cacheSpinner.succeed(t("commands.init.cacheCreated"));
 
     // Initialize manifest
-    const manifestSpinner = ora("Initializing manifest...").start();
+    const manifestSpinner = ora(
+      t("commands.init.initializingManifest"),
+    ).start();
     await initializeManifest(projectDir);
-    manifestSpinner.succeed("Created manifest.json");
+    manifestSpinner.succeed(t("commands.init.manifestCreated"));
 
     console.log(
       chalk.green(
-        `\n✅ Initialization complete! Run ${chalk.bold("vibe-sync sync")} to start syncing.\n`,
+        `\n✅ ${t("commands.init.complete", { command: chalk.bold("vibe-sync sync") })}\n`,
       ),
     );
   } catch (error) {
     if (error instanceof Error) {
-      console.error(chalk.red(`\n❌ Error: ${error.message}\n`));
+      console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
       process.exit(1);
     }
   }
@@ -241,8 +250,8 @@ export function createInitCommand(): Command {
   const command = new Command("init");
 
   command
-    .description("Initialize vibe-sync configuration")
-    .option("--user", "Create user-level config instead of project-level")
+    .description(t("commands.init.description"))
+    .option("--user", t("commands.init.userLevelOption"))
     .action(async (options) => {
       await initCommand(options);
     });

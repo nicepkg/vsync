@@ -10,13 +10,25 @@
   },
   "commands": {
     "init": {
-      "welcome": "🚀 欢迎使用 vibe-sync!",
+      "welcome": "🎯 vibe-sync 初始化",
       "description": "初始化 vibe-sync 配置",
-      "selectTools": "您使用哪些 AI 编码工具?",
+      "detectingTools": "正在检测已安装的工具...",
+      "detectedTools": "检测到的工具: {tools}",
+      "selectTools": "您想同步哪些工具?",
+      "selectToolsValidation": "请至少选择一个工具",
       "selectSource": "哪个工具应该作为配置源?",
-      "selectLevel": "配置级别:",
-      "configCreated": "配置创建成功!",
-      "configExists": "配置文件已存在"
+      "selectSyncItems": "您想同步什么?",
+      "selectSyncItemsValidation": "请至少选择一个同步项",
+      "skillsChoice": "技能",
+      "mcpChoice": "MCP 服务器",
+      "creatingConfig": "正在创建配置...",
+      "configCreated": "已创建 .vibe-sync.json",
+      "creatingCache": "正在创建缓存目录...",
+      "cacheCreated": "已创建 .vibe-sync-cache/",
+      "initializingManifest": "正在初始化清单...",
+      "manifestCreated": "已创建 manifest.json",
+      "complete": "初始化完成! 运行 {command} 开始同步。",
+      "userLevelOption": "创建用户级配置而不是项目级配置"
     },
     "sync": {
       "description": "跨工具同步配置",

@@ -96,7 +96,7 @@ describe("i18n Utilities", () => {
 
     it("should translate nested key", () => {
       const translation = t("commands.init.welcome");
-      expect(translation).toBe("🚀 Welcome to vibe-sync!");
+      expect(translation).toBe("🎯 vibe-sync initialization");
     });
 
     it("should interpolate single parameter", () => {

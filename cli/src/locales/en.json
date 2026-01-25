@@ -10,13 +10,25 @@
   },
   "commands": {
     "init": {
-      "welcome": "🚀 Welcome to vibe-sync!",
+      "welcome": "🎯 vibe-sync initialization",
       "description": "Initialize vibe-sync configuration",
-      "selectTools": "Which AI coding tools do you use?",
-      "selectSource": "Which tool should be the configuration source?",
-      "selectLevel": "Configuration level:",
-      "configCreated": "Configuration created successfully!",
-      "configExists": "Configuration file already exists"
+      "detectingTools": "Detecting installed tools...",
+      "detectedTools": "Detected tools: {tools}",
+      "selectTools": "Which tools do you want to sync?",
+      "selectToolsValidation": "Please select at least one tool",
+      "selectSource": "Which tool should be the source of truth?",
+      "selectSyncItems": "What would you like to sync?",
+      "selectSyncItemsValidation": "Please select at least one item to sync",
+      "skillsChoice": "Skills",
+      "mcpChoice": "MCP Servers",
+      "creatingConfig": "Creating configuration...",
+      "configCreated": "Created .vibe-sync.json",
+      "creatingCache": "Creating cache directory...",
+      "cacheCreated": "Created .vibe-sync-cache/",
+      "initializingManifest": "Initializing manifest...",
+      "manifestCreated": "Created manifest.json",
+      "complete": "Initialization complete! Run {command} to start syncing.",
+      "userLevelOption": "Create user-level config instead of project-level"
     },
     "sync": {
       "description": "Synchronize configurations across tools",
