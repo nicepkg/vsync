@@ -387,7 +387,7 @@ async function cleanCommand(
       // Ask for type
       const { cleanType } = await inquirer.prompt<{ cleanType: string }>([
         {
-          type: "list",
+          type: "select",
           name: "cleanType",
           message: t("commands.clean.selectType"),
           choices: [

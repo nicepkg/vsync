@@ -83,7 +83,7 @@ describe("Language Prompt Utilities", () => {
       expect(result).toBe("zh");
       expect(mockPrompt).toHaveBeenCalledWith([
         {
-          type: "list",
+          type: "select",
           name: "language",
           message: "Choose language / 选择语言:",
           choices: [

@@ -175,7 +175,7 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
     // Prompt for source tool
     const sourceAnswer = await inquirer.prompt<{ source: ToolName }>([
       {
-        type: "list",
+        type: "select",
         name: "source",
         message: t("commands.init.selectSource"),
         choices: toolsAnswer.tools.map((tool) => ({

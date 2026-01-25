@@ -668,7 +668,7 @@ async function promptForSymlinkUsage(
   // Ask user
   const { useSymlinks } = await inquirer.prompt<{ useSymlinks: boolean }>([
     {
-      type: "list",
+      type: "select",
       name: "useSymlinks",
       message: t("commands.sync.symlinkPromptQuestion"),
       choices: [

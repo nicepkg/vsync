@@ -354,7 +354,7 @@ export function createImportCommand(): Command {
             selectedTool: ToolName;
           }>([
             {
-              type: "list",
+              type: "select",
               name: "selectedTool",
               message: t("commands.import.selectTool"),
               choices: availableTools,

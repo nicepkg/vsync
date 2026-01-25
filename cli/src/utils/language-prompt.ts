@@ -64,7 +64,7 @@ export async function shouldPromptForLanguage(
 export async function promptForLanguage(): Promise<Language> {
   const answer = await inquirer.prompt<{ language: Language }>([
     {
-      type: "list",
+      type: "select",
       name: "language",
       message: "Choose language / 选择语言:",
       choices: [
