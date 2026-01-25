@@ -1,0 +1,104 @@
+{
+  "common": {
+    "yes": "是",
+    "no": "否",
+    "cancel": "取消",
+    "confirm": "确认",
+    "success": "成功",
+    "error": "错误",
+    "warning": "警告"
+  },
+  "commands": {
+    "init": {
+      "welcome": "🚀 欢迎使用 vibe-sync!",
+      "description": "初始化 vibe-sync 配置",
+      "selectTools": "您使用哪些 AI 编码工具?",
+      "selectSource": "哪个工具应该作为配置源?",
+      "selectLevel": "配置级别:",
+      "configCreated": "配置创建成功!",
+      "configExists": "配置文件已存在"
+    },
+    "sync": {
+      "description": "跨工具同步配置",
+      "loadingConfig": "正在加载配置...",
+      "configLoaded": "配置已加载",
+      "reading": "正在读取 {tool} 配置...",
+      "foundSkills": "找到 {count} 个技能",
+      "foundMCP": "找到 {count} 个 MCP 服务器",
+      "foundAgents": "找到 {count} 个代理",
+      "foundCommands": "找到 {count} 个命令",
+      "calculating": "正在计算差异...",
+      "planGenerated": "同步计划已生成",
+      "noChanges": "所有内容都是最新的!",
+      "dryRun": "演练模式 - 不会进行任何更改",
+      "confirmPrompt": "是否继续同步?",
+      "cancelled": "同步已取消",
+      "syncing": "正在同步配置...",
+      "completed": "同步完成",
+      "completedWithErrors": "同步完成，但有错误",
+      "settingUpSymlinks": "正在设置技能目录的符号链接...",
+      "symlinksConfigured": "符号链接已配置",
+      "symlinksFailed": "符号链接设置失败"
+    },
+    "plan": {
+      "description": "显示同步计划但不执行",
+      "noOperations": "没有需要执行的操作"
+    },
+    "status": {
+      "description": "显示当前同步状态",
+      "checking": "正在检查状态...",
+      "statusReady": "状态就绪"
+    },
+    "list": {
+      "description": "列出所有技能和 MCP 服务器",
+      "loading": "正在加载项目...",
+      "itemsLoaded": "项目已加载"
+    },
+    "clean": {
+      "description": "清理 vibe-sync 生成的文件",
+      "cleaning": "正在清理...",
+      "cleaned": "清理完成"
+    },
+    "import": {
+      "description": "从其他工具导入配置",
+      "importing": "正在导入配置...",
+      "imported": "导入完成"
+    }
+  },
+  "errors": {
+    "configNotFound": "未找到配置文件。请先运行 'vibe-sync init'。",
+    "invalidConfig": "无效的配置: {message}",
+    "readFailed": "读取 {item} 失败: {error}",
+    "writeFailed": "写入 {item} 失败: {error}",
+    "deleteFailed": "删除 {item} 失败: {error}",
+    "planValidationFailed": "计划验证失败",
+    "rollbackFailed": "回滚失败: {error}",
+    "manifestCorrupted": "清单文件已损坏",
+    "unsupportedTool": "不支持的工具: {tool}",
+    "circularSymlink": "检测到循环符号链接: {path}",
+    "symlinkFailed": "创建符号链接失败: {error}"
+  },
+  "prompts": {
+    "selectTool": "选择一个工具:",
+    "selectMode": "选择模式:",
+    "enterValue": "输入值:",
+    "confirm": "确定吗?"
+  },
+  "plan": {
+    "create": "创建",
+    "update": "更新",
+    "delete": "删除",
+    "skip": "跳过",
+    "summary": "同步计划摘要",
+    "target": "目标",
+    "operations": "操作",
+    "created": "已创建",
+    "updated": "已更新",
+    "deleted": "已删除"
+  },
+  "manifest": {
+    "notFound": "未找到清单，开始全新同步",
+    "loaded": "清单已加载",
+    "saved": "清单已保存"
+  }
+}

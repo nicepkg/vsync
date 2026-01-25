@@ -737,15 +737,33 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Background**: Make vibe-sync accessible to Chinese-speaking developers. Detect or prompt for language preference on first run, store in user-level config.
 
-### 10.1 i18n Infrastructure
+### 10.1 i18n Infrastructure ✅
 
-- [ ] Add i18n dependency
-  - [ ] Install `i18next` or use custom simple i18n
-  - [ ] Or use lightweight JSON-based approach
-- [ ] Create language files
-  - [ ] `cli/src/locales/en.json` - English translations
-  - [ ] `cli/src/locales/zh.json` - Chinese (Simplified) translations
-  - [ ] Structure: nested JSON by module (commands, errors, prompts, etc.)
+- [x] Add i18n dependency
+  - [x] No external dependencies - implemented lightweight custom solution
+  - [x] Zero-dependency JSON-based approach
+- [x] Create language files
+  - [x] `cli/src/locales/en.json` - English translations (comprehensive coverage)
+  - [x] `cli/src/locales/zh.json` - Chinese (Simplified) translations (comprehensive coverage)
+  - [x] Structure: nested JSON by module (common, commands, errors, prompts, plan, manifest)
+- [x] Implement `cli/src/utils/i18n.ts`
+  - [x] `detectSystemLanguage()` - Auto-detect from LANG environment variable
+  - [x] `loadLanguage(lang)` - Load translation file dynamically
+  - [x] `t(key, params?)` - Translate with parameter interpolation
+  - [x] `setLanguage(lang)` - Switch language at runtime
+  - [x] `getCurrentLanguage()` - Get active language
+  - [x] `initI18n(lang?)` - Initialize with default or specified language
+  - [x] Nested key support (dot notation: "commands.sync.reading")
+  - [x] Parameter interpolation ({tool}, {count}, etc.)
+  - [x] Fallback to key if translation missing
+  - [x] Cross-platform path resolution (ESM + test environments)
+- [x] Added 22 comprehensive tests
+  - [x] Language detection (LANG parsing)
+  - [x] Translation loading (English, Chinese, errors)
+  - [x] Translation function (simple keys, nested keys, interpolation)
+  - [x] Language switching (dynamic runtime changes)
+  - [x] Edge cases (empty objects, invalid JSON, numeric params)
+- [x] All tests passing (467 total, +22 new)
 
 ### 10.2 Configuration Extension
 

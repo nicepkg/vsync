@@ -1,0 +1,104 @@
+{
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning"
+  },
+  "commands": {
+    "init": {
+      "welcome": "🚀 Welcome to vibe-sync!",
+      "description": "Initialize vibe-sync configuration",
+      "selectTools": "Which AI coding tools do you use?",
+      "selectSource": "Which tool should be the configuration source?",
+      "selectLevel": "Configuration level:",
+      "configCreated": "Configuration created successfully!",
+      "configExists": "Configuration file already exists"
+    },
+    "sync": {
+      "description": "Synchronize configurations across tools",
+      "loadingConfig": "Loading configuration...",
+      "configLoaded": "Configuration loaded",
+      "reading": "Reading {tool} configuration...",
+      "foundSkills": "Found {count} skills",
+      "foundMCP": "Found {count} MCP servers",
+      "foundAgents": "Found {count} agents",
+      "foundCommands": "Found {count} commands",
+      "calculating": "Calculating differences...",
+      "planGenerated": "Sync plan generated",
+      "noChanges": "Everything is up to date!",
+      "dryRun": "Dry run mode - no changes will be made",
+      "confirmPrompt": "Do you want to proceed with the sync?",
+      "cancelled": "Sync cancelled",
+      "syncing": "Syncing configurations...",
+      "completed": "Sync completed",
+      "completedWithErrors": "Sync completed with errors",
+      "settingUpSymlinks": "Setting up symlinks for skills directories...",
+      "symlinksConfigured": "Symlinks configured",
+      "symlinksF failed": "Failed to setup symlinks"
+    },
+    "plan": {
+      "description": "Show sync plan without executing",
+      "noOperations": "No operations to perform"
+    },
+    "status": {
+      "description": "Show current synchronization status",
+      "checking": "Checking status...",
+      "statusReady": "Status ready"
+    },
+    "list": {
+      "description": "List all skills and MCP servers",
+      "loading": "Loading items...",
+      "itemsLoaded": "Items loaded"
+    },
+    "clean": {
+      "description": "Clean up vibe-sync generated files",
+      "cleaning": "Cleaning up...",
+      "cleaned": "Cleanup completed"
+    },
+    "import": {
+      "description": "Import configurations from another tool",
+      "importing": "Importing configurations...",
+      "imported": "Import completed"
+    }
+  },
+  "errors": {
+    "configNotFound": "Configuration file not found. Run 'vibe-sync init' first.",
+    "invalidConfig": "Invalid configuration: {message}",
+    "readFailed": "Failed to read {item}: {error}",
+    "writeFailed": "Failed to write {item}: {error}",
+    "deleteFailed": "Failed to delete {item}: {error}",
+    "planValidationFailed": "Plan validation failed",
+    "rollbackFailed": "Rollback failed: {error}",
+    "manifestCorrupted": "Manifest file is corrupted",
+    "unsupportedTool": "Unsupported tool: {tool}",
+    "circularSymlink": "Circular symlink detected: {path}",
+    "symlinkFailed": "Failed to create symlink: {error}"
+  },
+  "prompts": {
+    "selectTool": "Select a tool:",
+    "selectMode": "Select mode:",
+    "enterValue": "Enter value:",
+    "confirm": "Are you sure?"
+  },
+  "plan": {
+    "create": "CREATE",
+    "update": "UPDATE",
+    "delete": "DELETE",
+    "skip": "SKIP",
+    "summary": "Sync Plan Summary",
+    "target": "Target",
+    "operations": "Operations",
+    "created": "Created",
+    "updated": "Updated",
+    "deleted": "Deleted"
+  },
+  "manifest": {
+    "notFound": "Manifest not found, starting fresh sync",
+    "loaded": "Manifest loaded",
+    "saved": "Manifest saved"
+  }
+}
