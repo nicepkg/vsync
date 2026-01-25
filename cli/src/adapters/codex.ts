@@ -27,14 +27,6 @@ export class CodexAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
   readonly toolName = "codex";
   readonly displayName = "Codex";
-  readonly configFormat = "toml" as const;
-  readonly capabilities = {
-    skills: true,
-    mcp: true,
-    agents: false,
-    commands: false,
-  } as const;
-  readonly isReadOnly = false;
 
   constructor(config: AdapterConfig) {
     this.config = config;

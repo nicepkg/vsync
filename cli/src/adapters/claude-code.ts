@@ -30,14 +30,6 @@ export class ClaudeCodeAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
   readonly toolName = "claude-code";
   readonly displayName = "Claude Code";
-  readonly configFormat = "json" as const;
-  readonly capabilities = {
-    skills: true,
-    mcp: true,
-    agents: true,
-    commands: true,
-  } as const;
-  readonly isReadOnly = true;
 
   constructor(config: AdapterConfig) {
     this.config = config;

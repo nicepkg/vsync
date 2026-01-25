@@ -38,14 +38,6 @@ export class OpenCodeAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
   readonly toolName = "opencode";
   readonly displayName = "OpenCode";
-  readonly configFormat = "jsonc" as const;
-  readonly capabilities = {
-    skills: true,
-    mcp: true,
-    agents: true,
-    commands: true,
-  } as const;
-  readonly isReadOnly = false;
 
   constructor(config: AdapterConfig) {
     this.config = config;

@@ -55,17 +55,6 @@ export interface ToolAdapter {
   readonly toolName: string;
   /** Display name (e.g., "Claude Code", "Cursor") */
   readonly displayName: string;
-  /** Config file format */
-  readonly configFormat: "json" | "jsonc" | "toml";
-  /** Adapter capabilities */
-  readonly capabilities: {
-    skills: boolean;
-    mcp: boolean;
-    agents: boolean;
-    commands: boolean;
-  };
-  /** Whether this adapter is read-only (source tool) */
-  readonly isReadOnly: boolean;
 
   /**
    * Get configuration directory name (e.g., ".claude", ".cursor")

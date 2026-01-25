@@ -88,9 +88,6 @@ class AdapterRegistry {
   getAllMetadata(): Array<{
     toolName: string;
     displayName: string;
-    configFormat: string;
-    capabilities: Record<string, boolean>;
-    isReadOnly: boolean;
   }> {
     return Array.from(this.adapters.values()).map((AdapterClass) => {
       const instance = new AdapterClass({
@@ -101,9 +98,6 @@ class AdapterRegistry {
       return {
         toolName: instance.toolName,
         displayName: instance.displayName,
-        configFormat: instance.configFormat,
-        capabilities: { ...instance.capabilities },
-        isReadOnly: instance.isReadOnly,
       };
     });
   }

@@ -37,14 +37,6 @@ export class CursorAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
   readonly toolName = "cursor";
   readonly displayName = "Cursor";
-  readonly configFormat = "json" as const;
-  readonly capabilities = {
-    skills: true,
-    mcp: true,
-    agents: true,
-    commands: true,
-  } as const;
-  readonly isReadOnly = false;
 
   constructor(config: AdapterConfig) {
     this.config = config;
