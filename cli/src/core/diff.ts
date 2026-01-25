@@ -150,277 +150,105 @@ export function calculateDiff(input: DiffInput): DiffResult {
   const targetCommandMap = new Map(targetCommands.map((c) => [c.name, c]));
   const sourceCommandMap = new Map(sourceCommands.map((c) => [c.name, c]));
 
-  // Process skills from source
-  for (const sourceSkill of sourceSkills) {
-    const targetSkill = targetSkillMap.get(sourceSkill.name);
-    const manifestItem = manifest.items[`skill/${sourceSkill.name}`];
-
-    const comparison = compareHashes(
-      sourceSkill.hash,
-      targetSkill?.hash ?? null,
-      manifestItem?.targets[targetTool]?.hash ?? null,
-      mode,
-    );
-
-    const operation: Operation = {
-      type: comparison.operation,
-      itemType: "skill",
-      name: sourceSkill.name,
-      description: comparison.reason,
-      reason: comparison.reason,
-    };
-
-    // Add newHash
-    if (sourceSkill.hash) {
-      operation.newHash = sourceSkill.hash;
-    }
-
-    // Add oldHash if exists
-    if (targetSkill?.hash) {
-      operation.oldHash = targetSkill.hash;
-    }
-
-    switch (comparison.operation) {
-      case "create":
-        toCreate.push(operation);
-        break;
-      case "update":
-        toUpdate.push(operation);
-        break;
-      case "skip":
-        toSkip.push(operation);
-        break;
-    }
-  }
-
-  // Process skills in target but not in source (potential deletes)
-  for (const targetSkill of targetSkills) {
-    if (!sourceSkillMap.has(targetSkill.name)) {
-      const manifestItem = manifest.items[`skill/${targetSkill.name}`];
+  /**
+   * Generic function to process source items
+   * Eliminates 4x duplication of 41 lines (164 lines total)
+   */
+  function processSourceItems<T extends { name: string; hash: string }>(
+    sourceItems: T[],
+    targetMap: Map<string, T>,
+    itemType: "skill" | "mcp" | "agent" | "command",
+  ): void {
+    for (const sourceItem of sourceItems) {
+      const targetItem = targetMap.get(sourceItem.name);
+      const manifestItem = manifest.items[`${itemType}/${sourceItem.name}`];
 
       const comparison = compareHashes(
-        null,
-        targetSkill.hash,
+        sourceItem.hash,
+        targetItem?.hash ?? null,
         manifestItem?.targets[targetTool]?.hash ?? null,
         mode,
       );
 
-      if (comparison.operation === "delete") {
-        toDelete.push({
-          type: "delete",
-          itemType: "skill",
-          name: targetSkill.name,
-          description: comparison.reason,
-          oldHash: targetSkill.hash,
-          reason: comparison.reason,
-        });
+      const operation: Operation = {
+        type: comparison.operation,
+        itemType,
+        name: sourceItem.name,
+        description: comparison.reason,
+        reason: comparison.reason,
+      };
+
+      // Add newHash if exists
+      if (sourceItem.hash) {
+        operation.newHash = sourceItem.hash;
+      }
+
+      // Add oldHash if exists
+      if (targetItem?.hash) {
+        operation.oldHash = targetItem.hash;
+      }
+
+      // Dispatch to appropriate array
+      switch (comparison.operation) {
+        case "create":
+          toCreate.push(operation);
+          break;
+        case "update":
+          toUpdate.push(operation);
+          break;
+        case "skip":
+          toSkip.push(operation);
+          break;
       }
     }
   }
 
-  // Process MCP servers from source
-  for (const sourceMCP of sourceMCPServers) {
-    const targetMCP = targetMCPMap.get(sourceMCP.name);
-    const manifestItem = manifest.items[`mcp/${sourceMCP.name}`];
+  /**
+   * Generic function to process target items for deletion
+   * Eliminates 4x duplication of 24 lines (96 lines total)
+   */
+  function processTargetItems<T extends { name: string; hash: string }>(
+    targetItems: T[],
+    sourceMap: Map<string, T>,
+    itemType: "skill" | "mcp" | "agent" | "command",
+  ): void {
+    for (const targetItem of targetItems) {
+      if (!sourceMap.has(targetItem.name)) {
+        const manifestItem = manifest.items[`${itemType}/${targetItem.name}`];
 
-    const comparison = compareHashes(
-      sourceMCP.hash,
-      targetMCP?.hash ?? null,
-      manifestItem?.targets[targetTool]?.hash ?? null,
-      mode,
-    );
+        const comparison = compareHashes(
+          null,
+          targetItem.hash,
+          manifestItem?.targets[targetTool]?.hash ?? null,
+          mode,
+        );
 
-    const operation: Operation = {
-      type: comparison.operation,
-      itemType: "mcp",
-      name: sourceMCP.name,
-      description: comparison.reason,
-      reason: comparison.reason,
-    };
-
-    // Add newHash
-    if (sourceMCP.hash) {
-      operation.newHash = sourceMCP.hash;
-    }
-
-    // Add oldHash if exists
-    if (targetMCP?.hash) {
-      operation.oldHash = targetMCP.hash;
-    }
-
-    switch (comparison.operation) {
-      case "create":
-        toCreate.push(operation);
-        break;
-      case "update":
-        toUpdate.push(operation);
-        break;
-      case "skip":
-        toSkip.push(operation);
-        break;
-    }
-  }
-
-  // Process MCP servers in target but not in source (potential deletes)
-  for (const targetMCP of targetMCPServers) {
-    if (!sourceMCPMap.has(targetMCP.name)) {
-      const manifestItem = manifest.items[`mcp/${targetMCP.name}`];
-
-      const comparison = compareHashes(
-        null,
-        targetMCP.hash,
-        manifestItem?.targets[targetTool]?.hash ?? null,
-        mode,
-      );
-
-      if (comparison.operation === "delete") {
-        toDelete.push({
-          type: "delete",
-          itemType: "mcp",
-          name: targetMCP.name,
-          description: comparison.reason,
-          oldHash: targetMCP.hash,
-          reason: comparison.reason,
-        });
+        if (comparison.operation === "delete") {
+          toDelete.push({
+            type: "delete",
+            itemType,
+            name: targetItem.name,
+            description: comparison.reason,
+            oldHash: targetItem.hash,
+            reason: comparison.reason,
+          });
+        }
       }
     }
   }
 
-  // Process agents from source
-  for (const sourceAgent of sourceAgents) {
-    const targetAgent = targetAgentMap.get(sourceAgent.name);
-    const manifestItem = manifest.items[`agent/${sourceAgent.name}`];
+  // Process all item types using unified logic (DRY principle)
+  processSourceItems(sourceSkills, targetSkillMap, "skill");
+  processTargetItems(targetSkills, sourceSkillMap, "skill");
 
-    const comparison = compareHashes(
-      sourceAgent.hash,
-      targetAgent?.hash ?? null,
-      manifestItem?.targets[targetTool]?.hash ?? null,
-      mode,
-    );
+  processSourceItems(sourceMCPServers, targetMCPMap, "mcp");
+  processTargetItems(targetMCPServers, sourceMCPMap, "mcp");
 
-    const operation: Operation = {
-      type: comparison.operation,
-      itemType: "agent",
-      name: sourceAgent.name,
-      description: comparison.reason,
-      reason: comparison.reason,
-    };
+  processSourceItems(sourceAgents, targetAgentMap, "agent");
+  processTargetItems(targetAgents, sourceAgentMap, "agent");
 
-    // Add newHash
-    if (sourceAgent.hash) {
-      operation.newHash = sourceAgent.hash;
-    }
-
-    // Add oldHash if exists
-    if (targetAgent?.hash) {
-      operation.oldHash = targetAgent.hash;
-    }
-
-    switch (comparison.operation) {
-      case "create":
-        toCreate.push(operation);
-        break;
-      case "update":
-        toUpdate.push(operation);
-        break;
-      case "skip":
-        toSkip.push(operation);
-        break;
-    }
-  }
-
-  // Process agents in target but not in source (potential deletes)
-  for (const targetAgent of targetAgents) {
-    if (!sourceAgentMap.has(targetAgent.name)) {
-      const manifestItem = manifest.items[`agent/${targetAgent.name}`];
-
-      const comparison = compareHashes(
-        null,
-        targetAgent.hash,
-        manifestItem?.targets[targetTool]?.hash ?? null,
-        mode,
-      );
-
-      if (comparison.operation === "delete") {
-        toDelete.push({
-          type: "delete",
-          itemType: "agent",
-          name: targetAgent.name,
-          description: comparison.reason,
-          oldHash: targetAgent.hash,
-          reason: comparison.reason,
-        });
-      }
-    }
-  }
-
-  // Process commands from source
-  for (const sourceCommand of sourceCommands) {
-    const targetCommand = targetCommandMap.get(sourceCommand.name);
-    const manifestItem = manifest.items[`command/${sourceCommand.name}`];
-
-    const comparison = compareHashes(
-      sourceCommand.hash,
-      targetCommand?.hash ?? null,
-      manifestItem?.targets[targetTool]?.hash ?? null,
-      mode,
-    );
-
-    const operation: Operation = {
-      type: comparison.operation,
-      itemType: "command",
-      name: sourceCommand.name,
-      description: comparison.reason,
-      reason: comparison.reason,
-    };
-
-    // Add newHash
-    if (sourceCommand.hash) {
-      operation.newHash = sourceCommand.hash;
-    }
-
-    // Add oldHash if exists
-    if (targetCommand?.hash) {
-      operation.oldHash = targetCommand.hash;
-    }
-
-    switch (comparison.operation) {
-      case "create":
-        toCreate.push(operation);
-        break;
-      case "update":
-        toUpdate.push(operation);
-        break;
-      case "skip":
-        toSkip.push(operation);
-        break;
-    }
-  }
-
-  // Process commands in target but not in source (potential deletes)
-  for (const targetCommand of targetCommands) {
-    if (!sourceCommandMap.has(targetCommand.name)) {
-      const manifestItem = manifest.items[`command/${targetCommand.name}`];
-
-      const comparison = compareHashes(
-        null,
-        targetCommand.hash,
-        manifestItem?.targets[targetTool]?.hash ?? null,
-        mode,
-      );
-
-      if (comparison.operation === "delete") {
-        toDelete.push({
-          type: "delete",
-          itemType: "command",
-          name: targetCommand.name,
-          description: comparison.reason,
-          oldHash: targetCommand.hash,
-          reason: comparison.reason,
-        });
-      }
-    }
-  }
+  processSourceItems(sourceCommands, targetCommandMap, "command");
+  processTargetItems(targetCommands, sourceCommandMap, "command");
 
   // Process manifest items for this target that are not in source or target
   // This handles delete detection for write-only targets where we can't read

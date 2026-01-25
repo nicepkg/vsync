@@ -7,6 +7,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { MCPServer, MCPOAuth } from "@src/types/models.js";
+import { EnvVarTransformer } from "@src/utils/env-var-transformer.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
 import type { WriteResult } from "./base.js";
@@ -141,7 +142,7 @@ export class CursorAdapter extends BaseAdapter {
           serverConfig.args = server.args;
         }
         if (server.env) {
-          serverConfig.env = this.normalizeCursorVars(server.env) as Record<
+          serverConfig.env = EnvVarTransformer.toCursor(server.env) as Record<
             string,
             string
           >;
@@ -150,7 +151,7 @@ export class CursorAdapter extends BaseAdapter {
           serverConfig.url = server.url;
         }
         if (server.headers) {
-          serverConfig.headers = this.normalizeCursorVars(
+          serverConfig.headers = EnvVarTransformer.toCursor(
             server.headers,
           ) as Record<string, string>;
         }
@@ -196,46 +197,8 @@ export class CursorAdapter extends BaseAdapter {
     }
   }
 
-  private normalizeCursorVars(value: unknown): unknown {
-    if (typeof value === "string") {
-      return this.normalizeCursorString(value);
-    }
-
-    if (Array.isArray(value)) {
-      return value.map((item) => this.normalizeCursorVars(item));
-    }
-
-    if (value && typeof value === "object") {
-      const result: Record<string, unknown> = {};
-      for (const [key, item] of Object.entries(value)) {
-        result[key] = this.normalizeCursorVars(item);
-      }
-      return result;
-    }
-
-    return value;
-  }
-
-  private normalizeCursorString(value: string): string {
-    return value.replace(/\$\{([A-Za-z0-9_]+)\}/g, (match, name) => {
-      if (this.isCursorReservedVar(name)) {
-        return match;
-      }
-      if (!/^[A-Z0-9_]+$/.test(name)) {
-        return match;
-      }
-      return `\${env:${name}}`;
-    });
-  }
-
-  private isCursorReservedVar(name: string): boolean {
-    return (
-      name === "workspaceFolder" ||
-      name === "workspaceFolderBasename" ||
-      name === "userHome" ||
-      name === "pathSeparator"
-    );
-  }
+  // Removed duplicate env var transformation methods
+  // Now using unified EnvVarTransformer from utils
 
   private toCursorAuth(auth: MCPOAuth): Record<string, unknown> {
     const cursorAuth: Record<string, unknown> = {};
@@ -250,7 +213,7 @@ export class CursorAdapter extends BaseAdapter {
       cursorAuth.scopes = auth.scopes;
     }
 
-    return this.normalizeCursorVars(cursorAuth) as Record<string, unknown>;
+    return EnvVarTransformer.toCursor(cursorAuth) as Record<string, unknown>;
   }
 
   private fromCursorAuth(

@@ -7,8 +7,6 @@ import { join } from "node:path";
 import { cwd } from "node:process";
 import chalk from "chalk";
 import { Command } from "commander";
-import inquirer from "inquirer";
-import ora from "ora";
 import { getAdapter, getToolConfigFiles } from "@src/adapters/registry.js";
 import {
   loadManifest,
@@ -17,7 +15,7 @@ import {
   updateAfterUpdate,
   updateAfterDelete,
 } from "@src/core/manifest-manager.js";
-import { generatePlan, formatPlan, validatePlan } from "@src/core/planner.js";
+import { generatePlan, validatePlan } from "@src/core/planner.js";
 import {
   createBackup,
   restoreBackup,
@@ -56,6 +54,7 @@ import {
   debugObject,
   debugTiming,
 } from "@src/utils/logger.js";
+import { SyncUI } from "@src/utils/sync-ui.js";
 
 /**
  * Source configuration data
@@ -559,53 +558,15 @@ export async function syncWithSymlinks(
  * @param config - Current config
  * @param projectDir - Project directory
  */
+/**
+ * Prompt for symlink usage (simplified - delegates to UI service)
+ * Updates config with user's choice and saves
+ */
 async function promptForSymlinkUsage(
   config: VibeConfig,
   projectDir: string,
 ): Promise<void> {
-  // Display info
-  // Config fields are guaranteed by ensureConfig validation
-  console.log(chalk.cyan(t("commands.sync.symlinkPromptTitle")));
-  console.log(
-    chalk.gray(
-      `  ${t("commands.sync.symlinkPromptSource", { tool: config.source_tool! })}`,
-    ),
-  );
-  console.log(
-    chalk.gray(
-      `  ${t("commands.sync.symlinkPromptTargets", { tools: config.target_tools!.join(", ") })}`,
-    ),
-  );
-  console.log();
-  console.log(t("commands.sync.symlinkPromptInfo"));
-  console.log();
-
-  // Ask user
-  const { useSymlinks } = await inquirer.prompt<{ useSymlinks: boolean }>([
-    {
-      type: "select",
-      name: "useSymlinks",
-      message: t("commands.sync.symlinkPromptQuestion"),
-      choices: [
-        {
-          name: t("commands.sync.symlinkChoiceSymlink"),
-          value: true,
-        },
-        {
-          name: t("commands.sync.symlinkChoiceCopy"),
-          value: false,
-        },
-      ],
-      default: true, // Recommend symlinks
-    },
-  ]);
-
-  // Show warning/benefits based on choice
-  if (useSymlinks) {
-    console.log(chalk.yellow(`\n  ${t("commands.sync.symlinkWarning")}`));
-    console.log(chalk.blue(`  ${t("commands.sync.symlinkBenefits")}`));
-  }
-  console.log();
+  const useSymlinks = await SyncUI.promptForSymlinkUsage(config);
 
   // Update config with user's choice
   config.use_symlinks_for_skills = useSymlinks;
@@ -635,31 +596,27 @@ export async function syncCommand(options: {
     debug("Sync command started", { projectDir, mode, options });
 
     // Load configuration (with auto-init if needed)
-    const spinner = ora(t("commands.sync.loadingConfig")).start();
+    const spinner = SyncUI.showLoadingConfig();
     const config = await ensureConfig(projectDir, options.user || false, {
       spinner,
       requireFields: ["source_tool", "target_tools", "sync_config"],
     });
     debugObject("Loaded config", config);
-    spinner.succeed(t("commands.sync.configLoaded"));
+    SyncUI.configLoaded(spinner);
 
     // Read source configuration
-    const readSpinner = ora(
-      t("commands.sync.reading", { tool: config.source_tool! }),
-    ).start();
+    const readSpinner = SyncUI.showReadingSource(config.source_tool!);
     const sourceData = await readSourceConfig(
       config.source_tool!,
       projectDir,
       config.level,
     );
-    readSpinner.succeed(
-      t("commands.sync.readComplete", {
-        skills: sourceData.skills.length,
-        mcp: sourceData.mcpServers.length,
-        agents: sourceData.agents.length,
-        commands: sourceData.commands.length,
-      }),
-    );
+    SyncUI.readComplete(readSpinner, {
+      skills: sourceData.skills.length,
+      mcp: sourceData.mcpServers.length,
+      agents: sourceData.agents.length,
+      commands: sourceData.commands.length,
+    });
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
@@ -680,7 +637,7 @@ export async function syncCommand(options: {
       );
     }
 
-    const planSpinner = ora(t("commands.sync.calculating")).start();
+    const planSpinner = SyncUI.showCalculating();
     const plan = await calculateSyncDiff(
       sourceData,
       config.target_tools!,
@@ -690,29 +647,18 @@ export async function syncCommand(options: {
       projectDir,
       config.level,
     );
-    planSpinner.succeed(t("commands.sync.planGenerated"));
+    SyncUI.planGenerated(planSpinner);
 
     // Display plan
-    console.log(formatPlan(plan));
+    SyncUI.displayPlan(plan);
 
     // Validate plan
     const validation = validatePlan(plan);
     if (!validation.valid) {
-      console.error(
-        chalk.red(`\n❌ ${t("commands.sync.planValidationFailed")}`),
-      );
-      validation.errors.forEach((err) =>
-        console.error(chalk.red(`  - ${err}`)),
-      );
-      process.exit(1);
+      SyncUI.displayValidationErrors(validation);
     }
 
-    if (validation.warnings && validation.warnings.length > 0) {
-      console.log(chalk.yellow(`\n⚠️  ${t("commands.sync.warnings")}`));
-      validation.warnings.forEach((warn) =>
-        console.log(chalk.yellow(`  - ${warn}`)),
-      );
-    }
+    SyncUI.displayValidationWarnings(validation);
 
     // Check if there are any operations
     const hasOperations = Object.values(plan.diffs).some(
@@ -724,58 +670,48 @@ export async function syncCommand(options: {
     );
 
     if (!hasOperations) {
-      console.log(chalk.green(`\n✅ ${t("commands.sync.noChanges")}\n`));
+      SyncUI.showNoChanges();
       return;
     }
 
     // Dry run - skip execution
     if (options.dryRun) {
-      console.log(chalk.blue(`\n💡 ${t("commands.sync.dryRun")}\n`));
+      SyncUI.showDryRun();
       return;
     }
 
     // Prompt for confirmation (skip if --yes flag is provided)
     if (!options.yes) {
-      // Safe mode (no deletes) defaults to Yes - non-destructive
-      // Prune mode (with deletes) defaults to No - requires explicit confirmation
-      const defaultConfirm = mode === "safe";
-
-      const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
-        {
-          type: "confirm",
-          name: "confirm",
-          message: t("commands.sync.confirmPrompt"),
-          default: defaultConfirm,
-        },
-      ]);
+      const isDestructive = mode === "prune";
+      const confirm = await SyncUI.confirmSync(isDestructive);
 
       if (!confirm) {
-        console.log(chalk.yellow(`\n⚠️  ${t("commands.sync.cancelled")}\n`));
+        SyncUI.showCancelled();
         return;
       }
     }
 
     // Setup symlinks if enabled
     if (shouldUseSymlinks(config)) {
-      const symlinkSpinner = ora(t("commands.sync.settingUpSymlinks")).start();
+      const symlinkSpinner = SyncUI.showSettingUpSymlinks();
       try {
         await syncWithSymlinks(config, plan, projectDir);
-        symlinkSpinner.succeed(t("commands.sync.symlinksConfigured"));
+        SyncUI.symlinksConfigured(symlinkSpinner);
       } catch (error) {
-        symlinkSpinner.fail(t("commands.sync.symlinksFailed"));
+        SyncUI.symlinksFailed(symlinkSpinner);
         throw error;
       }
     }
 
     // Execute sync
-    const execSpinner = ora(t("commands.sync.syncing")).start();
+    const execSpinner = SyncUI.showSyncing();
     const results = await executeSyncPlan(
       plan,
       sourceData,
       projectDir,
       config.level,
     );
-    execSpinner.succeed(t("commands.sync.completed"));
+    SyncUI.syncCompleted(execSpinner);
 
     // Update manifest
     for (const [toolName, result] of Object.entries(results)) {
@@ -814,39 +750,20 @@ export async function syncCommand(options: {
     }
 
     // Display summary
-    console.log(chalk.bold(`\n📊 ${t("commands.sync.syncSummary")}\n`));
-    for (const [toolName, result] of Object.entries(results)) {
-      if (!result) continue;
-
-      const icon = result.success ? "✅" : "❌";
-      console.log(chalk.bold(`${icon} ${toolName}:`));
-      console.log(`  ${t("commands.sync.created")}: ${result.created}`);
-      console.log(`  ${t("commands.sync.updated")}: ${result.updated}`);
-      console.log(`  ${t("commands.sync.deleted")}: ${result.deleted}`);
-
-      if (result.errors.length > 0) {
-        console.log(chalk.red(`  ${t("commands.sync.errors")}:`));
-        result.errors.forEach((err) => console.log(chalk.red(`    - ${err}`)));
-      }
-    }
+    SyncUI.displaySyncSummary(results);
 
     const allSuccess = Object.values(results).every((r) => r?.success);
-    if (allSuccess) {
-      console.log(chalk.green(`\n✅ ${t("commands.sync.syncSuccess")}\n`));
-      endTiming();
-    } else {
-      console.log(
-        chalk.yellow(`\n⚠️  ${t("commands.sync.completedWithErrors")}\n`),
-      );
+    endTiming();
+
+    if (!allSuccess) {
       debugObject("Sync results with errors", results);
-      endTiming();
       process.exit(1);
     }
   } catch (error) {
     debugError("Sync command failed", error);
     endTiming();
     if (error instanceof Error) {
-      console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
+      SyncUI.showError(`${t("common.error")}: ${error.message}`);
       process.exit(1);
     }
   }

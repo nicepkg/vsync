@@ -8,6 +8,7 @@ import { join } from "node:path";
 import * as jsonc from "jsonc-parser";
 import type { MCPServer, MCPOAuth } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+import { EnvVarTransformer } from "@src/utils/env-var-transformer.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
 import type { WriteResult } from "./base.js";
@@ -95,12 +96,12 @@ export class OpenCodeAdapter extends BaseAdapter {
       }
 
       if (raw.environment && typeof raw.environment === "object") {
-        server.env = this.fromOpenCodeEnvVars(
+        server.env = EnvVarTransformer.fromOpenCode(
           raw.environment as Record<string, unknown>,
         ) as Record<string, string>;
       }
       if (raw.headers && typeof raw.headers === "object") {
-        server.headers = this.fromOpenCodeEnvVars(
+        server.headers = EnvVarTransformer.fromOpenCode(
           raw.headers as Record<string, unknown>,
         ) as Record<string, string>;
       }
@@ -171,14 +172,18 @@ export class OpenCodeAdapter extends BaseAdapter {
         }
         if (server.env) {
           // Convert environment variables to {env:VAR}
-          serverConfig.environment = this.toOpenCodeEnvVars(server.env);
+          serverConfig.environment = EnvVarTransformer.toOpenCode(
+            server.env,
+          ) as Record<string, unknown>;
         }
         if (server.url) {
           serverConfig.url = server.url;
         }
         if (server.headers) {
           // Convert environment variables in headers
-          serverConfig.headers = this.toOpenCodeEnvVars(server.headers);
+          serverConfig.headers = EnvVarTransformer.toOpenCode(
+            server.headers,
+          ) as Record<string, unknown>;
         }
         if (server.auth) {
           serverConfig.oauth = this.toOpenCodeOAuth(server.auth);
@@ -246,86 +251,18 @@ export class OpenCodeAdapter extends BaseAdapter {
     }
   }
 
-  /**
-   * Convert environment variables recursively
-   * ${env:VAR} or ${VAR} -> {env:VAR} (OpenCode format)
-   */
-  private toOpenCodeEnvVars(
-    obj: Record<string, unknown>,
-  ): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === "string") {
-        result[key] = this.toOpenCodeEnvString(value);
-      } else if (Array.isArray(value)) {
-        result[key] = value.map((item) => {
-          if (typeof item === "string") {
-            return this.toOpenCodeEnvString(item);
-          }
-          if (item && typeof item === "object") {
-            return this.toOpenCodeEnvVars(item as Record<string, unknown>);
-          }
-          return item;
-        });
-      } else if (typeof value === "object" && value !== null) {
-        result[key] = this.toOpenCodeEnvVars(value as Record<string, unknown>);
-      } else {
-        result[key] = value;
-      }
-    }
-
-    return result;
-  }
-
-  private toOpenCodeEnvString(value: string): string {
-    // OpenCode uses {env:VAR} format (no $ prefix)
-    const withEnvPrefix = value.replace(/\$\{env:([^}]+)\}/g, "{env:$1}");
-    return withEnvPrefix.replace(/\$\{([A-Z0-9_]+)\}/g, "{env:$1}");
-  }
-
-  private fromOpenCodeEnvString(value: string): string {
-    // Convert {env:VAR} back to ${VAR} for internal representation
-    return value.replace(/\{env:([^}]+)\}/g, "${$1}");
-  }
-
-  private fromOpenCodeEnvVars(
-    obj: Record<string, unknown>,
-  ): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === "string") {
-        result[key] = this.fromOpenCodeEnvString(value);
-      } else if (Array.isArray(value)) {
-        result[key] = value.map((item) => {
-          if (typeof item === "string") {
-            return this.fromOpenCodeEnvString(item);
-          }
-          if (item && typeof item === "object") {
-            return this.fromOpenCodeEnvVars(item as Record<string, unknown>);
-          }
-          return item;
-        });
-      } else if (typeof value === "object" && value !== null) {
-        result[key] = this.fromOpenCodeEnvVars(
-          value as Record<string, unknown>,
-        );
-      } else {
-        result[key] = value;
-      }
-    }
-
-    return result;
-  }
+  // Removed duplicate env var transformation methods
+  // Now using unified EnvVarTransformer from utils
 
   private toOpenCodeOAuth(auth: MCPOAuth): Record<string, unknown> {
     const oauth: Record<string, unknown> = {};
     if (auth.client_id) {
-      oauth.clientId = this.toOpenCodeEnvString(auth.client_id);
+      oauth.clientId = EnvVarTransformer.toOpenCode(auth.client_id) as string;
     }
     if (auth.client_secret) {
-      oauth.clientSecret = this.toOpenCodeEnvString(auth.client_secret);
+      oauth.clientSecret = EnvVarTransformer.toOpenCode(
+        auth.client_secret,
+      ) as string;
     }
     if (auth.scopes && auth.scopes.length > 0) {
       oauth.scope = auth.scopes.join(" ");
@@ -342,10 +279,12 @@ export class OpenCodeAdapter extends BaseAdapter {
     };
 
     if (typeof oauth.clientId === "string") {
-      auth.client_id = this.fromOpenCodeEnvString(oauth.clientId);
+      auth.client_id = EnvVarTransformer.fromOpenCode(oauth.clientId) as string;
     }
     if (typeof oauth.clientSecret === "string") {
-      auth.client_secret = this.fromOpenCodeEnvString(oauth.clientSecret);
+      auth.client_secret = EnvVarTransformer.fromOpenCode(
+        oauth.clientSecret,
+      ) as string;
     }
     if (typeof oauth.scope === "string") {
       auth.scopes = oauth.scope.split(/\s+/).filter(Boolean);
