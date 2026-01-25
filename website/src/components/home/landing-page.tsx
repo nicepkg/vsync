@@ -180,18 +180,15 @@ type Translation = {
 export function LandingPage({ lang }: { lang: "en" | "zh" }) {
   const t: Translation = {
     hero: {
-      title:
-        lang === "en"
-          ? "Managing Configs Across Multiple AI Vibe Coding Tools is a Nightmare"
-          : "在多个氛围编程工具间管理配置是噩梦",
+      title: lang === "en" ? "Vibe-Sync" : "Vibe-Sync",
       subtitle:
         lang === "en"
-          ? "vibe-sync solves this with one command"
-          : "vibe-sync 用一条命令解决这个问题",
+          ? "One config. Many AI tools. Zero pain."
+          : "一处配置，多个 AI 工具同步，不再折腾。",
       desc:
         lang === "en"
-          ? "Each tool has its own directories and formats. Skills, MCP servers, Agents, Commands - they're all different. vibe-sync keeps everything in sync automatically. No more manual copying, no more broken configs."
-          : "每个工具都有自己的目录和格式。Skills、MCP servers、Agents、Commands - 都不一样。vibe-sync 自动保持所有内容同步。不再手动复制，不再有坏掉的配置。",
+          ? "Each vibe coding tool (Claude Code, Cursor, OpenCode, Codex) has its own directories and formats. Skills, MCP servers, Agents, Commands - they're all different. vibe-sync keeps everything in sync automatically. No more manual copying, no more broken configs."
+          : "每个氛围编程工具（Claude Code、Cursor、OpenCode、Codex）都有自己的目录和格式。Skills、MCP servers、Agents、Commands - 都不一样。vibe-sync 自动保持所有内容同步。不再手动复制，不再有坏掉的配置。",
       getStarted: lang === "en" ? "Get Started" : "开始使用",
       viewGithub: lang === "en" ? "Star on GitHub" : "Star on GitHub",
     },
