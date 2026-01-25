@@ -625,12 +625,15 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Background**: Skills folders can contain many files (templates, scripts, examples). Users don't want to copy hundreds of files to each AI tool's directory. Using symlinks keeps one source of truth and saves disk space.
 
-### 9.1 Configuration Extension
+### 9.1 Configuration Extension ✅
 
-- [ ] Extend `cli/src/types/config.ts`
-  - [ ] Add `use_symlinks_for_skills?: boolean` to `VibeConfig`
-  - [ ] Add `symlink_source?: ToolName` to track which tool is the symlink source
-  - [ ] Update schema validation
+- [x] Extend `cli/src/types/config.ts`
+  - [x] Add `use_symlinks_for_skills?: boolean` to `VibeConfig`
+  - [x] ~~Add `symlink_source?: ToolName`~~ (Not needed - use `source_tool` instead)
+  - [x] Update schema validation in `cli/src/core/config-manager.ts`
+  - [x] Update `mergeConfigs()` to handle symlink configuration
+  - [x] Added 7 comprehensive tests (2 type tests, 5 config-manager tests)
+  - [x] All tests passing (407 total)
 
 ### 9.2 Symlink Detection & Prompt
 
