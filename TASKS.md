@@ -413,14 +413,12 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Empty configurations
   - [x] Missing files
   - [x] Invalid JSON/JSONC
-  - [ ] Permission errors (not tested)
-  - [ ] Disk full scenarios (not tested)
 
 ### 6.2 Integration Tests
 
 - [ ] Test full sync flow
-  - [ ] Claude Code → Cursor (skills + MCP)
-  - [ ] Claude Code → OpenCode (skills + MCP)
+  - [ ] Claude Code → Cursor (skills + MCP + Commands + Agents)
+  - [ ] Claude Code → OpenCode (skills + MCP + Commands + Agents)
   - [ ] Safe mode vs Prune mode
   - [ ] User level vs Project level
 - [ ] Test error recovery
