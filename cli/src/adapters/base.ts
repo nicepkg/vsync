@@ -358,7 +358,11 @@ export abstract class BaseAdapter implements ToolAdapter {
             itemMeta.description = parsed.data.description;
           }
           if (Object.keys(parsed.data).length > 0) {
-            itemMeta.metadata = parsed.data;
+            // Exclude 'name' field from metadata since it's redundant and auto-added during write
+            const { name: _name, ...metadataWithoutName } = parsed.data;
+            if (Object.keys(metadataWithoutName).length > 0) {
+              itemMeta.metadata = metadataWithoutName;
+            }
           }
           if (Object.keys(supportFiles).length > 0) {
             itemMeta.supportFiles = supportFiles;
@@ -422,7 +426,11 @@ export abstract class BaseAdapter implements ToolAdapter {
             itemMeta.description = parsed.data.description;
           }
           if (Object.keys(parsed.data).length > 0) {
-            itemMeta.metadata = parsed.data;
+            // Exclude 'name' field from metadata since it's redundant and auto-added during write
+            const { name: _name, ...metadataWithoutName } = parsed.data;
+            if (Object.keys(metadataWithoutName).length > 0) {
+              itemMeta.metadata = metadataWithoutName;
+            }
           }
 
           item.hash = hashFn(item);
