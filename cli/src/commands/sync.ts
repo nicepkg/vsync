@@ -43,6 +43,7 @@ import type {
   Command as VibeCommand,
 } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
+import { t } from "@src/utils/i18n.js";
 
 /**
  * Source configuration data
@@ -454,13 +455,11 @@ export async function executeSyncPlan(
         }
 
         // Rollback all changes on error
-        console.error(
-          chalk.yellow(`\n⚠️  Error occurred - rolling back changes...`),
-        );
+        console.error(chalk.yellow(`\n⚠️  ${t("commands.sync.rollingBack")}`));
         for (const backup of allBackups) {
           await restoreBackup(backup);
         }
-        console.error(chalk.green("✅ Rollback completed"));
+        console.error(chalk.green(`✅ ${t("commands.sync.rollbackComplete")}`));
 
         // Clean up backups after rollback
         for (const backup of allBackups) {
@@ -574,13 +573,13 @@ export async function syncCommand(options: {
     const mode: SyncMode = options.prune ? "prune" : "safe";
 
     // Load configuration
-    const spinner = ora("Loading configuration...").start();
+    const spinner = ora(t("commands.sync.loadingConfig")).start();
     const config = await loadSyncConfig(projectDir, options.user || false);
-    spinner.succeed("Configuration loaded");
+    spinner.succeed(t("commands.sync.configLoaded"));
 
     // Read source configuration
     const readSpinner = ora(
-      `Reading ${config.source_tool} configuration...`,
+      t("commands.sync.reading", { tool: config.source_tool }),
     ).start();
     const sourceData = await readSourceConfig(
       config.source_tool,
@@ -588,21 +587,26 @@ export async function syncCommand(options: {
       config.level,
     );
     readSpinner.succeed(
-      `Read ${sourceData.skills.length} skills, ${sourceData.mcpServers.length} MCP servers, ${sourceData.agents.length} agents, ${sourceData.commands.length} commands`,
+      t("commands.sync.readComplete", {
+        skills: sourceData.skills.length,
+        mcp: sourceData.mcpServers.length,
+        agents: sourceData.agents.length,
+        commands: sourceData.commands.length,
+      }),
     );
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
 
     // Calculate diff and generate plan
-    const planSpinner = ora("Calculating differences...").start();
+    const planSpinner = ora(t("commands.sync.calculating")).start();
     const plan = await calculateSyncDiff(
       sourceData,
       config.target_tools,
       manifest,
       mode,
     );
-    planSpinner.succeed("Sync plan generated");
+    planSpinner.succeed(t("commands.sync.planGenerated"));
 
     // Display plan
     console.log(formatPlan(plan));
@@ -610,7 +614,9 @@ export async function syncCommand(options: {
     // Validate plan
     const validation = validatePlan(plan);
     if (!validation.valid) {
-      console.error(chalk.red("\n❌ Plan validation failed:"));
+      console.error(
+        chalk.red(`\n❌ ${t("commands.sync.planValidationFailed")}`),
+      );
       validation.errors.forEach((err) =>
         console.error(chalk.red(`  - ${err}`)),
       );
@@ -618,7 +624,7 @@ export async function syncCommand(options: {
     }
 
     if (validation.warnings && validation.warnings.length > 0) {
-      console.log(chalk.yellow("\n⚠️  Warnings:"));
+      console.log(chalk.yellow(`\n⚠️  ${t("commands.sync.warnings")}`));
       validation.warnings.forEach((warn) =>
         console.log(chalk.yellow(`  - ${warn}`)),
       );
@@ -634,13 +640,13 @@ export async function syncCommand(options: {
     );
 
     if (!hasOperations) {
-      console.log(chalk.green("\n✅ Everything is up to date!\n"));
+      console.log(chalk.green(`\n✅ ${t("commands.sync.noChanges")}\n`));
       return;
     }
 
     // Dry run - skip execution
     if (options.dryRun) {
-      console.log(chalk.blue("\n💡 Dry run mode - no changes will be made\n"));
+      console.log(chalk.blue(`\n💡 ${t("commands.sync.dryRun")}\n`));
       return;
     }
 
@@ -649,39 +655,37 @@ export async function syncCommand(options: {
       {
         type: "confirm",
         name: "confirm",
-        message: "Do you want to proceed with the sync?",
+        message: t("commands.sync.confirmPrompt"),
         default: false,
       },
     ]);
 
     if (!confirm) {
-      console.log(chalk.yellow("\n⚠️  Sync cancelled\n"));
+      console.log(chalk.yellow(`\n⚠️  ${t("commands.sync.cancelled")}\n`));
       return;
     }
 
     // Setup symlinks if enabled
     if (shouldUseSymlinks(config)) {
-      const symlinkSpinner = ora(
-        "Setting up symlinks for skills directories...",
-      ).start();
+      const symlinkSpinner = ora(t("commands.sync.settingUpSymlinks")).start();
       try {
         await syncWithSymlinks(config, plan, projectDir);
-        symlinkSpinner.succeed("Symlinks configured");
+        symlinkSpinner.succeed(t("commands.sync.symlinksConfigured"));
       } catch (error) {
-        symlinkSpinner.fail("Failed to setup symlinks");
+        symlinkSpinner.fail(t("commands.sync.symlinksFailed"));
         throw error;
       }
     }
 
     // Execute sync
-    const execSpinner = ora("Syncing configurations...").start();
+    const execSpinner = ora(t("commands.sync.syncing")).start();
     const results = await executeSyncPlan(
       plan,
       sourceData,
       projectDir,
       config.level,
     );
-    execSpinner.succeed("Sync completed");
+    execSpinner.succeed(t("commands.sync.completed"));
 
     // Update manifest
     for (const [toolName, result] of Object.entries(results)) {
@@ -712,32 +716,34 @@ export async function syncCommand(options: {
     }
 
     // Display summary
-    console.log(chalk.bold("\n📊 Sync Summary:\n"));
+    console.log(chalk.bold(`\n📊 ${t("commands.sync.syncSummary")}\n`));
     for (const [toolName, result] of Object.entries(results)) {
       if (!result) continue;
 
       const icon = result.success ? "✅" : "❌";
       console.log(chalk.bold(`${icon} ${toolName}:`));
-      console.log(`  Created: ${result.created}`);
-      console.log(`  Updated: ${result.updated}`);
-      console.log(`  Deleted: ${result.deleted}`);
+      console.log(`  ${t("commands.sync.created")}: ${result.created}`);
+      console.log(`  ${t("commands.sync.updated")}: ${result.updated}`);
+      console.log(`  ${t("commands.sync.deleted")}: ${result.deleted}`);
 
       if (result.errors.length > 0) {
-        console.log(chalk.red("  Errors:"));
+        console.log(chalk.red(`  ${t("commands.sync.errors")}:`));
         result.errors.forEach((err) => console.log(chalk.red(`    - ${err}`)));
       }
     }
 
     const allSuccess = Object.values(results).every((r) => r?.success);
     if (allSuccess) {
-      console.log(chalk.green("\n✅ Sync completed successfully!\n"));
+      console.log(chalk.green(`\n✅ ${t("commands.sync.syncSuccess")}\n`));
     } else {
-      console.log(chalk.yellow("\n⚠️  Sync completed with errors\n"));
+      console.log(
+        chalk.yellow(`\n⚠️  ${t("commands.sync.completedWithErrors")}\n`),
+      );
       process.exit(1);
     }
   } catch (error) {
     if (error instanceof Error) {
-      console.error(chalk.red(`\n❌ Error: ${error.message}\n`));
+      console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
       process.exit(1);
     }
   }
@@ -747,10 +753,10 @@ export function createSyncCommand(): Command {
   const command = new Command("sync");
 
   command
-    .description("Synchronize configurations across tools")
-    .option("--dry-run", "Show what would be synced without making changes")
-    .option("--prune", "Enable delete operations (use with caution)")
-    .option("--user", "Use user-level config instead of project-level")
+    .description(t("commands.sync.description"))
+    .option("--dry-run", t("commands.sync.dryRunOption"))
+    .option("--prune", t("commands.sync.pruneOption"))
+    .option("--user", t("commands.sync.userLevelOption"))
     .action(async (options) => {
       await syncCommand(options);
     });
