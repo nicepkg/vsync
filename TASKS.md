@@ -636,18 +636,23 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Added 7 comprehensive tests (2 type tests, 5 config-manager tests)
   - [x] All tests passing (407 total)
 
-### 9.2 Symlink Detection & Prompt
+### 9.2 Symlink Detection & Prompt ✅
 
-- [ ] Implement symlink detection in `cli/src/commands/sync.ts`
-  - [ ] Check if target skills directory is a symlink
-  - [ ] Check if target skills directory exists and has content
-  - [ ] Detect first-time sync (no manifest entry for skills)
-- [ ] Add interactive prompt (only on first sync)
-  - [ ] Show source tool selection confirmation
-  - [ ] Ask: "Skills folder may contain many files. Use symlinks instead of copying?"
-  - [ ] Show warning: "This will DELETE existing skills folders in other tools"
-  - [ ] Show benefits: "Saves disk space, keeps single source of truth"
-  - [ ] Confirm action with Y/n
+- [x] Implement symlink detection in `cli/src/commands/sync.ts`
+  - [x] Detect first-time sync (no manifest entry for skills)
+  - [x] `detectFirstTimeSkillsSync()` - Check if manifest has any skill entries
+  - [x] `shouldPromptForSymlinks()` - Determine when to prompt user
+- [x] Add interactive prompt (only on first sync)
+  - [x] Show source tool and target tools
+  - [x] Ask: "How would you like to sync skills directories?"
+  - [x] Provide choice: symlinks (recommended) vs copy files
+  - [x] Show warning: "This will DELETE existing skills folders in other tools"
+  - [x] Show benefits: "Saves disk space, keeps single source of truth"
+  - [x] Save user choice to config (`use_symlinks_for_skills`)
+- [x] Added i18n support
+  - [x] 8 translation keys (English + Chinese)
+- [x] Added 11 comprehensive tests
+- [x] All tests passing (500 total)
 
 ### 9.3 Symlink Creation Logic ✅
 

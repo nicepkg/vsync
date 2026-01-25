@@ -129,6 +129,56 @@ export async function readSourceConfig(
 }
 
 /**
+ * Detect if this is the first time syncing skills
+ * Checks if manifest has any skill entries
+ *
+ * @param manifest - Current manifest
+ * @returns True if no skill entries exist in manifest
+ */
+export function detectFirstTimeSkillsSync(manifest: Manifest): boolean {
+  // Check if any manifest items are skills
+  const hasSkillEntries = Object.keys(manifest.items).some((key) => {
+    const item = manifest.items[key];
+    return item && item.type === "skill";
+  });
+
+  return !hasSkillEntries;
+}
+
+/**
+ * Determine if we should prompt user about symlink usage
+ * Only prompt on first sync when use_symlinks_for_skills is undefined
+ *
+ * @param config - vibe-sync configuration
+ * @param manifest - Current manifest
+ * @param targetTools - Target tools to sync to
+ * @returns True if should prompt for symlink preference
+ */
+export function shouldPromptForSymlinks(
+  config: VibeConfig,
+  manifest: Manifest,
+  targetTools: ToolName[],
+): boolean {
+  // Don't prompt if use_symlinks_for_skills is already set
+  if (config.use_symlinks_for_skills !== undefined) {
+    return false;
+  }
+
+  // Don't prompt if skills not in sync config
+  if (!config.sync_config.skills) {
+    return false;
+  }
+
+  // Don't prompt if no target tools
+  if (targetTools.length === 0) {
+    return false;
+  }
+
+  // Only prompt on first-time skills sync
+  return detectFirstTimeSkillsSync(manifest);
+}
+
+/**
  * Read target tool configurations
  *
  * @param targetTools - Target tool names
@@ -559,6 +609,69 @@ export async function syncWithSymlinks(
 }
 
 /**
+ * Prompt user for symlink usage preference
+ * Shows information about symlinks and asks user to choose
+ * Updates config file with user's choice
+ *
+ * @param config - Current config
+ * @param projectDir - Project directory
+ */
+async function promptForSymlinkUsage(
+  config: VibeConfig,
+  projectDir: string,
+): Promise<void> {
+  // Display info
+  console.log(chalk.cyan(t("commands.sync.symlinkPromptTitle")));
+  console.log(
+    chalk.gray(
+      `  ${t("commands.sync.symlinkPromptSource", { tool: config.source_tool })}`,
+    ),
+  );
+  console.log(
+    chalk.gray(
+      `  ${t("commands.sync.symlinkPromptTargets", { tools: config.target_tools.join(", ") })}`,
+    ),
+  );
+  console.log();
+  console.log(t("commands.sync.symlinkPromptInfo"));
+  console.log();
+
+  // Ask user
+  const { useSymlinks } = await inquirer.prompt<{ useSymlinks: boolean }>([
+    {
+      type: "list",
+      name: "useSymlinks",
+      message: t("commands.sync.symlinkPromptQuestion"),
+      choices: [
+        {
+          name: t("commands.sync.symlinkChoiceSymlink"),
+          value: true,
+        },
+        {
+          name: t("commands.sync.symlinkChoiceCopy"),
+          value: false,
+        },
+      ],
+      default: true, // Recommend symlinks
+    },
+  ]);
+
+  // Show warning/benefits based on choice
+  if (useSymlinks) {
+    console.log(chalk.yellow(`\n  ${t("commands.sync.symlinkWarning")}`));
+    console.log(chalk.blue(`  ${t("commands.sync.symlinkBenefits")}`));
+  }
+  console.log();
+
+  // Update config with user's choice
+  config.use_symlinks_for_skills = useSymlinks;
+
+  // Save config back to file
+  const { saveConfig } = await import("@src/core/config-manager.js");
+  await saveConfig(config, config.level, projectDir);
+}
+
+/**
  * Run sync command
  *
  * @param options - Command options
@@ -597,6 +710,11 @@ export async function syncCommand(options: {
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
+
+    // Check if we should prompt for symlink usage (only on first skills sync)
+    if (shouldPromptForSymlinks(config, manifest, config.target_tools)) {
+      await promptForSymlinkUsage(config, projectDir);
+    }
 
     // Calculate diff and generate plan
     const planSpinner = ora(t("commands.sync.calculating")).start();
