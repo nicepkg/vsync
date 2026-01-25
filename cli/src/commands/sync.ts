@@ -3,6 +3,7 @@
  * Synchronize configurations across tools
  */
 
+import { join } from "node:path";
 import { cwd } from "node:process";
 import chalk from "chalk";
 import { Command } from "commander";
@@ -24,6 +25,10 @@ import {
   cleanupBackup,
 } from "@src/core/rollback.js";
 import type { BackupInfo } from "@src/core/rollback.js";
+import {
+  shouldUseSymlinks,
+  setupSymlinkForSkills,
+} from "@src/core/symlink-sync.js";
 import type {
   ConfigLevel,
   SyncMode,
@@ -327,8 +332,11 @@ export async function executeSyncPlan(
           try {
             const writeResult = await adapter.writeSkills(allSkills);
             if (writeResult.success) {
-              result.created += skillsToCreate.length;
-              result.updated += skillsToUpdate.length;
+              // Use actual write count (may be 0 for symlinked directories)
+              if (writeResult.count > 0) {
+                result.created += skillsToCreate.length;
+                result.updated += skillsToUpdate.length;
+              }
             } else {
               result.errors.push(writeResult.error || "Failed to write skills");
               result.success = false;
@@ -510,6 +518,48 @@ export async function updateManifestAfterSync(
 }
 
 /**
+ * Setup symlinks for skills directories when enabled
+ *
+ * @param config - Vibe configuration
+ * @param plan - Sync plan
+ * @param projectDir - Project directory
+ */
+export async function syncWithSymlinks(
+  config: VibeConfig,
+  plan: SyncPlan,
+  projectDir: string,
+): Promise<void> {
+  // Check if symlinks should be used
+  if (!shouldUseSymlinks(config)) {
+    return;
+  }
+
+  // Get source adapter to determine source skills directory
+  const sourceAdapter = getAdapter({
+    tool: config.source_tool,
+    baseDir: projectDir,
+    level: config.level,
+  });
+
+  const sourceSkillsDir = join(projectDir, sourceAdapter.getSkillsDir());
+
+  // Setup symlinks for each target tool
+  for (const targetTool of Object.keys(plan.diffs)) {
+    const tool = targetTool as ToolName;
+    const targetAdapter = getAdapter({
+      tool,
+      baseDir: projectDir,
+      level: config.level,
+    });
+
+    const targetSkillsDir = join(projectDir, targetAdapter.getSkillsDir());
+
+    // Setup symlink from target to source
+    await setupSymlinkForSkills(sourceSkillsDir, targetSkillsDir);
+  }
+}
+
+/**
  * Run sync command
  *
  * @param options - Command options
@@ -607,6 +657,20 @@ export async function syncCommand(options: {
     if (!confirm) {
       console.log(chalk.yellow("\n⚠️  Sync cancelled\n"));
       return;
+    }
+
+    // Setup symlinks if enabled
+    if (shouldUseSymlinks(config)) {
+      const symlinkSpinner = ora(
+        "Setting up symlinks for skills directories...",
+      ).start();
+      try {
+        await syncWithSymlinks(config, plan, projectDir);
+        symlinkSpinner.succeed("Symlinks configured");
+      } catch (error) {
+        symlinkSpinner.fail("Failed to setup symlinks");
+        throw error;
+      }
     }
 
     // Execute sync
