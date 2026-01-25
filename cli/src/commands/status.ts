@@ -146,7 +146,11 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
 
     // Check for pending changes
     const checkSpinner = ora("Checking for pending changes...").start();
-    const sourceData = await readSourceConfig(config.source_tool, projectDir);
+    const sourceData = await readSourceConfig(
+      config.source_tool,
+      projectDir,
+      config.level,
+    );
     const plan = await calculateSyncDiff(
       sourceData,
       config.target_tools,

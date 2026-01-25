@@ -50,10 +50,18 @@ export class ClaudeCodeAdapter implements ToolAdapter {
     return ".claude";
   }
 
+  getConfigPaths(): string[] {
+    return [join(this.getConfigDir(), "settings.json")];
+  }
+
   /**
    * Get configuration file paths for backup
    */
-  getConfigFiles(): string[] {
+  getMCPConfigPaths(): string[] {
+    if (this.config.level === "user") {
+      return [join(this.getConfigDir(), "mcp.json")];
+    }
+
     return [".mcp.json"];
   }
 
@@ -61,21 +69,31 @@ export class ClaudeCodeAdapter implements ToolAdapter {
    * Get skills directory path
    */
   getSkillsDir(): string {
-    return `${this.config.baseDir}/.claude/skills`;
+    return join(this.getConfigDir(), "skills");
   }
 
   /**
    * Get agents directory path
    */
   getAgentsDir(): string {
-    return `${this.config.baseDir}/.claude/agents`;
+    return join(this.getConfigDir(), "agents");
   }
 
   /**
    * Get commands directory path
    */
   getCommandsDir(): string {
-    return `${this.config.baseDir}/.claude/commands`;
+    return join(this.getConfigDir(), "commands");
+  }
+
+  private async getMcpConfigExitFullPath(): Promise<string> {
+    const mcpConfigPath = await fileOps.findFirstExistingPath(
+      this.getMCPConfigPaths().map((p) => join(this.config.baseDir, p)),
+    );
+    if (!mcpConfigPath) {
+      throw new Error("Claude Code MCP config path is not configured");
+    }
+    return mcpConfigPath;
   }
 
   /**
@@ -83,7 +101,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
    * Each skill is a directory with SKILL.md and optional support files
    */
   async readSkills(): Promise<Skill[]> {
-    const skillsDir = join(this.config.baseDir, ".claude", "skills");
+    const skillsDir = join(this.config.baseDir, this.getSkillsDir());
 
     try {
       const entries = await fileOps.readdir(skillsDir, { withFileTypes: true });
@@ -170,7 +188,7 @@ export class ClaudeCodeAdapter implements ToolAdapter {
    * Claude Code only supports stdio MCP servers
    */
   async readMCPServers(): Promise<MCPServer[]> {
-    const mcpJsonPath = join(this.config.baseDir, ".mcp.json");
+    const mcpJsonPath = await this.getMcpConfigExitFullPath();
 
     try {
       const config = await fileOps.readJSON<{
@@ -222,46 +240,28 @@ export class ClaudeCodeAdapter implements ToolAdapter {
 
   /**
    * Read all agents from .claude/agents/
-   * Each agent is a directory with AGENT.md and optional support files
+   * Each agent is a single .md file
    */
   async readAgents(): Promise<Agent[]> {
-    const agentsDir = join(this.config.baseDir, ".claude", "agents");
+    const agentsDir = join(this.config.baseDir, this.getAgentsDir());
 
     try {
       const entries = await fileOps.readdir(agentsDir, { withFileTypes: true });
       const agents: Agent[] = [];
 
       for (const entry of entries) {
-        if (!entry.isDirectory()) {
-          continue; // Skip non-directories
+        if (!entry.isFile() || !entry.name.endsWith(".md")) {
+          continue; // Skip non-markdown files
         }
 
-        const agentName = entry.name;
-        const agentDir = join(agentsDir, agentName);
-        const agentMdPath = join(agentDir, "AGENT.md");
+        const agentName = entry.name.slice(0, -3);
+        const agentMdPath = join(agentsDir, entry.name);
 
         try {
-          // Read AGENT.md
           const agentContent = await readFile(agentMdPath, "utf-8");
 
           // Parse frontmatter
           const parsed = matter(agentContent);
-
-          // Read support files
-          const supportFiles: Record<string, string> = {};
-          const agentFiles = await fileOps.readdir(agentDir, {
-            withFileTypes: true,
-          });
-
-          for (const file of agentFiles) {
-            if (file.name === "AGENT.md" || file.isDirectory()) {
-              continue;
-            }
-
-            const filePath = join(agentDir, file.name);
-            const fileContent = await readFile(filePath, "utf-8");
-            supportFiles[file.name] = fileContent;
-          }
 
           // Create agent object (omit undefined optional fields)
           const agent: Agent = {
@@ -277,16 +277,13 @@ export class ClaudeCodeAdapter implements ToolAdapter {
           if (Object.keys(parsed.data).length > 0) {
             agent.metadata = parsed.data;
           }
-          if (Object.keys(supportFiles).length > 0) {
-            agent.supportFiles = supportFiles;
-          }
 
           // Compute hash
           agent.hash = hashAgent(agent);
 
           agents.push(agent);
         } catch (error) {
-          // Skip agents with missing or invalid AGENT.md
+          // Skip agents with missing or invalid .md file
           console.warn(
             `Skipping agent ${agentName}: ${error instanceof Error ? error.message : "Unknown error"}`,
           );
@@ -309,10 +306,10 @@ export class ClaudeCodeAdapter implements ToolAdapter {
 
   /**
    * Read all commands from .claude/commands/
-   * Each command is a directory with COMMAND.md and optional support files
+   * Each command is a single .md file
    */
   async readCommands(): Promise<Command[]> {
-    const commandsDir = join(this.config.baseDir, ".claude", "commands");
+    const commandsDir = join(this.config.baseDir, this.getCommandsDir());
 
     try {
       const entries = await fileOps.readdir(commandsDir, {
@@ -321,36 +318,18 @@ export class ClaudeCodeAdapter implements ToolAdapter {
       const commands: Command[] = [];
 
       for (const entry of entries) {
-        if (!entry.isDirectory()) {
-          continue; // Skip non-directories
+        if (!entry.isFile() || !entry.name.endsWith(".md")) {
+          continue; // Skip non-markdown files
         }
 
-        const commandName = entry.name;
-        const commandDir = join(commandsDir, commandName);
-        const commandMdPath = join(commandDir, "COMMAND.md");
+        const commandName = entry.name.slice(0, -3);
+        const commandMdPath = join(commandsDir, entry.name);
 
         try {
-          // Read COMMAND.md
           const commandContent = await readFile(commandMdPath, "utf-8");
 
           // Parse frontmatter
           const parsed = matter(commandContent);
-
-          // Read support files
-          const supportFiles: Record<string, string> = {};
-          const commandFiles = await fileOps.readdir(commandDir, {
-            withFileTypes: true,
-          });
-
-          for (const file of commandFiles) {
-            if (file.name === "COMMAND.md" || file.isDirectory()) {
-              continue;
-            }
-
-            const filePath = join(commandDir, file.name);
-            const fileContent = await readFile(filePath, "utf-8");
-            supportFiles[file.name] = fileContent;
-          }
 
           // Create command object (omit undefined optional fields)
           const command: Command = {
@@ -366,16 +345,13 @@ export class ClaudeCodeAdapter implements ToolAdapter {
           if (Object.keys(parsed.data).length > 0) {
             command.metadata = parsed.data;
           }
-          if (Object.keys(supportFiles).length > 0) {
-            command.supportFiles = supportFiles;
-          }
 
           // Compute hash
           command.hash = hashCommand(command);
 
           commands.push(command);
         } catch (error) {
-          // Skip commands with missing or invalid COMMAND.md
+          // Skip commands with missing or invalid .md file
           console.warn(
             `Skipping command ${commandName}: ${error instanceof Error ? error.message : "Unknown error"}`,
           );
@@ -404,16 +380,16 @@ export class ClaudeCodeAdapter implements ToolAdapter {
     const warnings: string[] = [];
 
     // Check if .claude directory exists
-    const claudeDir = join(this.config.baseDir, ".claude");
-    const claudeDirStats = await fileOps.stat(claudeDir);
-    if (!claudeDirStats) {
+    const configDirPath = join(this.config.baseDir, this.getConfigDir());
+    const configDirStats = await fileOps.stat(configDirPath);
+    if (!configDirStats) {
       warnings.push(".claude directory not found");
-    } else if (!claudeDirStats.isDirectory()) {
+    } else if (!configDirStats.isDirectory()) {
       warnings.push(".claude exists but is not a directory");
     }
 
     // Check if .mcp.json exists
-    const mcpJsonPath = join(this.config.baseDir, ".mcp.json");
+    const mcpJsonPath = await this.getMcpConfigExitFullPath();
     const mcpJsonStats = await fileOps.stat(mcpJsonPath);
     if (!mcpJsonStats) {
       warnings.push(".mcp.json not found");

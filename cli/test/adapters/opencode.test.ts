@@ -3,7 +3,7 @@ import * as jsonc from "jsonc-parser";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
-import type { Skill, MCPServer } from "@src/types/models.js";
+import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 
 describe("OpenCodeAdapter", () => {
   let adapter: OpenCodeAdapter;
@@ -19,8 +19,8 @@ describe("OpenCodeAdapter", () => {
   "mcp": {
     /* Existing server */
     "existing": {
-      "type": "stdio",
-      "command": "existing-command"
+      "type": "local",
+      "command": ["existing-command"]
     }
   },
   // Other settings
@@ -35,6 +35,7 @@ describe("OpenCodeAdapter", () => {
     adapter = new OpenCodeAdapter({
       tool: "opencode",
       baseDir: "/project",
+      level: "project",
     });
   });
 
@@ -105,6 +106,7 @@ describe("OpenCodeAdapter", () => {
       const emptyAdapter = new OpenCodeAdapter({
         tool: "opencode",
         baseDir: "/empty",
+        level: "project",
       });
 
       const skills: Skill[] = [
@@ -151,7 +153,11 @@ describe("OpenCodeAdapter", () => {
       // Parse and verify structure
       const config = jsonc.parse(jsoncText);
       expect(config.mcp.postgres).toBeDefined();
-      expect(config.mcp.postgres.command).toBe("npx");
+      expect(config.mcp.postgres.command).toEqual([
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+      ]);
     });
 
     it("should add type field to all servers", async () => {
@@ -175,11 +181,11 @@ describe("OpenCodeAdapter", () => {
       const jsoncText = await readFile("/project/opencode.jsonc", "utf-8");
       const config = jsonc.parse(jsoncText);
 
-      expect(config.mcp["stdio-server"].type).toBe("stdio");
+      expect(config.mcp["stdio-server"].type).toBe("local");
       expect(config.mcp["http-server"].type).toBe("remote");
     });
 
-    it("should convert environment variable format from ${env:VAR} to ${VAR}", async () => {
+    it("should convert environment variable format to {env:VAR}", async () => {
       const servers: MCPServer[] = [
         {
           name: "test",
@@ -198,8 +204,8 @@ describe("OpenCodeAdapter", () => {
       const jsoncText = await readFile("/project/opencode.jsonc", "utf-8");
       const config = jsonc.parse(jsoncText);
 
-      expect(config.mcp.test.env.TOKEN).toBe("${GITHUB_TOKEN}");
-      expect(config.mcp.test.env.API_KEY).toBe("${API_KEY}");
+      expect(config.mcp.test.environment.TOKEN).toBe("{env:GITHUB_TOKEN}");
+      expect(config.mcp.test.environment.API_KEY).toBe("{env:API_KEY}");
     });
 
     it("should preserve JSONC comments", async () => {
@@ -259,13 +265,13 @@ describe("OpenCodeAdapter", () => {
 
       // Verify existing server is preserved
       expect(config.mcp.existing).toBeDefined();
-      expect(config.mcp.existing.command).toBe("existing-command");
+      expect(config.mcp.existing.command).toEqual(["existing-command"]);
 
       // Verify new server is added
       expect(config.mcp["new-server"]).toBeDefined();
     });
 
-    it("should create opencode.jsonc if missing", async () => {
+    it("should create opencode.json if missing", async () => {
       mockFs({
         "/empty": {},
       });
@@ -273,6 +279,7 @@ describe("OpenCodeAdapter", () => {
       const emptyAdapter = new OpenCodeAdapter({
         tool: "opencode",
         baseDir: "/empty",
+        level: "project",
       });
 
       const servers: MCPServer[] = [
@@ -288,10 +295,42 @@ describe("OpenCodeAdapter", () => {
 
       expect(result.success).toBe(true);
 
-      const jsoncText = await readFile("/empty/opencode.jsonc", "utf-8");
-      const config = jsonc.parse(jsoncText);
+      const jsonText = await readFile("/empty/opencode.json", "utf-8");
+      const config = jsonc.parse(jsonText);
 
       expect(config.mcp["new-server"]).toBeDefined();
+    });
+
+    it("should write user config to .opencode/opencode.json", async () => {
+      mockFs({
+        "/home": {
+          ".opencode": {},
+        },
+      });
+
+      const userAdapter = new OpenCodeAdapter({
+        tool: "opencode",
+        baseDir: "/home",
+        level: "user",
+      });
+
+      const servers: MCPServer[] = [
+        {
+          name: "user-server",
+          type: "stdio",
+          command: "user-command",
+          hash: "user123",
+        },
+      ];
+
+      const result = await userAdapter.writeMCPServers(servers);
+
+      expect(result.success).toBe(true);
+
+      const jsonText = await readFile("/home/.opencode/opencode.json", "utf-8");
+      const config = jsonc.parse(jsonText);
+
+      expect(config.mcp["user-server"]).toBeDefined();
     });
 
     it("should map OAuth type to remote", async () => {
@@ -303,6 +342,7 @@ describe("OpenCodeAdapter", () => {
           auth: {
             client_id: "${CLIENT_ID}",
             client_secret: "${CLIENT_SECRET}",
+            scopes: ["tools:read", "tools:write"],
           },
           hash: "jkl789",
         },
@@ -314,6 +354,13 @@ describe("OpenCodeAdapter", () => {
       const config = jsonc.parse(jsoncText);
 
       expect(config.mcp["oauth-server"].type).toBe("remote");
+      expect(config.mcp["oauth-server"].oauth.clientId).toBe("{env:CLIENT_ID}");
+      expect(config.mcp["oauth-server"].oauth.clientSecret).toBe(
+        "{env:CLIENT_SECRET}",
+      );
+      expect(config.mcp["oauth-server"].oauth.scope).toBe(
+        "tools:read tools:write",
+      );
     });
 
     it("should handle servers without env vars", async () => {
@@ -334,8 +381,7 @@ describe("OpenCodeAdapter", () => {
       const jsoncText = await readFile("/project/opencode.jsonc", "utf-8");
       const config = jsonc.parse(jsoncText);
 
-      expect(config.mcp.simple.command).toBe("simple-command");
-      expect(config.mcp.simple.args).toEqual(["--flag"]);
+      expect(config.mcp.simple.command).toEqual(["simple-command", "--flag"]);
     });
 
     it("should handle nested env var conversions in complex objects", async () => {
@@ -358,9 +404,11 @@ describe("OpenCodeAdapter", () => {
       const config = jsonc.parse(jsoncText);
 
       expect(config.mcp.complex.headers.Authorization).toBe(
-        "Bearer ${API_TOKEN}",
+        "Bearer {env:API_TOKEN}",
       );
-      expect(config.mcp.complex.headers["X-Custom"]).toBe("${CUSTOM_HEADER}");
+      expect(config.mcp.complex.headers["X-Custom"]).toBe(
+        "{env:CUSTOM_HEADER}",
+      );
     });
   });
 
@@ -460,6 +508,174 @@ describe("OpenCodeAdapter", () => {
     });
   });
 
+  describe("readMCPServers", () => {
+    it("should map OpenCode types and fields", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          "opencode.json": `{
+  "mcp": {
+    "stdio": {
+      "type": "local",
+      "command": ["npx", "-y", "server"],
+      "environment": {
+        "TOKEN": "{env:API_TOKEN}"
+      }
+    },
+    "http": {
+      "type": "remote",
+      "url": "https://api.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer token"
+      }
+    },
+    "oauth": {
+      "type": "remote",
+      "url": "https://oauth.example.com/mcp",
+      "oauth": {
+        "clientId": "{env:CLIENT_ID}",
+        "clientSecret": "{env:CLIENT_SECRET}",
+        "scope": "tools:read tools:write"
+      }
+    }
+  }
+}`,
+        },
+      });
+
+      const readAdapter = new OpenCodeAdapter({
+        tool: "opencode",
+        baseDir: "/project",
+        level: "project",
+      });
+
+      const servers = await readAdapter.readMCPServers();
+
+      const stdio = servers.find((server) => server.name === "stdio");
+      const http = servers.find((server) => server.name === "http");
+      const oauth = servers.find((server) => server.name === "oauth");
+
+      expect(stdio?.type).toBe("stdio");
+      expect(stdio?.command).toBe("npx");
+      expect(stdio?.args).toEqual(["-y", "server"]);
+      expect(stdio?.env?.TOKEN).toBe("${API_TOKEN}");
+      expect(http?.type).toBe("http");
+      expect(http?.url).toBe("https://api.example.com/mcp");
+      expect(oauth?.type).toBe("oauth");
+      expect(oauth?.auth?.client_id).toBe("${CLIENT_ID}");
+      expect(oauth?.auth?.client_secret).toBe("${CLIENT_SECRET}");
+      expect(oauth?.auth?.scopes).toEqual(["tools:read", "tools:write"]);
+    });
+  });
+
+  describe("Agents", () => {
+    it("should write agents to .opencode/agents/*.md", async () => {
+      const agents: Agent[] = [
+        {
+          name: "security-auditor",
+          description: "Security auditor",
+          content: "Agent content",
+          hash: "agent-hash",
+        },
+      ];
+
+      const result = await adapter.writeAgents(agents);
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+
+      const agentMd = await readFile(
+        "/project/.opencode/agents/security-auditor.md",
+        "utf-8",
+      );
+      expect(agentMd).toContain("description: Security auditor");
+      expect(agentMd).toContain("Agent content");
+    });
+
+    it("should read agents from .opencode/agents/*.md", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".opencode": {
+            agents: {
+              "security-auditor.md": `---
+description: Security auditor
+---
+Agent content`,
+              "notes.txt": "Ignore me",
+            },
+          },
+        },
+      });
+
+      const readAdapter = new OpenCodeAdapter({
+        tool: "opencode",
+        baseDir: "/project",
+        level: "project",
+      });
+
+      const agents = await readAdapter.readAgents();
+
+      expect(agents).toHaveLength(1);
+      expect(agents[0]!.name).toBe("security-auditor");
+      expect(agents[0]!.content).toBe("Agent content");
+    });
+  });
+
+  describe("Commands", () => {
+    it("should write commands to .opencode/commands/*.md", async () => {
+      const commands: Command[] = [
+        {
+          name: "deploy",
+          description: "Deploy command",
+          content: "Command content",
+          hash: "command-hash",
+        },
+      ];
+
+      const result = await adapter.writeCommands(commands);
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+
+      const commandMd = await readFile(
+        "/project/.opencode/commands/deploy.md",
+        "utf-8",
+      );
+      expect(commandMd).toContain("description: Deploy command");
+      expect(commandMd).toContain("Command content");
+    });
+
+    it("should read commands from .opencode/commands/*.md", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".opencode": {
+            commands: {
+              "deploy.md": `---
+description: Deploy command
+---
+Command content`,
+              "notes.txt": "Ignore me",
+            },
+          },
+        },
+      });
+
+      const readAdapter = new OpenCodeAdapter({
+        tool: "opencode",
+        baseDir: "/project",
+        level: "project",
+      });
+
+      const commands = await readAdapter.readCommands();
+
+      expect(commands).toHaveLength(1);
+      expect(commands[0]!.name).toBe("deploy");
+      expect(commands[0]!.content).toBe("Command content");
+    });
+  });
+
   describe("validate", () => {
     it("should validate existing configuration", async () => {
       const result = await adapter.validate();
@@ -472,6 +688,7 @@ describe("OpenCodeAdapter", () => {
       const emptyAdapter = new OpenCodeAdapter({
         tool: "opencode",
         baseDir: "/empty",
+        level: "project",
       });
 
       const result = await emptyAdapter.validate();
@@ -480,7 +697,7 @@ describe("OpenCodeAdapter", () => {
       expect(result.warnings?.some((w) => w.includes(".opencode"))).toBe(true);
     });
 
-    it("should warn when opencode.jsonc missing", async () => {
+    it("should warn when opencode.json is missing", async () => {
       mockFs({
         "/project": {
           ".opencode": {
@@ -492,7 +709,7 @@ describe("OpenCodeAdapter", () => {
       const result = await adapter.validate();
 
       expect(result.warnings).toBeDefined();
-      expect(result.warnings?.some((w) => w.includes("opencode.jsonc"))).toBe(
+      expect(result.warnings?.some((w) => w.includes("opencode.json"))).toBe(
         true,
       );
     });

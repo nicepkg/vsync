@@ -11,10 +11,12 @@ describe("Adapter Base Types", () => {
       const config: AdapterConfig = {
         tool: "claude-code",
         baseDir: "/project",
+        level: "project",
       };
 
       expect(config.tool).toBe("claude-code");
       expect(config.baseDir).toBe("/project");
+      expect(config.level).toBe("project");
     });
   });
 

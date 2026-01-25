@@ -105,6 +105,7 @@ export async function importConfigs(
     const sourceAdapter = getAdapter({
       tool: options.sourceTool,
       baseDir: options.sourcePath,
+      level: "project",
     });
 
     // Use targetTool if specified, otherwise use sourceTool
@@ -112,6 +113,7 @@ export async function importConfigs(
     const targetAdapter = getAdapter({
       tool: targetTool,
       baseDir: options.targetPath,
+      level: "project",
     });
 
     // Import skills
@@ -128,6 +130,7 @@ export async function importConfigs(
           const fallbackAdapter = getAdapter({
             tool: options.sourceTool,
             baseDir: options.targetPath,
+            level: "project",
           });
           targetSkills = await fallbackAdapter.readSkills();
         } catch {
@@ -170,6 +173,7 @@ export async function importConfigs(
           const fallbackAdapter = getAdapter({
             tool: options.sourceTool,
             baseDir: options.targetPath,
+            level: "project",
           });
           targetServers = await fallbackAdapter.readMCPServers();
         } catch {
@@ -213,6 +217,7 @@ export async function importConfigs(
           const fallbackAdapter = getAdapter({
             tool: options.sourceTool,
             baseDir: options.targetPath,
+            level: "project",
           });
           targetAgents = await fallbackAdapter.readAgents();
         } catch {
@@ -255,6 +260,7 @@ export async function importConfigs(
           const fallbackAdapter = getAdapter({
             tool: options.sourceTool,
             baseDir: options.targetPath,
+            level: "project",
           });
           targetCommands = await fallbackAdapter.readCommands();
         } catch {
@@ -352,6 +358,7 @@ export function createImportCommand(): Command {
         const sourceAdapter = getAdapter({
           tool: sourceTool,
           baseDir: sourcePath,
+          level: "project",
         });
 
         const sourceSkills = await sourceAdapter.readSkills();

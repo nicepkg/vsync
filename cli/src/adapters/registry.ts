@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Adapter registry - Auto-registration system
  * Add new adapters by importing them and adding to ADAPTERS array
@@ -41,7 +42,11 @@ class AdapterRegistry {
   constructor() {
     // Auto-register all adapters
     for (const AdapterClass of ADAPTERS) {
-      const tempInstance = new AdapterClass({ baseDir: "", tool: "" as any });
+      const tempInstance = new AdapterClass({
+        baseDir: "",
+        tool: "" as any,
+        level: "project",
+      });
       this.adapters.set(tempInstance.toolName, AdapterClass);
     }
   }
@@ -88,7 +93,11 @@ class AdapterRegistry {
     isReadOnly: boolean;
   }> {
     return Array.from(this.adapters.values()).map((AdapterClass) => {
-      const instance = new AdapterClass({ baseDir: "", tool: "" as any });
+      const instance = new AdapterClass({
+        baseDir: "",
+        tool: "" as any,
+        level: "project",
+      });
       return {
         toolName: instance.toolName,
         displayName: instance.displayName,
@@ -141,7 +150,7 @@ function createAdapter(
  * @returns Config directory name (e.g., ".claude", ".cursor")
  */
 function getToolConfigDir(toolName: string): string {
-  const adapter = createAdapter(toolName, { baseDir: "" });
+  const adapter = createAdapter(toolName, { baseDir: "", level: "project" });
   return adapter.getConfigDir();
 }
 
@@ -166,9 +175,10 @@ export function getAllConfigDirs(): Record<string, string> {
 export function getToolConfigFiles(
   toolName: string,
   baseDir: string,
+  level: AdapterConfig["level"] = "project",
 ): string[] {
-  const adapter = createAdapter(toolName, { baseDir });
-  return adapter.getConfigFiles().map((file) => `${baseDir}/${file}`);
+  const adapter = createAdapter(toolName, { baseDir, level });
+  return adapter.getMCPConfigPaths().map((p) => `${baseDir}/${p}`);
 }
 
 /**

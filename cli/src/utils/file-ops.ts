@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * File operation utilities
  * Provides robust, DRY file operations for all adapters
@@ -172,4 +173,19 @@ export async function stat(path: string): Promise<Stats | null> {
     }
     throw error;
   }
+}
+
+/**
+ * Find the first existing path from a list of paths
+ * Returns the first path that exists, or null if none exist
+ */
+export async function findFirstExistingPath(
+  paths: string[],
+): Promise<string | null> {
+  for (const path of paths) {
+    if (await pathExists(path)) {
+      return path;
+    }
+  }
+  return null;
 }

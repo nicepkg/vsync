@@ -12,7 +12,7 @@ export interface Command {
   name: string;
   /** Short description (optional, from frontmatter) */
   description?: string;
-  /** Main content from COMMAND.md or script file */
+  /** Main content from command markdown file */
   content: string;
   /** Frontmatter metadata */
   metadata?: Record<string, unknown>;
@@ -58,7 +58,7 @@ export interface Agent {
   name: string;
   /** Short description (optional, from frontmatter) */
   description?: string;
-  /** Main content from AGENT.md */
+  /** Main content from agent markdown file */
   content: string;
   /** Frontmatter metadata */
   metadata?: Record<string, unknown>;

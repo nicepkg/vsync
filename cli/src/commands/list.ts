@@ -263,7 +263,11 @@ async function listCommand(
     const readSpinner = ora(
       `Reading ${config.source_tool} configuration...`,
     ).start();
-    const sourceData = await readSourceConfig(config.source_tool, projectDir);
+    const sourceData = await readSourceConfig(
+      config.source_tool,
+      projectDir,
+      config.level,
+    );
     readSpinner.succeed("Configuration read");
 
     // Display based on type

@@ -11,6 +11,7 @@ describe("Adapter Registry", () => {
       const adapter = getAdapter({
         tool: "claude-code",
         baseDir: "/test",
+        level: "project",
       });
 
       expect(adapter).toBeInstanceOf(ClaudeCodeAdapter);
@@ -22,6 +23,7 @@ describe("Adapter Registry", () => {
       const adapter = getAdapter({
         tool: "cursor",
         baseDir: "/test",
+        level: "project",
       });
 
       expect(adapter).toBeInstanceOf(CursorAdapter);
@@ -33,6 +35,7 @@ describe("Adapter Registry", () => {
       const adapter = getAdapter({
         tool: "opencode",
         baseDir: "/test",
+        level: "project",
       });
 
       expect(adapter).toBeInstanceOf(OpenCodeAdapter);
@@ -44,6 +47,7 @@ describe("Adapter Registry", () => {
       const adapter = getAdapter({
         tool: "codex",
         baseDir: "/test",
+        level: "project",
       });
 
       expect(adapter).toBeInstanceOf(CodexAdapter);
@@ -57,6 +61,7 @@ describe("Adapter Registry", () => {
           // @ts-expect-error - Testing invalid tool name
           tool: "invalid-tool",
           baseDir: "/test",
+          level: "project",
         }),
       ).toThrow("Unsupported tool");
     });
@@ -65,6 +70,7 @@ describe("Adapter Registry", () => {
       const adapter = getAdapter({
         tool: "cursor",
         baseDir: "/custom/path",
+        level: "project",
       });
 
       expect(adapter.config.baseDir).toBe("/custom/path");

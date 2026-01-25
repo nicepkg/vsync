@@ -3,7 +3,7 @@ import mockFs from "mock-fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { AdapterConfig } from "@src/adapters/base.js";
 import { CodexAdapter } from "@src/adapters/codex.js";
-import type { Agent, Command, MCPServer, Skill } from "@src/types/models.js";
+import type { MCPServer, Skill } from "@src/types/models.js";
 
 describe("CodexAdapter", () => {
   let adapter: CodexAdapter;
@@ -19,6 +19,7 @@ describe("CodexAdapter", () => {
     const config: AdapterConfig = {
       tool: "codex",
       baseDir,
+      level: "project",
     };
     adapter = new CodexAdapter(config);
   });
@@ -121,10 +122,15 @@ Skill content here`,
       const tomlContent = `[mcp_servers.postgres]
 command = "npx"
 args = ["-y", "@modelcontextprotocol/server-postgres"]
+env_vars = ["DATABASE_URL"]
 
-[mcp_servers.filesystem]
-command = "npx"
-args = ["-y", "@modelcontextprotocol/server-filesystem"]`;
+[mcp_servers.postgres.env]
+PGPASSWORD = "secret"
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
+bearer_token_env_var = "FIGMA_OAUTH_TOKEN"
+http_headers = { "X-Figma-Region" = "us-east-1" }`;
 
       mockFs.restore();
       mockFs({
@@ -141,7 +147,15 @@ args = ["-y", "@modelcontextprotocol/server-filesystem"]`;
       expect(servers[0]!.name).toBe("postgres");
       expect(servers[0]!.command).toBe("npx");
       expect(servers[0]!.type).toBe("stdio");
-      expect(servers[1]!.name).toBe("filesystem");
+      expect(servers[0]!.env?.DATABASE_URL).toBe("${DATABASE_URL}");
+      expect(servers[0]!.env?.PGPASSWORD).toBe("secret");
+      expect(servers[1]!.name).toBe("figma");
+      expect(servers[1]!.type).toBe("http");
+      expect(servers[1]!.url).toBe("https://mcp.figma.com/mcp");
+      expect(servers[1]!.headers?.Authorization).toBe(
+        "Bearer ${FIGMA_OAUTH_TOKEN}",
+      );
+      expect(servers[1]!.headers?.["X-Figma-Region"]).toBe("us-east-1");
     });
 
     it("should return empty array if config.toml doesn't exist", async () => {
@@ -156,14 +170,28 @@ args = ["-y", "@modelcontextprotocol/server-filesystem"]`;
           type: "stdio",
           command: "npx",
           args: ["-y", "@modelcontextprotocol/server-postgres"],
+          env: {
+            DATABASE_URL: "${env:DATABASE_URL}",
+            PGPASSWORD: "secret",
+          },
           hash: "hash1",
+        },
+        {
+          name: "figma",
+          type: "http",
+          url: "https://mcp.figma.com/mcp",
+          headers: {
+            Authorization: "Bearer ${FIGMA_OAUTH_TOKEN}",
+            "X-Figma-Region": "us-east-1",
+          },
+          hash: "hash2",
         },
       ];
 
       const result = await adapter.writeMCPServers(servers);
 
       expect(result.success).toBe(true);
-      expect(result.count).toBe(1);
+      expect(result.count).toBe(2);
 
       // Verify TOML was written
       const configContent = await readFile(
@@ -172,6 +200,16 @@ args = ["-y", "@modelcontextprotocol/server-filesystem"]`;
       );
       expect(configContent).toContain("[mcp_servers.postgres]");
       expect(configContent).toContain('command = "npx"');
+      expect(configContent).toMatch(/env_vars\s*=\s*\[\s*"DATABASE_URL"\s*\]/);
+      expect(configContent).toContain("[mcp_servers.postgres.env]");
+      expect(configContent).toContain('PGPASSWORD = "secret"');
+      expect(configContent).toContain("[mcp_servers.figma]");
+      expect(configContent).toContain('url = "https://mcp.figma.com/mcp"');
+      expect(configContent).toContain(
+        'bearer_token_env_var = "FIGMA_OAUTH_TOKEN"',
+      );
+      expect(configContent).toContain("[mcp_servers.figma.http_headers]");
+      expect(configContent).toContain('X-Figma-Region = "us-east-1"');
     });
 
     it("should preserve existing config when adding servers", async () => {
@@ -233,140 +271,44 @@ command = "npx"`,
   });
 
   describe("Agents", () => {
-    it("should read agents from .codex/agents/", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {
-          ".codex": {
-            agents: {
-              "test-agent": {
-                "AGENT.md": `---
-description: Test agent
----
-Agent content`,
-              },
-            },
-          },
-        },
-      });
-
+    it("should return empty agents (Codex does not support agents)", async () => {
       const agents = await adapter.readAgents();
-
-      expect(agents).toHaveLength(1);
-      expect(agents[0]!.name).toBe("test-agent");
-      expect(agents[0]!.content).toBe("Agent content");
+      expect(agents).toEqual([]);
     });
 
-    it("should write agents to .codex/agents/", async () => {
-      const agents: Agent[] = [
+    it("should report unsupported when writing agents", async () => {
+      const result = await adapter.writeAgents([
         {
           name: "new-agent",
           description: "New agent",
           content: "Agent content",
           hash: "hash1",
         },
-      ];
+      ]);
 
-      const result = await adapter.writeAgents(agents);
-
-      expect(result.success).toBe(true);
-      expect(result.count).toBe(1);
-
-      const agentMd = await readFile(
-        `${baseDir}/.codex/agents/new-agent/AGENT.md`,
-        "utf-8",
-      );
-      expect(agentMd).toContain("Agent content");
-    });
-
-    it("should delete agent from .codex/agents/", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {
-          ".codex": {
-            agents: {
-              "test-agent": {
-                "AGENT.md": "Content",
-              },
-            },
-          },
-        },
-      });
-
-      await adapter.deleteAgent("test-agent");
-
-      await expect(
-        readFile(`${baseDir}/.codex/agents/test-agent/AGENT.md`, "utf-8"),
-      ).rejects.toThrow();
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("does not support agents");
     });
   });
 
   describe("Commands", () => {
-    it("should read commands from .codex/commands/", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {
-          ".codex": {
-            commands: {
-              "test-command": {
-                "COMMAND.md": `---
-description: Test command
----
-Command content`,
-              },
-            },
-          },
-        },
-      });
-
+    it("should return empty commands (Codex does not support commands)", async () => {
       const commands = await adapter.readCommands();
-
-      expect(commands).toHaveLength(1);
-      expect(commands[0]!.name).toBe("test-command");
-      expect(commands[0]!.content).toBe("Command content");
+      expect(commands).toEqual([]);
     });
 
-    it("should write commands to .codex/commands/", async () => {
-      const commands: Command[] = [
+    it("should report unsupported when writing commands", async () => {
+      const result = await adapter.writeCommands([
         {
           name: "new-command",
           description: "New command",
           content: "Command content",
           hash: "hash1",
         },
-      ];
+      ]);
 
-      const result = await adapter.writeCommands(commands);
-
-      expect(result.success).toBe(true);
-      expect(result.count).toBe(1);
-
-      const commandMd = await readFile(
-        `${baseDir}/.codex/commands/new-command/COMMAND.md`,
-        "utf-8",
-      );
-      expect(commandMd).toContain("Command content");
-    });
-
-    it("should delete command from .codex/commands/", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {
-          ".codex": {
-            commands: {
-              "test-command": {
-                "COMMAND.md": "Content",
-              },
-            },
-          },
-        },
-      });
-
-      await adapter.deleteCommand("test-command");
-
-      await expect(
-        readFile(`${baseDir}/.codex/commands/test-command/COMMAND.md`, "utf-8"),
-      ).rejects.toThrow();
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("does not support commands");
     });
   });
 
@@ -450,46 +392,6 @@ command = "npx"`,
 
       expect(servers[0]!.hash).toBeTruthy();
       expect(servers[0]!.hash).toHaveLength(64);
-    });
-
-    it("should compute hash for agents", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {
-          ".codex": {
-            agents: {
-              "test-agent": {
-                "AGENT.md": "Content",
-              },
-            },
-          },
-        },
-      });
-
-      const agents = await adapter.readAgents();
-
-      expect(agents[0]!.hash).toBeTruthy();
-      expect(agents[0]!.hash).toHaveLength(64);
-    });
-
-    it("should compute hash for commands", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {
-          ".codex": {
-            commands: {
-              "test-command": {
-                "COMMAND.md": "Content",
-              },
-            },
-          },
-        },
-      });
-
-      const commands = await adapter.readCommands();
-
-      expect(commands[0]!.hash).toBeTruthy();
-      expect(commands[0]!.hash).toHaveLength(64);
     });
   });
 });

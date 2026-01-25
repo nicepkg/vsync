@@ -54,20 +54,34 @@ export class CursorAdapter implements ToolAdapter {
     return ".cursor";
   }
 
-  getConfigFiles(): string[] {
-    return [".cursor/mcp.json"];
+  getConfigPaths(): string[] {
+    return [];
+  }
+
+  getMCPConfigPaths(): string[] {
+    return [join(this.getConfigDir(), "mcp.json")];
   }
 
   getSkillsDir(): string {
-    return `${this.config.baseDir}/.cursor/skills`;
+    return join(this.getConfigDir(), "skills");
   }
 
   getAgentsDir(): string {
-    return `${this.config.baseDir}/.cursor/agents`;
+    return join(this.getConfigDir(), "agents");
   }
 
   getCommandsDir(): string {
-    return `${this.config.baseDir}/.cursor/commands`;
+    return join(this.getConfigDir(), "commands");
+  }
+
+  private async getMcpConfigExitFullPath(): Promise<string> {
+    const mcpConfigPath = await fileOps.findFirstExistingPath(
+      this.getMCPConfigPaths().map((p) => join(this.config.baseDir, p)),
+    );
+    if (!mcpConfigPath) {
+      throw new Error("Cursor MCP config path is not configured");
+    }
+    return mcpConfigPath;
   }
 
   /**
@@ -75,7 +89,7 @@ export class CursorAdapter implements ToolAdapter {
    * Each skill is a directory with SKILL.md and optional support files
    */
   async writeSkills(skills: Skill[]): Promise<WriteResult> {
-    const skillsDir = join(this.config.baseDir, ".cursor", "skills");
+    const skillsDir = join(this.config.baseDir, this.getSkillsDir());
 
     try {
       // Ensure skills directory exists
@@ -141,11 +155,11 @@ export class CursorAdapter implements ToolAdapter {
    * Cursor uses mcpServers field and supports stdio, HTTP, OAuth
    */
   async writeMCPServers(servers: MCPServer[]): Promise<WriteResult> {
-    const mcpJsonPath = join(this.config.baseDir, ".cursor", "mcp.json");
+    const mcpJsonPath = await this.getMcpConfigExitFullPath();
 
     try {
       // Ensure .cursor directory exists
-      await fileOps.ensureDir(join(this.config.baseDir, ".cursor"));
+      await fileOps.ensureDir(join(this.config.baseDir, this.getConfigDir()));
 
       // Read existing config or create new one
       const existingConfig = await fileOps.readJSON<{
@@ -167,16 +181,21 @@ export class CursorAdapter implements ToolAdapter {
           serverConfig.args = server.args;
         }
         if (server.env) {
-          serverConfig.env = server.env;
+          serverConfig.env = this.normalizeCursorVars(server.env) as Record<
+            string,
+            string
+          >;
         }
         if (server.url) {
           serverConfig.url = server.url;
         }
         if (server.headers) {
-          serverConfig.headers = server.headers;
+          serverConfig.headers = this.normalizeCursorVars(
+            server.headers,
+          ) as Record<string, string>;
         }
         if (server.auth) {
-          serverConfig.auth = server.auth;
+          serverConfig.auth = this.normalizeCursorVars(server.auth) as MCPOAuth;
         }
 
         config.mcpServers[server.name] = serverConfig;
@@ -203,20 +222,17 @@ export class CursorAdapter implements ToolAdapter {
 
   /**
    * Write agents to .cursor/agents/
-   * Each agent is a directory with AGENT.md and optional support files
+   * Each agent is a single .md file
    */
   async writeAgents(agents: Agent[]): Promise<WriteResult> {
-    const agentsDir = join(this.config.baseDir, ".cursor", "agents");
+    const agentsDir = join(this.config.baseDir, this.getAgentsDir());
 
     try {
       // Ensure agents directory exists
       await fileOps.ensureDir(agentsDir);
 
       for (const agent of agents) {
-        const agentDir = join(agentsDir, agent.name);
-        await fileOps.ensureDir(agentDir);
-
-        // Generate AGENT.md content
+        // Generate agent content
         let agentContent = agent.content;
 
         // Add frontmatter if metadata or description exists
@@ -236,19 +252,8 @@ export class CursorAdapter implements ToolAdapter {
           agentContent = matter.stringify(agent.content, frontmatter);
         }
 
-        // Write AGENT.md
-        const agentMdPath = join(agentDir, "AGENT.md");
+        const agentMdPath = join(agentsDir, `${agent.name}.md`);
         await atomicWrite(agentMdPath, agentContent);
-
-        // Write support files
-        if (agent.supportFiles) {
-          for (const [fileName, fileContent] of Object.entries(
-            agent.supportFiles,
-          )) {
-            const filePath = join(agentDir, fileName);
-            await atomicWrite(filePath, fileContent);
-          }
-        }
       }
 
       return {
@@ -271,7 +276,7 @@ export class CursorAdapter implements ToolAdapter {
    * Delete a skill from .cursor/skills/
    */
   async deleteSkill(name: string): Promise<void> {
-    const skillDir = join(this.config.baseDir, ".cursor", "skills", name);
+    const skillDir = join(this.config.baseDir, this.getSkillsDir(), name);
 
     try {
       await fileOps.remove(skillDir);
@@ -291,7 +296,7 @@ export class CursorAdapter implements ToolAdapter {
    * Delete an MCP server from .cursor/mcp.json
    */
   async deleteMCPServer(name: string): Promise<void> {
-    const mcpJsonPath = join(this.config.baseDir, ".cursor", "mcp.json");
+    const mcpJsonPath = await this.getMcpConfigExitFullPath();
 
     const config = await fileOps.readJSON<{
       mcpServers?: Record<string, unknown>;
@@ -305,20 +310,17 @@ export class CursorAdapter implements ToolAdapter {
 
   /**
    * Write commands to .cursor/commands/
-   * Each command is a directory with COMMAND.md and optional support files
+   * Each command is a single .md file
    */
   async writeCommands(commands: Command[]): Promise<WriteResult> {
-    const commandsDir = join(this.config.baseDir, ".cursor", "commands");
+    const commandsDir = join(this.config.baseDir, this.getCommandsDir());
 
     try {
       // Ensure commands directory exists
       await fileOps.ensureDir(commandsDir);
 
       for (const command of commands) {
-        const commandDir = join(commandsDir, command.name);
-        await fileOps.ensureDir(commandDir);
-
-        // Generate COMMAND.md content
+        // Generate command content
         let commandContent = command.content;
 
         // Add frontmatter if metadata or description exists
@@ -338,19 +340,8 @@ export class CursorAdapter implements ToolAdapter {
           commandContent = matter.stringify(command.content, frontmatter);
         }
 
-        // Write COMMAND.md
-        const commandMdPath = join(commandDir, "COMMAND.md");
+        const commandMdPath = join(commandsDir, `${command.name}.md`);
         await atomicWrite(commandMdPath, commandContent);
-
-        // Write support files
-        if (command.supportFiles) {
-          for (const [fileName, fileContent] of Object.entries(
-            command.supportFiles,
-          )) {
-            const filePath = join(commandDir, fileName);
-            await atomicWrite(filePath, fileContent);
-          }
-        }
       }
 
       return {
@@ -373,10 +364,14 @@ export class CursorAdapter implements ToolAdapter {
    * Delete an agent from .cursor/agents/
    */
   async deleteAgent(name: string): Promise<void> {
-    const agentDir = join(this.config.baseDir, ".cursor", "agents", name);
+    const agentPath = join(
+      this.config.baseDir,
+      this.getAgentsDir(),
+      `${name}.md`,
+    );
 
     try {
-      await fileOps.remove(agentDir);
+      await fileOps.remove(agentPath);
     } catch (error) {
       // Ignore errors for non-existent agents
       if (
@@ -389,6 +384,47 @@ export class CursorAdapter implements ToolAdapter {
     }
   }
 
+  private normalizeCursorVars(value: unknown): unknown {
+    if (typeof value === "string") {
+      return this.normalizeCursorString(value);
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.normalizeCursorVars(item));
+    }
+
+    if (value && typeof value === "object") {
+      const result: Record<string, unknown> = {};
+      for (const [key, item] of Object.entries(value)) {
+        result[key] = this.normalizeCursorVars(item);
+      }
+      return result;
+    }
+
+    return value;
+  }
+
+  private normalizeCursorString(value: string): string {
+    return value.replace(/\$\{([A-Za-z0-9_]+)\}/g, (match, name) => {
+      if (this.isCursorReservedVar(name)) {
+        return match;
+      }
+      if (!/^[A-Z0-9_]+$/.test(name)) {
+        return match;
+      }
+      return `\${env:${name}}`;
+    });
+  }
+
+  private isCursorReservedVar(name: string): boolean {
+    return (
+      name === "workspaceFolder" ||
+      name === "workspaceFolderBasename" ||
+      name === "userHome" ||
+      name === "pathSeparator"
+    );
+  }
+
   /**
    * Validate Cursor configuration
    */
@@ -397,7 +433,7 @@ export class CursorAdapter implements ToolAdapter {
     const warnings: string[] = [];
 
     // Check if .cursor directory exists
-    const cursorDir = join(this.config.baseDir, ".cursor");
+    const cursorDir = join(this.config.baseDir, this.getConfigDir());
     try {
       const stats = await stat(cursorDir);
       if (!stats.isDirectory()) {
@@ -408,7 +444,7 @@ export class CursorAdapter implements ToolAdapter {
     }
 
     // Check if mcp.json exists
-    const mcpJsonPath = join(this.config.baseDir, ".cursor", "mcp.json");
+    const mcpJsonPath = await this.getMcpConfigExitFullPath();
     try {
       await stat(mcpJsonPath);
     } catch {
@@ -432,7 +468,7 @@ export class CursorAdapter implements ToolAdapter {
    * Read all skills from .cursor/skills/
    */
   async readSkills(): Promise<Skill[]> {
-    const skillsDir = join(this.config.baseDir, ".cursor", "skills");
+    const skillsDir = join(this.config.baseDir, this.getSkillsDir());
 
     try {
       const entries = await readdir(skillsDir, { withFileTypes: true });
@@ -504,7 +540,7 @@ export class CursorAdapter implements ToolAdapter {
    * Read MCP servers from .cursor/mcp.json
    */
   async readMCPServers(): Promise<MCPServer[]> {
-    const mcpJsonPath = join(this.config.baseDir, ".cursor", "mcp.json");
+    const mcpJsonPath = await this.getMcpConfigExitFullPath();
 
     try {
       const content = await readFile(mcpJsonPath, "utf-8");
@@ -519,9 +555,23 @@ export class CursorAdapter implements ToolAdapter {
       for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
         const rawConfig = serverConfig as Record<string, unknown>;
 
+        const hasCommand = typeof rawConfig.command === "string";
+        const hasAuth =
+          rawConfig.auth !== undefined && typeof rawConfig.auth === "object";
+        const hasUrl = typeof rawConfig.url === "string";
+
+        let type: MCPServer["type"] = "stdio";
+        if (hasCommand) {
+          type = "stdio";
+        } else if (hasAuth) {
+          type = "oauth";
+        } else if (hasUrl) {
+          type = "http";
+        }
+
         const server: MCPServer = {
           name,
-          type: "stdio",
+          type,
           hash: "",
         };
 
@@ -557,34 +607,21 @@ export class CursorAdapter implements ToolAdapter {
    * Read all agents from .cursor/agents/
    */
   async readAgents(): Promise<Agent[]> {
-    const agentsDir = join(this.config.baseDir, ".cursor", "agents");
+    const agentsDir = join(this.config.baseDir, this.getAgentsDir());
 
     try {
       const entries = await readdir(agentsDir, { withFileTypes: true });
       const agents: Agent[] = [];
 
       for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
+        if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
 
-        const agentName = entry.name;
-        const agentDir = join(agentsDir, agentName);
-        const agentMdPath = join(agentDir, "AGENT.md");
+        const agentName = entry.name.slice(0, -3);
+        const agentMdPath = join(agentsDir, entry.name);
 
         try {
           const agentContent = await readFile(agentMdPath, "utf-8");
           const parsed = matter(agentContent);
-
-          // Read support files
-          const supportFiles: Record<string, string> = {};
-          const agentFiles = await readdir(agentDir, { withFileTypes: true });
-
-          for (const file of agentFiles) {
-            if (file.name === "AGENT.md" || file.isDirectory()) continue;
-
-            const filePath = join(agentDir, file.name);
-            const fileContent = await readFile(filePath, "utf-8");
-            supportFiles[file.name] = fileContent;
-          }
 
           const agent: Agent = {
             name: agentName,
@@ -597,9 +634,6 @@ export class CursorAdapter implements ToolAdapter {
           }
           if (Object.keys(parsed.data).length > 0) {
             agent.metadata = parsed.data;
-          }
-          if (Object.keys(supportFiles).length > 0) {
-            agent.supportFiles = supportFiles;
           }
 
           agent.hash = hashAgent(agent);
@@ -628,10 +662,14 @@ export class CursorAdapter implements ToolAdapter {
    * Delete a command from .cursor/commands/
    */
   async deleteCommand(name: string): Promise<void> {
-    const commandDir = join(this.config.baseDir, ".cursor", "commands", name);
+    const commandPath = join(
+      this.config.baseDir,
+      this.getCommandsDir(),
+      `${name}.md`,
+    );
 
     try {
-      await fileOps.remove(commandDir);
+      await fileOps.remove(commandPath);
     } catch (error) {
       // Ignore errors for non-existent commands
       if (
@@ -648,36 +686,21 @@ export class CursorAdapter implements ToolAdapter {
    * Read all commands from .cursor/commands/
    */
   async readCommands(): Promise<Command[]> {
-    const commandsDir = join(this.config.baseDir, ".cursor", "commands");
+    const commandsDir = join(this.config.baseDir, this.getCommandsDir());
 
     try {
       const entries = await readdir(commandsDir, { withFileTypes: true });
       const commands: Command[] = [];
 
       for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
+        if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
 
-        const commandName = entry.name;
-        const commandDir = join(commandsDir, commandName);
-        const commandMdPath = join(commandDir, "COMMAND.md");
+        const commandName = entry.name.slice(0, -3);
+        const commandMdPath = join(commandsDir, entry.name);
 
         try {
           const commandContent = await readFile(commandMdPath, "utf-8");
           const parsed = matter(commandContent);
-
-          // Read support files
-          const supportFiles: Record<string, string> = {};
-          const commandFiles = await readdir(commandDir, {
-            withFileTypes: true,
-          });
-
-          for (const file of commandFiles) {
-            if (file.name === "COMMAND.md" || file.isDirectory()) continue;
-
-            const filePath = join(commandDir, file.name);
-            const fileContent = await readFile(filePath, "utf-8");
-            supportFiles[file.name] = fileContent;
-          }
 
           const command: Command = {
             name: commandName,
@@ -690,9 +713,6 @@ export class CursorAdapter implements ToolAdapter {
           }
           if (Object.keys(parsed.data).length > 0) {
             command.metadata = parsed.data;
-          }
-          if (Object.keys(supportFiles).length > 0) {
-            command.supportFiles = supportFiles;
           }
 
           command.hash = hashCommand(command);

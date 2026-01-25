@@ -10,7 +10,7 @@ import inquirer from "inquirer";
 import ora from "ora";
 import { getAdapter } from "@src/adapters/registry.js";
 import { loadManifest, saveManifest } from "@src/core/manifest-manager.js";
-import type { ToolName } from "@src/types/config.js";
+import type { ConfigLevel, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import { loadSyncConfig, readSourceConfig } from "./sync.js";
 
@@ -159,10 +159,15 @@ async function removeItem(
   fromSource: boolean,
   sourceTool: ToolName,
   projectDir: string,
+  level: ConfigLevel,
 ): Promise<void> {
   // Remove from source if requested
   if (fromSource) {
-    const sourceAdapter = getAdapter({ tool: sourceTool, baseDir: projectDir });
+    const sourceAdapter = getAdapter({
+      tool: sourceTool,
+      baseDir: projectDir,
+      level,
+    });
     const spinner = ora(`Deleting from source (${sourceTool})...`).start();
 
     try {
@@ -182,7 +187,7 @@ async function removeItem(
 
   // Remove from each target
   for (const tool of targetTools) {
-    const adapter = getAdapter({ tool, baseDir: projectDir });
+    const adapter = getAdapter({ tool, baseDir: projectDir, level });
     const spinner = ora(`Removing from ${tool}...`).start();
 
     try {
@@ -237,6 +242,7 @@ async function cleanCommand(
 ): Promise<void> {
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
+    const level: ConfigLevel = options.user ? "user" : "project";
 
     // Load configuration
     const spinner = ora("Loading configuration...").start();
@@ -339,6 +345,7 @@ async function cleanCommand(
         options.fromSource || false,
         config.source_tool,
         projectDir,
+        level,
       );
 
       console.log(
@@ -351,7 +358,11 @@ async function cleanCommand(
       }
     } else {
       // Interactive mode
-      const sourceData = await readSourceConfig(config.source_tool, projectDir);
+      const sourceData = await readSourceConfig(
+        config.source_tool,
+        projectDir,
+        level,
+      );
 
       // Ask for type
       const { cleanType } = await inquirer.prompt<{ cleanType: string }>([
@@ -443,6 +454,7 @@ async function cleanCommand(
           false,
           config.source_tool,
           projectDir,
+          level,
         );
       }
 

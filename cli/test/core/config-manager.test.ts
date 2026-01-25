@@ -187,6 +187,7 @@ describe("Config Manager", () => {
       const config: VibeConfig = {
         version: "3.0.0",
         level: "project",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         source_tool: "invalid-tool" as any,
         target_tools: ["cursor"],
         sync_config: { skills: true, mcp: true },

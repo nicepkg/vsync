@@ -3,7 +3,7 @@
  * Defines the contract that all tool adapters must implement
  */
 
-import type { ToolName } from "../types/config.js";
+import type { ConfigLevel, ToolName } from "../types/config.js";
 import type { Skill, MCPServer, Agent, Command } from "../types/models.js";
 
 /**
@@ -14,6 +14,8 @@ export interface AdapterConfig {
   tool: ToolName;
   /** Base directory (project root or user home) */
   baseDir: string;
+  /** Configuration level (project or user) */
+  level: ConfigLevel;
 }
 
 /**
@@ -75,7 +77,12 @@ export interface ToolAdapter {
    * Get configuration file paths that should be backed up
    * Returns array of file paths relative to baseDir
    */
-  getConfigFiles(): string[];
+  getConfigPaths(): string[];
+
+  /**
+   * Get MCP configuration file paths relative to baseDir
+   */
+  getMCPConfigPaths(): string[];
 
   /**
    * Get skills directory path relative to baseDir

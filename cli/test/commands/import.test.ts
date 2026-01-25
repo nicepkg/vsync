@@ -210,14 +210,10 @@ describe("Import Command", () => {
               },
             },
             agents: {
-              agent1: {
-                "AGENT.md": "Agent 1",
-              },
+              "agent1.md": "Agent 1",
             },
             commands: {
-              cmd1: {
-                "COMMAND.md": "Command 1",
-              },
+              "cmd1.md": "Command 1",
             },
           },
           ".mcp.json": JSON.stringify({

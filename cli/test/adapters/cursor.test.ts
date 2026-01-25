@@ -2,7 +2,7 @@ import { readFile, readdir } from "node:fs/promises";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { CursorAdapter } from "@src/adapters/cursor.js";
-import type { Skill, MCPServer } from "@src/types/models.js";
+import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 
 describe("CursorAdapter", () => {
   let adapter: CursorAdapter;
@@ -27,6 +27,7 @@ describe("CursorAdapter", () => {
     adapter = new CursorAdapter({
       tool: "cursor",
       baseDir: "/project",
+      level: "project",
     });
   });
 
@@ -117,6 +118,7 @@ describe("CursorAdapter", () => {
       const emptyAdapter = new CursorAdapter({
         tool: "cursor",
         baseDir: "/empty",
+        level: "project",
       });
 
       const skills: Skill[] = [
@@ -198,6 +200,35 @@ describe("CursorAdapter", () => {
       expect(config.mcpServers.test.env.HOME).toBe("${userHome}");
     });
 
+    it("should normalize bare env placeholders to ${env:VAR}", async () => {
+      const servers: MCPServer[] = [
+        {
+          name: "normalize-env",
+          type: "stdio",
+          command: "test-command",
+          env: {
+            TOKEN: "${GITHUB_TOKEN}",
+            PATH: "${workspaceFolder}/bin",
+            LOWER: "${token}",
+          },
+          hash: "norm123",
+        },
+      ];
+
+      await adapter.writeMCPServers(servers);
+
+      const mcpJson = await readFile("/project/.cursor/mcp.json", "utf-8");
+      const config = JSON.parse(mcpJson);
+
+      expect(config.mcpServers["normalize-env"].env.TOKEN).toBe(
+        "${env:GITHUB_TOKEN}",
+      );
+      expect(config.mcpServers["normalize-env"].env.PATH).toBe(
+        "${workspaceFolder}/bin",
+      );
+      expect(config.mcpServers["normalize-env"].env.LOWER).toBe("${token}");
+    });
+
     it("should write HTTP MCP servers", async () => {
       const servers: MCPServer[] = [
         {
@@ -254,6 +285,39 @@ describe("CursorAdapter", () => {
       );
     });
 
+    it("should normalize bare env placeholders in headers and auth", async () => {
+      const servers: MCPServer[] = [
+        {
+          name: "remote-auth",
+          type: "oauth",
+          url: "https://oauth.example.com/mcp",
+          headers: {
+            Authorization: "Bearer ${API_TOKEN}",
+          },
+          auth: {
+            client_id: "${CLIENT_ID}",
+            client_secret: "${CLIENT_SECRET}",
+          },
+          hash: "hdr123",
+        },
+      ];
+
+      await adapter.writeMCPServers(servers);
+
+      const mcpJson = await readFile("/project/.cursor/mcp.json", "utf-8");
+      const config = JSON.parse(mcpJson);
+
+      expect(config.mcpServers["remote-auth"].headers.Authorization).toBe(
+        "Bearer ${env:API_TOKEN}",
+      );
+      expect(config.mcpServers["remote-auth"].auth.client_id).toBe(
+        "${env:CLIENT_ID}",
+      );
+      expect(config.mcpServers["remote-auth"].auth.client_secret).toBe(
+        "${env:CLIENT_SECRET}",
+      );
+    });
+
     it("should create .cursor/mcp.json if missing", async () => {
       mockFs({
         "/empty": {},
@@ -262,6 +326,7 @@ describe("CursorAdapter", () => {
       const emptyAdapter = new CursorAdapter({
         tool: "cursor",
         baseDir: "/empty",
+        level: "project",
       });
 
       const servers: MCPServer[] = [
@@ -303,6 +368,114 @@ describe("CursorAdapter", () => {
       expect(config.mcpServers.minimal.command).toBe("minimal-command");
       expect(config.mcpServers.minimal.args).toBeUndefined();
       expect(config.mcpServers.minimal.env).toBeUndefined();
+    });
+  });
+
+  describe("Agents", () => {
+    it("should write agents to .cursor/agents/*.md", async () => {
+      const agents: Agent[] = [
+        {
+          name: "reviewer",
+          description: "Code reviewer",
+          content: "Agent content",
+          hash: "agent-hash",
+        },
+      ];
+
+      const result = await adapter.writeAgents(agents);
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+
+      const agentMd = await readFile(
+        "/project/.cursor/agents/reviewer.md",
+        "utf-8",
+      );
+      expect(agentMd).toContain("description: Code reviewer");
+      expect(agentMd).toContain("Agent content");
+    });
+
+    it("should read agents from .cursor/agents/*.md", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".cursor": {
+            agents: {
+              "reviewer.md": `---
+description: Code reviewer
+---
+Agent content`,
+              "notes.txt": "Ignore me",
+            },
+          },
+        },
+      });
+
+      const readAdapter = new CursorAdapter({
+        tool: "cursor",
+        baseDir: "/project",
+        level: "project",
+      });
+
+      const agents = await readAdapter.readAgents();
+
+      expect(agents).toHaveLength(1);
+      expect(agents[0]!.name).toBe("reviewer");
+      expect(agents[0]!.content).toBe("Agent content");
+    });
+  });
+
+  describe("Commands", () => {
+    it("should write commands to .cursor/commands/*.md", async () => {
+      const commands: Command[] = [
+        {
+          name: "quick-review",
+          description: "Quick review",
+          content: "Command content",
+          hash: "command-hash",
+        },
+      ];
+
+      const result = await adapter.writeCommands(commands);
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+
+      const commandMd = await readFile(
+        "/project/.cursor/commands/quick-review.md",
+        "utf-8",
+      );
+      expect(commandMd).toContain("description: Quick review");
+      expect(commandMd).toContain("Command content");
+    });
+
+    it("should read commands from .cursor/commands/*.md", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".cursor": {
+            commands: {
+              "quick-review.md": `---
+description: Quick review
+---
+Command content`,
+              "notes.txt": "Ignore me",
+            },
+          },
+        },
+      });
+
+      const readAdapter = new CursorAdapter({
+        tool: "cursor",
+        baseDir: "/project",
+        level: "project",
+      });
+
+      const commands = await readAdapter.readCommands();
+
+      expect(commands).toHaveLength(1);
+      expect(commands[0]!.name).toBe("quick-review");
+      expect(commands[0]!.content).toBe("Command content");
     });
   });
 
@@ -383,6 +556,55 @@ describe("CursorAdapter", () => {
     });
   });
 
+  describe("readMCPServers", () => {
+    it("should infer server types from config fields", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".cursor": {
+            "mcp.json": JSON.stringify({
+              mcpServers: {
+                stdio: {
+                  command: "npx",
+                  args: ["-y", "server"],
+                },
+                http: {
+                  url: "https://api.example.com/mcp",
+                  headers: {
+                    Authorization: "Bearer token",
+                  },
+                },
+                oauth: {
+                  url: "https://oauth.example.com/mcp",
+                  auth: {
+                    client_id: "id",
+                    client_secret: "secret",
+                  },
+                },
+              },
+            }),
+          },
+        },
+      });
+
+      const readAdapter = new CursorAdapter({
+        tool: "cursor",
+        baseDir: "/project",
+        level: "project",
+      });
+
+      const servers = await readAdapter.readMCPServers();
+
+      const stdio = servers.find((server) => server.name === "stdio");
+      const http = servers.find((server) => server.name === "http");
+      const oauth = servers.find((server) => server.name === "oauth");
+
+      expect(stdio?.type).toBe("stdio");
+      expect(http?.type).toBe("http");
+      expect(oauth?.type).toBe("oauth");
+    });
+  });
+
   describe("validate", () => {
     it("should validate existing configuration", async () => {
       const result = await adapter.validate();
@@ -395,6 +617,7 @@ describe("CursorAdapter", () => {
       const emptyAdapter = new CursorAdapter({
         tool: "cursor",
         baseDir: "/empty",
+        level: "project",
       });
 
       const result = await emptyAdapter.validate();

@@ -78,7 +78,11 @@ describe("Sync Command", () => {
 
   describe("Sync Execution", () => {
     it("should read source configurations", async () => {
-      const result = await readSourceConfig("claude-code", "/project");
+      const result = await readSourceConfig(
+        "claude-code",
+        "/project",
+        "project",
+      );
 
       expect(result.skills.length).toBeGreaterThan(0);
       expect(result.skills[0]?.name).toBe("test-skill");
@@ -145,7 +149,12 @@ describe("Sync Command", () => {
         commands: [],
       };
 
-      const result = await executeSyncPlan(plan, sourceData, "/project");
+      const result = await executeSyncPlan(
+        plan,
+        sourceData,
+        "/project",
+        "project",
+      );
 
       expect(result.cursor?.success).toBe(true);
     });
@@ -251,7 +260,11 @@ describe("Sync Command", () => {
         },
       });
 
-      const result = await readSourceConfig("claude-code", "/invalid");
+      const result = await readSourceConfig(
+        "claude-code",
+        "/invalid",
+        "project",
+      );
 
       // Adapters gracefully return empty arrays when directories don't exist
       expect(result.skills).toEqual([]);

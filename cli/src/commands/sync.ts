@@ -24,7 +24,12 @@ import {
   cleanupBackup,
 } from "@src/core/rollback.js";
 import type { BackupInfo } from "@src/core/rollback.js";
-import type { SyncMode, ToolName, VibeConfig } from "@src/types/config.js";
+import type {
+  ConfigLevel,
+  SyncMode,
+  ToolName,
+  VibeConfig,
+} from "@src/types/config.js";
 import type { Manifest, ItemType } from "@src/types/manifest.js";
 import type {
   MCPServer,
@@ -96,8 +101,13 @@ export async function loadSyncConfig(
 export async function readSourceConfig(
   sourceTool: ToolName,
   projectDir: string,
+  level: ConfigLevel,
 ): Promise<SourceData> {
-  const adapter = getAdapter({ tool: sourceTool, baseDir: projectDir });
+  const adapter = getAdapter({
+    tool: sourceTool,
+    baseDir: projectDir,
+    level,
+  });
 
   const skills = await adapter.readSkills();
   const mcpServers = await adapter.readMCPServers();
@@ -211,9 +221,13 @@ export async function calculateSyncDiff(
  * @param baseDir - Base directory
  * @returns Array of file paths that may be modified
  */
-function getTargetFilePaths(tool: ToolName, baseDir: string): string[] {
+function getTargetFilePaths(
+  tool: ToolName,
+  baseDir: string,
+  level: ConfigLevel,
+): string[] {
   // Get config files from registry (no hardcoding!)
-  return getToolConfigFiles(tool, baseDir);
+  return getToolConfigFiles(tool, baseDir, level);
 }
 
 /**
@@ -228,6 +242,7 @@ export async function executeSyncPlan(
   plan: SyncPlan,
   sourceData: SourceData,
   projectDir: string,
+  level: ConfigLevel,
 ): Promise<SyncResults> {
   const results: SyncResults = {};
   const allBackups: BackupInfo[] = [];
@@ -236,7 +251,7 @@ export async function executeSyncPlan(
     // Phase 1: Create backups for all target files
     for (const toolName of Object.keys(plan.diffs)) {
       const tool = toolName as ToolName;
-      const filePaths = getTargetFilePaths(tool, projectDir);
+      const filePaths = getTargetFilePaths(tool, projectDir, level);
 
       for (const filePath of filePaths) {
         const backup = await createBackup(filePath);
@@ -249,7 +264,11 @@ export async function executeSyncPlan(
       if (!diff) continue;
 
       const tool = toolName as ToolName;
-      const adapter = getAdapter({ tool, baseDir: projectDir });
+      const adapter = getAdapter({
+        tool,
+        baseDir: projectDir,
+        level,
+      });
 
       const result: TargetSyncResult = {
         success: true,
@@ -517,7 +536,11 @@ export async function syncCommand(options: {
     const readSpinner = ora(
       `Reading ${config.source_tool} configuration...`,
     ).start();
-    const sourceData = await readSourceConfig(config.source_tool, projectDir);
+    const sourceData = await readSourceConfig(
+      config.source_tool,
+      projectDir,
+      config.level,
+    );
     readSpinner.succeed(
       `Read ${sourceData.skills.length} skills, ${sourceData.mcpServers.length} MCP servers, ${sourceData.agents.length} agents, ${sourceData.commands.length} commands`,
     );
@@ -592,7 +615,12 @@ export async function syncCommand(options: {
 
     // Execute sync
     const execSpinner = ora("Syncing configurations...").start();
-    const results = await executeSyncPlan(plan, sourceData, projectDir);
+    const results = await executeSyncPlan(
+      plan,
+      sourceData,
+      projectDir,
+      config.level,
+    );
     execSpinner.succeed("Sync completed");
 
     // Update manifest

@@ -98,5 +98,6 @@
   },
   "[mdx]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "cSpell.words": ["MCPO", "opencode"]
 }

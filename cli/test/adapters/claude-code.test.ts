@@ -53,6 +53,7 @@ No frontmatter, just content.`,
     adapter = new ClaudeCodeAdapter({
       tool: "claude-code",
       baseDir: "/project",
+      level: "project",
     });
   });
 
@@ -97,6 +98,7 @@ No frontmatter, just content.`,
       const emptyAdapter = new ClaudeCodeAdapter({
         tool: "claude-code",
         baseDir: "/empty",
+        level: "project",
       });
 
       const skills = await emptyAdapter.readSkills();
@@ -184,6 +186,7 @@ No frontmatter, just content.`,
       const emptyAdapter = new ClaudeCodeAdapter({
         tool: "claude-code",
         baseDir: "/empty",
+        level: "project",
       });
 
       const servers = await emptyAdapter.readMCPServers();
@@ -213,6 +216,94 @@ No frontmatter, just content.`,
     });
   });
 
+  describe("readAgents", () => {
+    it("should read agents from .claude/agents/*.md", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".claude": {
+            agents: {
+              "reviewer.md": `---
+description: Code reviewer
+---
+Agent content`,
+            },
+          },
+        },
+      });
+
+      const agents = await adapter.readAgents();
+
+      expect(agents).toHaveLength(1);
+      expect(agents[0]!.name).toBe("reviewer");
+      expect(agents[0]!.content).toBe("Agent content");
+      expect(agents[0]!.description).toBe("Code reviewer");
+    });
+
+    it("should skip non-markdown files", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".claude": {
+            agents: {
+              "reviewer.md": "Agent content",
+              "notes.txt": "Ignore me",
+            },
+          },
+        },
+      });
+
+      const agents = await adapter.readAgents();
+
+      expect(agents).toHaveLength(1);
+      expect(agents[0]!.name).toBe("reviewer");
+    });
+  });
+
+  describe("readCommands", () => {
+    it("should read commands from .claude/commands/*.md", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".claude": {
+            commands: {
+              "quick-review.md": `---
+description: Quick review
+---
+Command content`,
+            },
+          },
+        },
+      });
+
+      const commands = await adapter.readCommands();
+
+      expect(commands).toHaveLength(1);
+      expect(commands[0]!.name).toBe("quick-review");
+      expect(commands[0]!.content).toBe("Command content");
+      expect(commands[0]!.description).toBe("Quick review");
+    });
+
+    it("should skip non-markdown files", async () => {
+      mockFs.restore();
+      mockFs({
+        "/project": {
+          ".claude": {
+            commands: {
+              "quick-review.md": "Command content",
+              "notes.txt": "Ignore me",
+            },
+          },
+        },
+      });
+
+      const commands = await adapter.readCommands();
+
+      expect(commands).toHaveLength(1);
+      expect(commands[0]!.name).toBe("quick-review");
+    });
+  });
+
   describe("validate", () => {
     it("should validate existing configuration", async () => {
       const result = await adapter.validate();
@@ -225,6 +316,7 @@ No frontmatter, just content.`,
       const emptyAdapter = new ClaudeCodeAdapter({
         tool: "claude-code",
         baseDir: "/empty",
+        level: "project",
       });
 
       const result = await emptyAdapter.validate();
