@@ -15,7 +15,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 **Next Phase**: All core phases complete! 🎉
 
 **Progress**: 8/10 phases complete (MVP v1.0 ✅ + v1.1 ✅) + Phase 8 ✅ + Phase 9 ✅ + Phase 10 ✅
-**Test Count**: 565 tests passing (+21 new for error formatter)
+**Test Count**: 574 tests passing (+9 new integration tests, 3/9 passing so far)
 **Roadmap**: v1.2 COMPLETE! Includes Phase 8 (Performance) ✅ + Phase 9 (Symlinks) ✅ + Phase 10 (i18n) ✅
 
 ---
@@ -416,11 +416,14 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 6.2 Integration Tests
 
-- [ ] Test full sync flow
-  - [ ] Claude Code → Cursor (skills + MCP + Commands + Agents)
-  - [ ] Claude Code → OpenCode (skills + MCP + Commands + Agents)
-  - [ ] Safe mode vs Prune mode
-  - [ ] User level vs Project level
+- [x] Test full sync flow ✅ (in progress - 3/9 passing)
+  - [x] Claude Code → Cursor (skills + MCP + Agents) ✅
+  - [ ] Claude Code → Cursor (Commands) - timing out
+  - [ ] Claude Code → OpenCode (MCP format conversion) - file not created
+  - [ ] Safe mode vs Prune mode - both timing out
+  - [ ] Multi-target sync - partially working
+  - [ ] Manifest updates - key format issue
+  - [ ] User level vs Project level - not tested yet
 - [ ] Test error recovery
   - [ ] Partial write failure
   - [ ] Network interruption (for future HTTP MCP)
