@@ -27,7 +27,7 @@ describe("Init Command", () => {
 
   describe("Tool Detection", () => {
     it("should detect existing Claude Code directory", async () => {
-      const detected = await import("../../src/commands/init.js").then((m) =>
+      const detected = await import("@src/commands/init.js").then((m) =>
         m.detectTools("/project"),
       );
 
@@ -35,7 +35,7 @@ describe("Init Command", () => {
     });
 
     it("should detect existing Cursor directory", async () => {
-      const detected = await import("../../src/commands/init.js").then((m) =>
+      const detected = await import("@src/commands/init.js").then((m) =>
         m.detectTools("/project"),
       );
 
@@ -49,7 +49,7 @@ describe("Init Command", () => {
         },
       });
 
-      const detected = await import("../../src/commands/init.js").then((m) =>
+      const detected = await import("@src/commands/init.js").then((m) =>
         m.detectTools("/project"),
       );
 
@@ -57,7 +57,7 @@ describe("Init Command", () => {
     });
 
     it("should return empty array if no tools detected", async () => {
-      const detected = await import("../../src/commands/init.js").then((m) =>
+      const detected = await import("@src/commands/init.js").then((m) =>
         m.detectTools("/empty"),
       );
 
@@ -74,7 +74,7 @@ describe("Init Command", () => {
         isUserLevel: false,
       };
 
-      const config = await import("../../src/commands/init.js").then((m) =>
+      const config = await import("@src/commands/init.js").then((m) =>
         m.generateConfig(options),
       );
 
@@ -93,7 +93,7 @@ describe("Init Command", () => {
         isUserLevel: false,
       };
 
-      const config = await import("../../src/commands/init.js").then((m) =>
+      const config = await import("@src/commands/init.js").then((m) =>
         m.generateConfig(options),
       );
 
@@ -110,7 +110,7 @@ describe("Init Command", () => {
         isUserLevel: false,
       };
 
-      const config = await import("../../src/commands/init.js").then((m) =>
+      const config = await import("@src/commands/init.js").then((m) =>
         m.generateConfig(options),
       );
 
@@ -132,7 +132,7 @@ describe("Init Command", () => {
         },
       };
 
-      await import("../../src/commands/init.js").then((m) =>
+      await import("@src/commands/init.js").then((m) =>
         m.saveConfig(config, "/project"),
       );
 
@@ -144,7 +144,7 @@ describe("Init Command", () => {
     });
 
     it("should create .vibe-sync-cache directory", async () => {
-      await import("../../src/commands/init.js").then((m) =>
+      await import("@src/commands/init.js").then((m) =>
         m.createCacheDirectory("/project"),
       );
 
@@ -152,7 +152,7 @@ describe("Init Command", () => {
     });
 
     it("should create empty manifest.json in cache", async () => {
-      await import("../../src/commands/init.js").then((m) =>
+      await import("@src/commands/init.js").then((m) =>
         m.initializeManifest("/project"),
       );
 
@@ -178,7 +178,7 @@ describe("Init Command", () => {
         },
       };
 
-      await import("../../src/commands/init.js").then((m) =>
+      await import("@src/commands/init.js").then((m) =>
         m.saveConfig(config, "/project"),
       );
 
@@ -201,7 +201,7 @@ describe("Init Command", () => {
         },
       };
 
-      await import("../../src/commands/init.js").then((m) =>
+      await import("@src/commands/init.js").then((m) =>
         m.saveConfig(config, "/home/user"),
       );
 
@@ -222,9 +222,7 @@ describe("Init Command", () => {
       };
 
       await expect(
-        import("../../src/commands/init.js").then((m) =>
-          m.generateConfig(options),
-        ),
+        import("@src/commands/init.js").then((m) => m.generateConfig(options)),
       ).rejects.toThrow("At least one tool must be selected");
     });
 
@@ -237,9 +235,7 @@ describe("Init Command", () => {
       };
 
       await expect(
-        import("../../src/commands/init.js").then((m) =>
-          m.generateConfig(options),
-        ),
+        import("@src/commands/init.js").then((m) => m.generateConfig(options)),
       ).rejects.toThrow("Source tool must be one of the selected tools");
     });
 
@@ -252,9 +248,7 @@ describe("Init Command", () => {
       };
 
       await expect(
-        import("../../src/commands/init.js").then((m) =>
-          m.generateConfig(options),
-        ),
+        import("@src/commands/init.js").then((m) => m.generateConfig(options)),
       ).rejects.toThrow("At least one sync item must be selected");
     });
   });

@@ -8,15 +8,15 @@
  * - DRY: Single translate function with parameter interpolation
  */
 
-import enTranslations from "../locales/en.json";
-import zhTranslations from "../locales/zh.json";
+import enTranslations from "@src/locales/en.json";
+import zhTranslations from "@src/locales/zh.json";
 
 /**
  * Translation data structure
  */
 type Translations = typeof enTranslations;
 
-const locales = {
+const langTranslationsMap = {
   en: enTranslations,
   zh: zhTranslations,
 } as const satisfies Record<string, Translations>;
@@ -24,7 +24,9 @@ const locales = {
 /**
  * Supported languages
  */
-export type Language = keyof typeof locales;
+export type Language = keyof typeof langTranslationsMap;
+
+export const langs = Object.keys(langTranslationsMap) as Language[];
 
 /**
  * Current language and loaded translations
@@ -65,7 +67,7 @@ export async function loadLanguage(lang: Language): Promise<void> {
   }
 
   try {
-    translations = locales[lang];
+    translations = langTranslationsMap[lang];
     currentLanguage = lang;
   } catch (error) {
     if (error instanceof Error) {

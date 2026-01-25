@@ -13,8 +13,8 @@
  * - Fail-Safe: Continues other syncs even if one fails (Promise.allSettled)
  */
 
-import type { ToolAdapter } from "../adapters/base.js";
-import type { DiffResult } from "../types/plan.js";
+import type { ToolAdapter } from "@src/adapters/base.js";
+import type { DiffResult } from "@src/types/plan.js";
 import {
   createBackup,
   restoreBackup,

@@ -15,7 +15,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { atomicWrite } from "../utils/atomic-write.js";
+import { atomicWrite } from "@src/utils/atomic-write.js";
 
 /**
  * Cache entry for a single file

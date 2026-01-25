@@ -9,7 +9,7 @@ import {
   syncCommand,
   updateManifestAfterSync,
 } from "@src/commands/sync.js";
-import type { VibeConfig, ToolName } from "../../src/types/config.js";
+import type { VibeConfig, ToolName } from "@src/types/config.js";
 
 describe("Sync Command", () => {
   const sampleConfig: VibeConfig = {

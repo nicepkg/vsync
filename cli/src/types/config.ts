@@ -3,7 +3,7 @@
  * Defines the structure of .vibe-sync.json
  */
 
-import type { ADAPTERS } from "../adapters/registry.js";
+import type { ADAPTERS } from "@src/adapters/registry.js";
 
 /**
  * Sync mode

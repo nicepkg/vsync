@@ -6,13 +6,16 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
-import type { ConfigLevel, ToolName } from "../types/config.js";
-import type { Skill, MCPServer, Agent, Command } from "../types/models.js";
-import { atomicWrite } from "../utils/atomic-write.js";
-import * as fileOps from "../utils/file-ops.js";
-import { hashAgent, hashCommand, hashSkill } from "../utils/hash.js";
-import { readSupportFiles, writeSupportFiles } from "../utils/support-files.js";
-import { isSymlink } from "../utils/symlink.js";
+import type { ConfigLevel, ToolName } from "@src/types/config.js";
+import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
+import { atomicWrite } from "@src/utils/atomic-write.js";
+import * as fileOps from "@src/utils/file-ops.js";
+import { hashAgent, hashCommand, hashSkill } from "@src/utils/hash.js";
+import {
+  readSupportFiles,
+  writeSupportFiles,
+} from "@src/utils/support-files.js";
+import { isSymlink } from "@src/utils/symlink.js";
 
 /**
  * Adapter configuration

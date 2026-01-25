@@ -19,13 +19,6 @@ import { createSyncCommand } from "./commands/sync.js";
  */
 async function getVersion(): Promise<string> {
   try {
-    // const filename = fileURLToPath(import.meta.url);
-    // const dir = dirname(filename);
-    // const packagePath = join(dir, "../../package.json");
-    // const packageJson = await readFile(packagePath, "utf-8");
-    // const parsed = JSON.parse(packageJson);
-    // return parsed.version || "1.0.0";
-
     return packageJson.version || "1.0.0";
   } catch {
     return "1.0.0";

@@ -13,9 +13,9 @@
  * - Low Coupling: Depends on adapter interface, not concrete implementations
  */
 
-import type { ToolAdapter } from "../adapters/base.js";
-import type { Skill, MCPServer, Agent, Command } from "../types/models.js";
-import type { DiffResult } from "../types/plan.js";
+import type { ToolAdapter } from "@src/adapters/base.js";
+import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
+import type { DiffResult } from "@src/types/plan.js";
 
 /**
  * Source data containing all items from the source tool

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { formatStatus } from "../../src/commands/status.js";
-import type { VibeConfig } from "../../src/types/config.js";
-import type { Manifest } from "../../src/types/manifest.js";
+import { formatStatus } from "@src/commands/status.js";
+import type { VibeConfig } from "@src/types/config.js";
+import type { Manifest } from "@src/types/manifest.js";
 
 describe("Status Command", () => {
   const sampleConfig: VibeConfig = {

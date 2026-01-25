@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatDetailedPlan } from "../../src/commands/plan.js";
-import type { SyncPlan } from "../../src/types/plan.js";
+import { formatDetailedPlan } from "@src/commands/plan.js";
+import type { SyncPlan } from "@src/types/plan.js";
 
 describe("Plan Command", () => {
   describe("formatDetailedPlan", () => {

@@ -13,7 +13,7 @@
  */
 
 import { promises as fs } from "node:fs";
-import { hashContent } from "../utils/hash.js";
+import { hashContent } from "@src/utils/hash.js";
 import { type FileCache } from "./file-cache.js";
 
 /**

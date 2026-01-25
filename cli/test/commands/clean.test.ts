@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatCleanPlan, parseItemName } from "../../src/commands/clean.js";
+import { formatCleanPlan, parseItemName } from "@src/commands/clean.js";
 
 describe("Clean Command", () => {
   describe("parseItemName", () => {

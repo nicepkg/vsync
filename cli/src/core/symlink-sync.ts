@@ -10,13 +10,13 @@
 
 import { stat, lstat, unlink, rmdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { VibeConfig } from "../types/config.js";
+import type { VibeConfig } from "@src/types/config.js";
 import {
   isSymlink,
   createSymlink,
   resolveSymlink,
   removeSymlink,
-} from "../utils/symlink.js";
+} from "@src/utils/symlink.js";
 
 /**
  * Validation result for symlink setup

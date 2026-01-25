@@ -10,6 +10,7 @@ import { cwd } from "node:process";
 import { getAvailableTools } from "@src/adapters/registry.js";
 import type { VibeConfig, ConfigLevel } from "@src/types/config.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+import { langs } from "@src/utils/i18n.js";
 
 /**
  * Validation result
@@ -291,7 +292,7 @@ export function validateConfig(config: VibeConfig): ValidationResult {
 
   // Validate language (optional 'en' | 'zh')
   if (config.language !== undefined) {
-    if (config.language !== "en" && config.language !== "zh") {
+    if (!langs.includes(config.language)) {
       errors.push("language must be 'en' or 'zh'");
     }
   }

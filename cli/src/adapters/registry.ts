@@ -3,7 +3,7 @@
  * Add new adapters here to make them available to the CLI.
  */
 
-import type { ToolName } from "../types/config.js";
+import type { ToolName } from "@src/types/config.js";
 import type { AdapterConfig, ToolAdapter } from "./base.js";
 import { ClaudeCodeAdapter } from "./claude-code.js";
 import { CodexAdapter } from "./codex.js";
