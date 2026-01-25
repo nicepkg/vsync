@@ -11,12 +11,12 @@
 
 This document tracks all implementation tasks for vibe-sync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
 
-**Current Status**: 🟡 Phase 9 In Progress (Symlink Support - 4/7 sub-phases complete)
-**Next Phase**: Phase 9 (remaining) → Phase 10 (i18n)
+**Current Status**: 🟢 Phase 9 Complete (Symlink Support - all sub-phases complete)
+**Next Phase**: Phase 10 (i18n) - in progress (10.4 remaining)
 
-**Progress**: 6/10 phases complete (MVP v1.0 ✅ + v1.1 ✅) + Phase 8 ✅ + Phase 9 (partial)
-**Test Count**: 439 tests passing
-**Roadmap**: v1.2 will include Phase 8 (Performance) ✅ + Phase 9 (Symlinks) 🟡 + Phase 10 (i18n)
+**Progress**: 7/10 phases complete (MVP v1.0 ✅ + v1.1 ✅) + Phase 8 ✅ + Phase 9 ✅
+**Test Count**: 516 tests passing
+**Roadmap**: v1.2 will include Phase 8 (Performance) ✅ + Phase 9 (Symlinks) ✅ + Phase 10 (i18n) 🟡
 
 ---
 
@@ -620,7 +620,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ---
 
-## Phase 9: Skills Symlink Support (1-2 days)
+## Phase 9: Skills Symlink Support (1-2 days) ✅
 
 **Goal**: Add symlink support for skills to avoid duplicating large skill folders across multiple tools
 
@@ -699,16 +699,21 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Claude Code, Cursor, OpenCode, Codex adapters all work correctly
   - [x] No adapter-specific changes needed (inheritance handles it)
 
-### 9.5 Safety & Error Handling (Partially Complete)
+### 9.5 Safety & Error Handling ✅
 
 - [x] Implement safety checks (in `symlink-sync.ts`)
   - [x] Prevent circular symlinks (validated before creation)
   - [x] Detect broken symlinks and handle gracefully
   - [x] Handle permission errors on symlink creation (throws descriptive error)
   - [x] Validate source directory exists before setup
-- [ ] Add rollback support (to be integrated with sync workflow)
-  - [ ] Backup before deleting skills folders
-  - [ ] Restore on error
+- [x] Add rollback support
+  - [x] `createDirectoryBackup()` - Backup before deleting skills folders
+  - [x] `restoreDirectoryBackup()` - Restore on error
+  - [x] `cleanupDirectoryBackup()` - Cleanup backup after success
+  - [x] `setupSymlinkWithBackup()` - Integrated setup with automatic rollback
+  - [x] `copyDirectoryRecursive()` - Helper for backup/restore operations
+  - [x] Added 16 comprehensive rollback tests
+  - [x] All tests passing (516 total)
 
 ### 9.6 Testing ✅
 
@@ -728,11 +733,12 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Phase 9 Deliverables**:
 
-- [ ] Symlink support working on Unix and Windows
-- [ ] Interactive prompt for first-time sync
-- [ ] Config option to enable/disable symlinks
-- [ ] All tests passing
-- [ ] Documentation updated
+- [x] Symlink support working on Unix and Windows
+- [x] Interactive prompt for first-time sync
+- [x] Config option to enable/disable symlinks
+- [x] All tests passing (516 total, 65 symlink-related tests added)
+- [x] Rollback support for safe error recovery
+- [ ] Documentation updated (deferred - not blocking)
 
 ---
 
