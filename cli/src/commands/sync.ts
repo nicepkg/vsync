@@ -794,6 +794,15 @@ export async function syncCommand(options: {
     }
 
     // Calculate diff and generate plan
+    // Debug: Show manifest state before calculating diff
+    debug("Manifest items count:", Object.keys(manifest.items).length);
+    if (Object.keys(manifest.items).length > 0) {
+      debug(
+        "Sample manifest items:",
+        Object.keys(manifest.items).slice(0, 5).join(", "),
+      );
+    }
+
     const planSpinner = ora(t("commands.sync.calculating")).start();
     const plan = await calculateSyncDiff(
       sourceData,
@@ -897,16 +906,30 @@ export async function syncCommand(options: {
       const diff = plan.diffs[tool];
       if (!diff) continue;
 
+      // Helper function to get hash from source data
+      const getHash = (itemType: ItemType, name: string): string => {
+        if (itemType === "skill") {
+          return sourceData.skills.find((s) => s.name === name)?.hash || "";
+        } else if (itemType === "mcp") {
+          return sourceData.mcpServers.find((m) => m.name === name)?.hash || "";
+        } else if (itemType === "agent") {
+          return sourceData.agents.find((a) => a.name === name)?.hash || "";
+        } else if (itemType === "command") {
+          return sourceData.commands.find((c) => c.name === name)?.hash || "";
+        }
+        return "";
+      };
+
       const operations: SyncOperations = {
         created: diff.toCreate.map((op) => ({
           type: op.itemType,
           name: op.name,
-          hash: op.newHash || "",
+          hash: getHash(op.itemType, op.name),
         })),
         updated: diff.toUpdate.map((op) => ({
           type: op.itemType,
           name: op.name,
-          hash: op.newHash || "",
+          hash: getHash(op.itemType, op.name),
         })),
         deleted: diff.toDelete.map((op) => ({
           type: op.itemType,
