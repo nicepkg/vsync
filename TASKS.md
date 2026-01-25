@@ -15,7 +15,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 **Next Phase**: All core phases complete! 🎉
 
 **Progress**: 8/10 phases complete (MVP v1.0 ✅ + v1.1 ✅) + Phase 8 ✅ + Phase 9 ✅ + Phase 10 ✅
-**Test Count**: 516 tests passing
+**Test Count**: 525 tests passing (+9 new)
 **Roadmap**: v1.2 COMPLETE! Includes Phase 8 (Performance) ✅ + Phase 9 (Symlinks) ✅ + Phase 10 (i18n) ✅
 
 ---
@@ -477,8 +477,12 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [ ] Emoji indicators (optional, configurable)
 - [ ] Add confirmation timeouts
   - [ ] Auto-cancel after 30s of inactivity
-- [ ] Add `--yes` flag
-  - [ ] Skip confirmations (for CI/CD)
+- [x] Add `--yes` flag ✅
+  - [x] Skip confirmations (for CI/CD)
+  - [x] Applies to sync and clean commands
+  - [x] Safety: Does NOT skip dangerous --from-source confirmations
+  - [x] i18n support (English + Chinese)
+  - [x] 9 comprehensive tests (all passing)
 
 **Phase 6 Deliverables**:
 
