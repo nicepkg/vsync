@@ -648,13 +648,16 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [ ] Show benefits: "Saves disk space, keeps single source of truth"
   - [ ] Confirm action with Y/n
 
-### 9.3 Symlink Creation Logic
+### 9.3 Symlink Creation Logic ✅
 
-- [ ] Implement `cli/src/utils/symlink.ts`
-  - [ ] `createSymlink(target, source)` - Cross-platform symlink creation
-  - [ ] `isSymlink(path)` - Check if path is a symlink
-  - [ ] `resolveSymlink(path)` - Resolve symlink to real path
-  - [ ] Handle Windows vs Unix symlinks
+- [x] Implement `cli/src/utils/symlink.ts`
+  - [x] `createSymlink(target, source)` - Cross-platform symlink creation
+  - [x] `isSymlink(path)` - Check if path is a symlink
+  - [x] `resolveSymlink(path)` - Resolve symlink to real path
+  - [x] `removeSymlink(path)` - Remove symlink safely
+  - [x] Handle Windows vs Unix symlinks (junction on Windows, dir on Unix)
+  - [x] Added 17 comprehensive tests
+  - [x] All tests passing (424 total)
 - [ ] Update sync workflow
   - [ ] If `use_symlinks_for_skills: true`:
     - [ ] Delete target skills directory (with confirmation)
