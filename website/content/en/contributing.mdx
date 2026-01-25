@@ -1,0 +1,607 @@
+---
+title: Contributing
+description: Contribute to vibe-sync development. Learn setup, TDD workflow, code standards, adding tool adapters, PR process, and development guidelines. TypeScript, pnpm monorepo, 612 tests.
+---
+
+# Contributing
+
+Thank you for your interest in contributing to vibe-sync! This guide will help you get started.
+
+## Ways to Contribute
+
+### ⭐ Star the Repository
+
+The simplest way to support the project is to [star it on GitHub](https://github.com/nicepkg/vibe-sync). This helps others discover the tool.
+
+### 🐛 Report Bugs
+
+Found a bug? [Open an issue](https://github.com/nicepkg/vibe-sync/issues/new) with:
+- Clear description of the problem
+- Steps to reproduce
+- Expected vs actual behavior
+- Environment details (OS, Node version, etc.)
+
+### 💡 Suggest Features
+
+Have an idea? [Open a feature request](https://github.com/nicepkg/vibe-sync/issues/new) describing:
+- The problem you're trying to solve
+- Your proposed solution
+- Use cases and benefits
+- Any alternative approaches considered
+
+### 🔧 Submit Pull Requests
+
+Code contributions are welcome! See the [Development Setup](#development-setup) section below.
+
+### 📖 Improve Documentation
+
+Documentation improvements are valuable:
+- Fix typos or unclear explanations
+- Add examples or use cases
+- Translate to other languages
+- Improve code comments
+
+---
+
+## Development Setup
+
+### Prerequisites
+
+- **Node.js**: >= 24.0.0 (for development)
+- **pnpm**: Package manager
+- **Git**: Version control
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/nicepkg/vibe-sync.git
+cd vibe-sync
+```
+
+### Install Dependencies
+
+```bash
+# Install pnpm if needed
+npm install -g pnpm
+
+# Install project dependencies
+cd cli
+pnpm install
+```
+
+### Project Structure
+
+vibe-sync uses a pnpm monorepo:
+
+```
+vibe-sync/
+├── pnpm-workspace.yaml     # Workspace config
+├── cli/                    # CLI workspace package
+│   ├── package.json        # CLI dependencies
+│   ├── tsconfig.json       # TypeScript config
+│   ├── src/                # Source code
+│   │   ├── cli/            # CLI entry point
+│   │   ├── commands/       # Command implementations
+│   │   ├── adapters/       # Tool adapters
+│   │   ├── core/           # Core logic
+│   │   ├── types/          # TypeScript types
+│   │   └── utils/          # Utilities
+│   └── test/               # Tests (mirrors src/)
+└── website/                # Documentation website
+```
+
+### Build the CLI
+
+```bash
+cd cli
+pnpm build
+```
+
+### Run Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage
+pnpm test:coverage
+
+# Type checking
+pnpm typecheck
+
+# Linting
+pnpm lint
+```
+
+### Test the CLI Locally
+
+```bash
+# Link for local testing
+cd cli
+npm link
+
+# Now you can run vibe-sync globally
+vibe-sync --version
+```
+
+---
+
+## Development Workflow
+
+vibe-sync follows a **Test-Driven Development (TDD)** approach:
+
+### 1. Read Current Task
+
+Check `TASKS.md` for the current phase and task:
+
+```bash
+cat TASKS.md
+```
+
+### 2. Write Tests First
+
+Before implementing, write tests:
+
+```typescript
+// cli/test/commands/my-feature.test.ts
+import { describe, it, expect } from 'vitest';
+
+describe('My Feature', () => {
+  it('should do something', () => {
+    // Test implementation
+  });
+});
+```
+
+### 3. Implement the Feature
+
+Write the code to make tests pass:
+
+```typescript
+// cli/src/commands/my-feature.ts
+export function myFeature() {
+  // Implementation
+}
+```
+
+### 4. Validate
+
+```bash
+# Run tests
+pnpm test
+
+# Type check
+pnpm typecheck
+
+# Lint
+pnpm lint
+```
+
+### 5. Mark Task Complete
+
+Update `TASKS.md`:
+
+```markdown
+- [x] Implement my feature
+```
+
+### 6. Commit Changes
+
+Follow Angular commit convention:
+
+```bash
+git add .
+git commit -m "feat: add my awesome feature
+
+Implements the feature described in task X.
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Code Style and Standards
+
+### TypeScript
+
+- **Strict mode**: All code must pass `strict: true`
+- **No any**: Use proper types
+- **Explicit types**: For public APIs
+
+```typescript
+// ✅ Good
+export function calculateHash(content: string): string {
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+// ❌ Bad
+export function calculateHash(content: any): any {
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+```
+
+### Testing
+
+- **Test coverage**: Aim for >80%
+- **Unit tests**: For individual functions
+- **Integration tests**: For command workflows
+- **Mock file system**: Use `mock-fs` for file operations
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import mock from 'mock-fs';
+
+describe('My Feature', () => {
+  beforeEach(() => {
+    mock({
+      '/fake/path': {
+        'file.txt': 'content'
+      }
+    });
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('should work', async () => {
+    // Test with mocked filesystem
+  });
+});
+```
+
+### Commit Convention
+
+Follow [Angular commit convention](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-format):
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types**:
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation changes
+- `refactor` - Code refactoring
+- `test` - Test changes
+- `chore` - Build/tooling changes
+
+**Examples**:
+```bash
+git commit -m "feat(adapters): add codex TOML support"
+git commit -m "fix(sync): preserve JSONC comments in OpenCode"
+git commit -m "docs(readme): update installation instructions"
+```
+
+---
+
+## Architecture Guidelines
+
+### Adding a New Tool Adapter
+
+1. **Create adapter file**: `cli/src/adapters/my-tool-adapter.ts`
+
+```typescript
+import { BaseAdapter } from './base-adapter';
+import type { ToolAdapter } from '@src/types/adapter';
+
+export class MyToolAdapter extends BaseAdapter implements ToolAdapter {
+  readonly name = 'my-tool';
+
+  async readSkills(): Promise<Skill[]> {
+    // Implementation
+  }
+
+  async writeSkills(skills: Skill[]): Promise<WriteResult> {
+    // Implementation
+  }
+
+  // ... other methods
+}
+```
+
+2. **Register adapter**: `cli/src/adapters/registry.ts`
+
+```typescript
+export function getAdapter(options: AdapterOptions): ToolAdapter {
+  switch (options.tool) {
+    case 'my-tool':
+      return new MyToolAdapter(options);
+    // ... other cases
+  }
+}
+```
+
+3. **Write tests**: `cli/test/adapters/my-tool-adapter.test.ts`
+
+4. **Update types**: `cli/src/types/config.ts`
+
+```typescript
+export type ToolName =
+  | 'claude-code'
+  | 'cursor'
+  | 'opencode'
+  | 'codex'
+  | 'my-tool';  // Add here
+```
+
+### Adding a New Command
+
+1. **Create command file**: `cli/src/commands/my-command.ts`
+
+```typescript
+import { Command } from 'commander';
+
+export function createMyCommand(): Command {
+  const command = new Command('my-command');
+
+  command
+    .description('Description of my command')
+    .option('--option', 'Option description')
+    .action(async (options) => {
+      // Command implementation
+    });
+
+  return command;
+}
+```
+
+2. **Register command**: `cli/src/cli/index.ts`
+
+```typescript
+import { createMyCommand } from '@src/commands/my-command';
+
+program.addCommand(createMyCommand());
+```
+
+3. **Write tests**: `cli/test/commands/my-command.test.ts`
+
+4. **Add i18n strings**: `cli/src/utils/i18n.ts`
+
+---
+
+## Critical Rules
+
+### 1. Never Expand Environment Variables
+
+```typescript
+// ❌ WRONG - Expands variables
+const config = {
+  env: {
+    TOKEN: process.env.GITHUB_TOKEN  // Actual value!
+  }
+};
+
+// ✅ CORRECT - Preserves syntax
+const config = {
+  env: {
+    TOKEN: "${env:GITHUB_TOKEN}"  // Reference preserved
+  }
+};
+```
+
+### 2. Always Use Atomic Writes
+
+```typescript
+import { atomicWrite } from '@src/utils/atomic-write';
+
+// ❌ WRONG - Not crash-safe
+await fs.writeFile(path, content);
+
+// ✅ CORRECT - Atomic operation
+await atomicWrite(path, content);
+```
+
+### 3. Follow TDD Workflow
+
+```bash
+# 1. Write test first
+vim test/my-feature.test.ts
+
+# 2. Run test (should fail)
+pnpm test
+
+# 3. Implement feature
+vim src/my-feature.ts
+
+# 4. Run test (should pass)
+pnpm test
+
+# 5. Commit
+git commit -m "feat: add my feature"
+```
+
+### 4. Respect Config Format Precision
+
+Each tool has **different** MCP formats:
+
+```typescript
+// OpenCode - unique format!
+{
+  "mcp": {  // Not "mcpServers"!
+    "server": {
+      "type": "local",  // Required!
+      "environment": {  // Not "env"!
+        "VAR": "{env:VAR}"  // Curly braces!
+      }
+    }
+  }
+}
+```
+
+See `docs/prd.md` Section 2.2 for complete format specifications.
+
+---
+
+## Pull Request Process
+
+1. **Fork the repository**
+
+2. **Create a feature branch**:
+   ```bash
+   git checkout -b feat/my-feature
+   ```
+
+3. **Make your changes** following the guidelines above
+
+4. **Run tests and checks**:
+   ```bash
+   pnpm test
+   pnpm typecheck
+   pnpm lint
+   ```
+
+5. **Commit with conventional commits**:
+   ```bash
+   git commit -m "feat: add my feature"
+   ```
+
+6. **Push to your fork**:
+   ```bash
+   git push origin feat/my-feature
+   ```
+
+7. **Create Pull Request** on GitHub with:
+   - Clear title and description
+   - Link to related issues
+   - Screenshots (if UI changes)
+   - Test results
+
+### PR Checklist
+
+- [ ] Tests pass (`pnpm test`)
+- [ ] Type checking passes (`pnpm typecheck`)
+- [ ] Linting passes (`pnpm lint`)
+- [ ] Follows TDD workflow
+- [ ] Config formats match PRD exactly
+- [ ] Environment variables not expanded
+- [ ] Atomic writes used
+- [ ] Conventional commit messages
+- [ ] Documentation updated (if needed)
+
+---
+
+## Testing Guidelines
+
+### What to Test
+
+1. **Happy paths**: Normal usage scenarios
+2. **Edge cases**: Empty configs, missing files, etc.
+3. **Error handling**: Invalid inputs, permission errors
+4. **Format conversion**: Correct syntax transformation
+5. **Atomic operations**: Rollback on errors
+
+### Test Structure
+
+```typescript
+describe('Feature Name', () => {
+  describe('when condition A', () => {
+    it('should do X', () => {
+      // Arrange
+      const input = setupInput();
+
+      // Act
+      const result = performAction(input);
+
+      // Assert
+      expect(result).toBe(expected);
+    });
+  });
+
+  describe('when condition B', () => {
+    it('should do Y', () => {
+      // ...
+    });
+  });
+});
+```
+
+---
+
+## Code Review
+
+All PRs are reviewed for:
+- **Correctness**: Does it work as intended?
+- **Tests**: Are there adequate tests?
+- **Types**: Are types correct and precise?
+- **Style**: Does it follow project conventions?
+- **Documentation**: Are docs updated if needed?
+- **Performance**: Are there any inefficiencies?
+
+---
+
+## Documentation Standards
+
+### README Updates
+
+Keep README.md in sync with:
+- Feature additions
+- Command changes
+- Configuration updates
+
+### Code Documentation
+
+```typescript
+/**
+ * Brief description of function
+ *
+ * Longer explanation if needed.
+ *
+ * @param paramName - Parameter description
+ * @returns Return value description
+ * @throws {ErrorType} When this error occurs
+ *
+ * @example
+ * ```typescript
+ * const result = myFunction('input');
+ * console.log(result); // 'output'
+ * ```
+ */
+export function myFunction(paramName: string): string {
+  // Implementation
+}
+```
+
+---
+
+## Getting Help
+
+Need help contributing?
+
+- **Discussions**: [GitHub Discussions](https://github.com/nicepkg/vibe-sync/discussions)
+- **Issues**: [Ask on GitHub](https://github.com/nicepkg/vibe-sync/issues)
+- **Email**: 2214962083@qq.com
+
+---
+
+## Code of Conduct
+
+Be respectful and constructive:
+- Welcome newcomers
+- Be patient with questions
+- Provide constructive feedback
+- Focus on the code, not the person
+
+---
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+---
+
+## Recognition
+
+Contributors are recognized in:
+- README.md contributors section
+- Release notes
+- GitHub contributors graph
+
+Thank you for making vibe-sync better! 🎉

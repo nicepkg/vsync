@@ -1,0 +1,373 @@
+---
+title: Quick Reference
+description: Quick reference guide and cheat sheet for vibe-sync commands, options, and common usage patterns. Copy-paste ready examples for daily workflows.
+---
+
+# Quick Reference
+
+Quick reference guide and cheat sheet for vibe-sync commands and common patterns.
+
+## Commands Overview
+
+| Command | Description | Common Options |
+|:--------|:------------|:---------------|
+| `init` | Initialize configuration | `--user` |
+| `sync` | Synchronize configs | `--dry-run`, `--prune`, `--user`, `-y` |
+| `plan` | Preview sync plan | `--user` |
+| `status` | Check sync status | `--user` |
+| `list` | List configurations | `skills`, `mcp`, `--user` |
+| `clean` | Remove from targets | `--from-source`, `--user`, `-y` |
+| `import` | Import from project | `--user` |
+
+## Common Workflows
+
+### First-Time Setup
+
+```bash
+# Project-level setup
+vibe-sync init
+vibe-sync sync
+
+# User-level setup
+vibe-sync init --user
+vibe-sync sync --user
+```
+
+**[Learn more →](../getting-started)**
+
+### Daily Sync
+
+```bash
+# 1. Edit configs in source tool
+vim ~/.claude/skills/my-skill/SKILL.md
+
+# 2. Sync to targets
+vibe-sync sync
+```
+
+### Preview Before Sync
+
+```bash
+# Check what will change
+vibe-sync plan
+
+# Or use dry-run
+vibe-sync sync --dry-run
+
+# If satisfied, apply
+vibe-sync sync
+```
+
+### Cleanup Old Configs
+
+```bash
+# Safe: Remove from targets only
+vibe-sync clean skill/old-skill
+
+# Strict mirroring (deletes extras)
+vibe-sync sync --prune
+```
+
+**[Learn more →](../cli-commands#clean)**
+
+## Sync Modes
+
+### Safe Mode (Default)
+
+```bash
+vibe-sync sync
+```
+
+- ✅ Creates new items
+- ✅ Updates existing items
+- ❌ Never deletes
+
+**[Learn more →](../core-concepts#safe-mode-default)**
+
+### Prune Mode
+
+```bash
+vibe-sync sync --prune
+```
+
+- ✅ Creates new items
+- ✅ Updates existing items
+- ⚠️ Deletes items not in source
+
+**[Learn more →](../core-concepts#prune-mode)**
+
+## Configuration Layers
+
+### Project-Level
+
+```bash
+# Default behavior
+vibe-sync init       # Creates .vibe-sync.json
+vibe-sync sync       # Syncs project configs
+```
+
+**Use for**: Team configs, project-specific integrations
+
+### User-Level
+
+```bash
+# Add --user flag
+vibe-sync init --user    # Creates ~/.vibe-sync.json
+vibe-sync sync --user    # Syncs global configs
+```
+
+**Use for**: Personal preferences, global skills
+
+**[Learn more →](../core-concepts#configuration-layers)**
+
+## Command Examples
+
+### init
+
+```bash
+# Project config
+vibe-sync init
+
+# User config
+vibe-sync init --user
+```
+
+### sync
+
+```bash
+# Safe sync
+vibe-sync sync
+
+# Prune mode
+vibe-sync sync --prune
+
+# Dry run
+vibe-sync sync --dry-run
+
+# User-level
+vibe-sync sync --user
+
+# Skip confirmation
+vibe-sync sync -y
+```
+
+### plan
+
+```bash
+# Preview changes
+vibe-sync plan
+
+# User-level plan
+vibe-sync plan --user
+```
+
+### status
+
+```bash
+# Check sync status
+vibe-sync status
+
+# User-level status
+vibe-sync status --user
+```
+
+### list
+
+```bash
+# List all
+vibe-sync list
+
+# List skills
+vibe-sync list skills
+
+# List MCP servers
+vibe-sync list mcp
+
+# User-level
+vibe-sync list --user
+```
+
+### clean
+
+```bash
+# Remove single item from targets
+vibe-sync clean skill/old-skill
+
+# Interactive selection
+vibe-sync clean
+
+# Delete from source too (DANGEROUS!)
+vibe-sync clean skill/old-skill --from-source
+
+# User-level
+vibe-sync clean --user
+
+# Skip confirmation
+vibe-sync clean skill/old-skill -y
+```
+
+**[Learn more →](../cli-commands#clean)**
+
+### import
+
+```bash
+# Import from another project
+vibe-sync import ../other-project
+
+# Import to user-level
+vibe-sync import ../other-project --user
+```
+
+## Config File Quick Reference
+
+### .vibe-sync.json
+
+```json
+{
+  "version": "1.0.0",
+  "level": "project",
+  "source_tool": "claude-code",
+  "target_tools": ["cursor", "opencode", "codex"],
+  "sync_config": {
+    "skills": true,
+    "mcp": true
+  },
+  "use_symlinks_for_skills": false,
+  "language": "en"
+}
+```
+
+**[Learn more →](../configuration)**
+
+### Key Settings
+
+| Setting | Values | Description |
+|:--------|:-------|:------------|
+| `source_tool` | `claude-code`, `cursor`, `opencode`, `codex` | Your source of truth |
+| `target_tools` | Array of tools | Sync destinations |
+| `sync_config.skills` | `true`/`false` | Enable Skills sync |
+| `sync_config.mcp` | `true`/`false` | Enable MCP sync |
+| `use_symlinks_for_skills` | `true`/`false` | Use symlinks (v1.2+) |
+| `language` | `en`/`zh` | CLI language (user-level only) |
+
+## Tool-Specific Formats
+
+### MCP Environment Variables
+
+| Tool | Syntax | Example |
+|:-----|:-------|:--------|
+| Claude Code | `${VAR}` | `${API_KEY}` |
+| Cursor | `${env:VAR}` | `${env:API_KEY}` |
+| OpenCode | `{env:VAR}` | `{env:API_KEY}` |
+| Codex | No interpolation | Direct value |
+
+**[Learn more →](../configuration#mcp-configuration-differences)**
+
+### Config File Locations
+
+| Tool | Project | User |
+|:-----|:--------|:-----|
+| Claude Code | `.mcp.json` | `~/.claude.json` |
+| Cursor | `mcp.json` | `~/.cursor/mcp.json` |
+| OpenCode | `opencode.json(c)` | `~/.opencode/opencode.json` |
+| Codex | `config.toml` | `~/.codex/config.toml` |
+
+**[Learn more →](../configuration#supported-tools)**
+
+## Common Patterns
+
+### Team Collaboration
+
+```bash
+# 1. Commit config to git
+git add .vibe-sync.json
+git commit -m "feat: add vibe-sync config"
+
+# 2. Team members clone and sync
+git clone <repo>
+cd <repo>
+vibe-sync sync
+```
+
+### CI/CD Integration
+
+```bash
+# GitHub Actions
+- name: Sync configs
+  run: npx vibe-sync sync --yes
+```
+
+**[Learn more →](../advanced-features#cicd-integration)**
+
+### Migration Workflow
+
+```bash
+# 1. Import from old project
+vibe-sync import ../old-project
+
+# 2. Review plan
+vibe-sync plan
+
+# 3. Sync to targets
+vibe-sync sync
+```
+
+**[Learn more →](../faq#migration-questions)**
+
+## Exit Codes
+
+| Code | Meaning |
+|:-----|:--------|
+| `0` | Success |
+| `1` | Error occurred |
+
+## Getting Help
+
+```bash
+# General help
+vibe-sync --help
+
+# Command help
+vibe-sync sync --help
+
+# Version
+vibe-sync --version
+```
+
+## Common Issues
+
+### Permission Denied
+
+```bash
+# Check directory permissions
+ls -la ~/.cursor/
+
+# On Windows: Run as Administrator for symlinks
+```
+
+### Config Not Found
+
+```bash
+# Solution: Initialize first
+vibe-sync init
+```
+
+### Tool Not Detected
+
+```bash
+# Solution: Create tool directory
+mkdir -p ~/.cursor
+vibe-sync init
+```
+
+**[More troubleshooting →](../faq#troubleshooting)**
+
+## Related Resources
+
+- **[Getting Started](../getting-started)** - Detailed installation guide
+- **[Core Concepts](../core-concepts)** - Understanding vibe-sync
+- **[CLI Commands](../cli-commands)** - Full command reference
+- **[Configuration](../configuration)** - Config file details
+- **[Advanced Features](../advanced-features)** - Symlinks, performance
+- **[FAQ](../faq)** - Common questions
+- **[Contributing](../../contributing)** - Development guide

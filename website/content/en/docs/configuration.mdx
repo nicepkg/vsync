@@ -1,0 +1,330 @@
+---
+title: Configuration
+description: Complete configuration guide for vibe-sync. Learn .vibe-sync.json structure, tool-specific formats (JSON, TOML, JSONC), MCP differences, environment variable syntax for Claude Code, Cursor, OpenCode, and Codex.
+---
+
+# Configuration
+
+Learn how to configure vibe-sync and understand the format differences between AI coding tools.
+
+## Config File Structure
+
+vibe-sync uses `.vibe-sync.json` for configuration:
+
+- **Project-level**: `<project>/.vibe-sync.json`
+- **User-level**: `~/.vibe-sync.json`
+
+### Example Configuration
+
+```json
+{
+  "version": "1.0.0",
+  "level": "project",
+  "source_tool": "claude-code",
+  "target_tools": ["cursor", "opencode", "codex"],
+  "sync_config": {
+    "skills": true,
+    "mcp": true
+  },
+  "use_symlinks_for_skills": false,
+  "language": "en"
+}
+```
+
+### Configuration Fields
+
+| Field | Type | Description |
+|:------|:-----|:------------|
+| `version` | string | Config version (currently "1.0.0") |
+| `level` | string | "project" or "user" |
+| `source_tool` | string | Source tool name (e.g., "claude-code") |
+| `target_tools` | array | List of target tool names |
+| `sync_config.skills` | boolean | Enable Skills sync |
+| `sync_config.mcp` | boolean | Enable MCP servers sync |
+| `sync_config.agents` | boolean | Enable Agents sync (v1.1+, optional) |
+| `sync_config.commands` | boolean | Enable Commands sync (v1.1+, optional) |
+| `use_symlinks_for_skills` | boolean | Use symlinks for Skills (v1.2+, optional) |
+| `language` | string | CLI language: "en" or "zh" (v1.2+, user-level only) |
+
+## Supported Tools
+
+### Claude Code
+
+**Configuration Directories**:
+- User: `~/.claude/`
+- Project: `.claude/`
+
+**Features**:
+- ✅ Skills: `skills/`
+- ✅ Agents: `agents/`
+- ✅ Commands: `commands/`
+- ✅ MCP: `.mcp.json` (project) or `~/.claude.json` (user)
+
+**MCP Format**: JSON
+
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
+    }
+  }
+}
+```
+
+**Environment Variables**: `${VAR}` or `${VAR:-default}`
+
+### Cursor
+
+**Configuration Directories**:
+- User: `~/.cursor/`
+- Project: `.cursor/`
+
+**Features**:
+- ✅ Skills: `skills/`
+- ✅ Commands: `commands/`
+- ✅ MCP: `mcp.json`
+- ❌ Agents: Not supported
+
+**MCP Format**: JSON
+
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "PGPASSWORD": "${env:PGPASSWORD}",
+        "DATA_DIR": "${workspaceFolder}/data"
+      }
+    }
+  }
+}
+```
+
+**Environment Variables**: `${env:VAR}`, `${userHome}`, `${workspaceFolder}`, `${workspaceFolderBasename}`, `${pathSeparator}`
+
+### OpenCode
+
+**Configuration Directories**:
+- User: `~/.opencode/`
+- Project: `.opencode/`
+
+**Features**:
+- ✅ Skills: `skills/`
+- ✅ Agents: `agents/`
+- ✅ Commands: `commands/`
+- ✅ MCP: `opencode.json` or `opencode.jsonc`
+
+**MCP Format**: JSONC (supports comments)
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {  // ⚠️ Note: "mcp" not "mcpServers"
+    "sqlite": {
+      "type": "local",  // ⚠️ Required field
+      "enabled": true,
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sqlite"],
+      "environment": {
+        "PASSWORD": "{env:LOCAL_PASSWORD}"  // ⚠️ Curly braces
+      }
+    }
+  }
+}
+```
+
+**Environment Variables**: `{env:VAR}` (curly braces, no dollar sign)
+
+### Codex
+
+**Configuration Directories**:
+- User: `~/.codex/`
+- Project: `.codex/`
+
+**Features**:
+- ✅ Skills: `skills/`
+- ✅ MCP: `config.toml`
+- ❌ Agents: Not supported
+- ❌ Commands: Not supported
+
+**MCP Format**: TOML
+
+```toml
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+cwd = "/path/to/dir"  # optional
+env_vars = ["CONTEXT7_API_KEY"]  # optional, use system vars
+
+[mcp_servers.context7.env]  # optional
+MY_ENV_VAR = "MY_ENV_VALUE"
+```
+
+**Environment Variables**: No interpolation—values are literal strings
+
+## Format Comparison Table
+
+### Directory Structure
+
+| Config Type | Claude Code | Cursor | OpenCode | Codex |
+|:------------|:------------|:-------|:---------|:------|
+| **Skills** | `.claude/skills/` | `.cursor/skills/` | `.opencode/skills/` | `.codex/skills/` |
+| **Agents** | `.claude/agents/` | N/A | `.opencode/agents/` | N/A |
+| **Commands** | `.claude/commands/` | `.cursor/commands/` | `.opencode/commands/` | N/A |
+| **MCP Config** | `.mcp.json` | `mcp.json` | `opencode.json(c)` | `config.toml` |
+
+### MCP Configuration Differences
+
+| Feature | Claude Code | Cursor | OpenCode | Codex |
+|:--------|:------------|:-------|:---------|:------|
+| **Format** | JSON | JSON | JSONC (with comments) | TOML |
+| **Root Field** | `mcpServers` | `mcpServers` | `mcp` ⚠️ | `mcp_servers` |
+| **Type Field** | Not required | Not required | **Required** (`local`/`remote`) | Required |
+| **Env Syntax** | `${VAR}` | `${env:VAR}` | `{env:VAR}` | No interpolation |
+| **Comments** | ❌ | ❌ | ✅ | ✅ |
+
+### Critical Differences
+
+⚠️ **OpenCode** has unique requirements:
+1. Root field is `mcp` (not `mcpServers`)
+2. Must specify `type` field: `"local"` or `"remote"`
+3. Environment variables use curly braces: `{env:VAR}`
+4. Supports JSONC comments
+
+⚠️ **Codex** uses TOML format:
+1. Different file format entirely (`.toml` not `.json`)
+2. Field name is `mcp_servers` (with underscore)
+3. No variable interpolation support
+4. Optional `env_vars` array for system environment variables
+
+## Skills Configuration
+
+All tools use the same Agent Skills standard:
+
+### Directory Structure
+
+```
+<tool>/skills/
+└── my-skill/
+    ├── SKILL.md           # Required: skill definition with frontmatter
+    ├── template.md        # Optional: supporting file
+    └── scripts/           # Optional: helper scripts
+        └── deploy.sh
+```
+
+### SKILL.md Format
+
+```markdown
+---
+name: my-skill
+description: A helpful skill description
+author: Your Name
+tags: [deployment, automation]
+---
+
+# Skill Content
+
+Instructions and prompts for the AI agent...
+```
+
+## Why Format Conversion Matters
+
+Without vibe-sync, migrating configs between tools requires:
+
+1. **Manual format conversion**: JSON → TOML → JSONC
+2. **Environment variable rewriting**: `${VAR}` → `${env:VAR}` → `{env:VAR}`
+3. **Structure changes**: `mcpServers` → `mcp` → `mcp_servers`
+4. **Required field additions**: Adding `type` for OpenCode
+
+**With vibe-sync**, all this happens automatically! 🎉
+
+## Manifest File
+
+vibe-sync maintains a manifest at `.vibe-sync-cache/manifest.json`:
+
+```json
+{
+  "version": "1.0.0",
+  "last_sync": "2026-01-25T10:30:00Z",
+  "items": {
+    "skill/git-release": {
+      "type": "skill",
+      "hash": "abc123...",
+      "last_synced": "2026-01-25T10:30:00Z",
+      "targets": {
+        "cursor": "abc123...",
+        "opencode": "abc123..."
+      }
+    }
+  }
+}
+```
+
+**Purpose**:
+- Track sync state using SHA256 hashes
+- Detect changes quickly without reading files
+- Enable incremental syncing
+- Record last sync timestamp
+
+## Best Practices
+
+### 1. Choose the Right Source
+
+We recommend **Claude Code** as source for:
+- Most complete feature set (Skills, MCP, Agents, Commands)
+- Clean JSON format
+- Good documentation
+
+### 2. Project vs User Level
+
+**Use Project Level** for:
+- Team-shared configurations
+- Project-specific integrations
+- Commit to version control
+
+**Use User Level** for:
+- Personal preferences
+- Global skills library
+- Credentials and API keys
+
+### 3. Environment Variables
+
+Always use variable references, never hardcode:
+
+```json
+// ✅ Good
+{
+  "env": {
+    "API_KEY": "${API_KEY}"
+  }
+}
+
+// ❌ Bad
+{
+  "env": {
+    "API_KEY": "sk-1234567890abcdef"
+  }
+}
+```
+
+### 4. Version Control
+
+**Commit to git**:
+- `.vibe-sync.json` (safe, no secrets)
+- `.vibe-sync-cache/` (optional, helps with performance)
+
+**Keep out of git**:
+- Tool-specific config files with credentials
+- Use `.gitignore` for sensitive MCP configs
+
+## Next Steps
+
+- Learn all [CLI Commands](../cli-commands)
+- Explore [Advanced Features](../advanced-features)
+- Check the [FAQ](../faq) for troubleshooting
