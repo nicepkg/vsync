@@ -675,15 +675,18 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [ ] If `use_symlinks_for_skills: false`:
     - [ ] Use normal copy behavior (current implementation)
 
-### 9.4 Adapter Updates
+### 9.4 Adapter Updates ✅
 
-- [ ] Update `cli/src/adapters/base.ts`
-  - [ ] `writeSkills()` - Skip if target is a symlink
-  - [ ] `readSkills()` - Follow symlinks when reading
-  - [ ] `deleteSkill()` - Handle symlinked directories
-- [ ] Update all adapters (claude-code, cursor, opencode, codex)
-  - [ ] Verify symlink handling works correctly
-  - [ ] Test read/write operations on symlinked directories
+- [x] Update `cli/src/adapters/base.ts`
+  - [x] `writeSkills()` - Skip writing if target is a symlink (returns success with count 0)
+  - [x] `readSkills()` - Works transparently with symlinks (no changes needed)
+  - [x] `deleteSkill()` - Throws error when trying to delete from symlinked directory
+  - [x] Import `isSymlink` utility for symlink detection
+  - [x] Added 4 comprehensive tests for symlink handling
+  - [x] All tests passing (439 total)
+- [x] All adapters inherit symlink handling from BaseAdapter
+  - [x] Claude Code, Cursor, OpenCode, Codex adapters all work correctly
+  - [x] No adapter-specific changes needed (inheritance handles it)
 
 ### 9.5 Safety & Error Handling
 

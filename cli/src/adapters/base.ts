@@ -12,6 +12,7 @@ import { atomicWrite } from "../utils/atomic-write.js";
 import * as fileOps from "../utils/file-ops.js";
 import { hashAgent, hashCommand, hashSkill } from "../utils/hash.js";
 import { readSupportFiles, writeSupportFiles } from "../utils/support-files.js";
+import { isSymlink } from "../utils/symlink.js";
 
 /**
  * Adapter configuration
@@ -224,6 +225,18 @@ export abstract class BaseAdapter implements ToolAdapter {
   }
 
   async writeSkills(skills: Skill[]): Promise<WriteResult> {
+    // Check if skills directory is a symlink
+    const skillsDir = this.resolvePath(this.getSkillsDir());
+    const isLink = await isSymlink(skillsDir);
+
+    if (isLink) {
+      // Skip writing to symlinked directory - it's managed by the source
+      return {
+        success: true,
+        count: 0,
+      };
+    }
+
     return this.writeDirectoryItems<Skill>(
       this.getSkillsDir(),
       "SKILL.md",
@@ -232,6 +245,17 @@ export abstract class BaseAdapter implements ToolAdapter {
   }
 
   async deleteSkill(name: string): Promise<void> {
+    // Check if skills directory is a symlink
+    const skillsDir = this.resolvePath(this.getSkillsDir());
+    const isLink = await isSymlink(skillsDir);
+
+    if (isLink) {
+      throw new Error(
+        "Cannot delete individual skills from symlinked directory. " +
+          "The symlink points to another tool's skills directory.",
+      );
+    }
+
     await this.deleteDirectoryItem(this.getSkillsDir(), name);
   }
 
