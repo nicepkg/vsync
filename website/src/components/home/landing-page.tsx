@@ -61,8 +61,8 @@ const workflows = [
     icon: BookOpen,
     title: { en: "Skills Sync", zh: "Skills 同步" },
     desc: {
-      en: "Share Agent Skills Across Tools",
-      zh: "跨工具共享 Agent Skills",
+      en: "Symlinks + Full Content Sync",
+      zh: "符号链接 + 完整内容同步",
     },
     link: "/docs/getting-started",
     color: "text-purple-500",
@@ -70,16 +70,22 @@ const workflows = [
   },
   {
     icon: TrendingUp,
-    title: { en: "MCP Sync", zh: "MCP 同步" },
-    desc: { en: "Secure MCP Server Management", zh: "安全的 MCP Server 管理" },
+    title: { en: "MCP Servers", zh: "MCP Servers" },
+    desc: {
+      en: "Auto Format Conversion (JSON/TOML/JSONC)",
+      zh: "自动格式转换 (JSON/TOML/JSONC)",
+    },
     link: "/docs/getting-started",
     color: "text-cyan-500",
     bg: "bg-cyan-500/10",
   },
   {
     icon: BarChart2,
-    title: { en: "Diff Planning", zh: "差异计划" },
-    desc: { en: "Preview Changes Before Apply", zh: "应用前预览变更" },
+    title: { en: "Agents & Commands", zh: "Agents 和 Commands" },
+    desc: {
+      en: "Sync Custom Agents & Slash Commands",
+      zh: "同步自定义 Agent 和斜杠命令",
+    },
     link: "/docs/getting-started",
     color: "text-blue-500",
     bg: "bg-blue-500/10",
@@ -87,17 +93,20 @@ const workflows = [
   {
     icon: CheckCircle,
     title: { en: "Safe & Prune Modes", zh: "Safe & Prune 模式" },
-    desc: { en: "Choose Your Sync Strategy", zh: "选择同步策略" },
+    desc: {
+      en: "Safe (No Deletions) or Prune (Strict Mirror)",
+      zh: "Safe (不删除) 或 Prune (严格镜像)",
+    },
     link: "/docs/getting-started",
     color: "text-green-500",
     bg: "bg-green-500/10",
   },
   {
     icon: Presentation,
-    title: { en: "Multi-Tool Support", zh: "多工具支持" },
+    title: { en: "Multi-Language", zh: "多语言支持" },
     desc: {
-      en: "Claude, Cursor, OpenCode, Codex",
-      zh: "Claude、Cursor、OpenCode、Codex",
+      en: "English + 中文 Interactive CLI",
+      zh: "English + 中文交互式命令行",
     },
     link: "/docs/getting-started",
     color: "text-orange-500",
@@ -112,34 +121,34 @@ const problems = [
   {
     role: { en: "Multi-Tool User", zh: "多工具用户" },
     pain: {
-      en: "Manually copying Skills and MCP configs across Claude Code, Cursor, OpenCode...",
-      zh: "在 Claude Code、Cursor、OpenCode 之间手动复制 Skills 和 MCP 配置...",
+      en: "Managing configs across multiple vibe coding tools - different directories, different formats, endless manual copying",
+      zh: "在多个氛围编程工具间管理配置 - 不同目录、不同格式、无尽的手动复制",
     },
     gain: {
-      en: "One command syncs all configs automatically, no manual copying",
-      zh: "一条命令自动同步所有配置，无需手动复制",
+      en: "One command syncs everything. vibe-sync handles all format conversions automatically.",
+      zh: "一条命令同步所有内容。vibe-sync 自动处理所有格式转换。",
     },
   },
   {
-    role: { en: "Configuration Manager", zh: "配置管理者" },
+    role: { en: "Environment Variable Hell", zh: "环境变量噩梦" },
     pain: {
-      en: "Different tools, different formats, environment variables break during migration",
-      zh: "不同工具、不同格式，迁移时环境变量总是出错",
+      en: "Claude Code uses ${VAR}, Cursor needs ${env:VAR}, OpenCode requires {env:VAR}. MCP servers break after migration.",
+      zh: "Claude Code 用 ${VAR}，Cursor 需要 ${env:VAR}，OpenCode 要求 {env:VAR}。迁移后 MCP servers 就崩了。",
     },
     gain: {
-      en: "vibe-sync handles format conversion and preserves environment variables safely",
-      zh: "vibe-sync 处理格式转换，安全保留环境变量",
+      en: "vibe-sync automatically converts env var syntax for each tool. No more broken MCP servers.",
+      zh: "vibe-sync 为每个工具自动转换环境变量语法。不再有坏掉的 MCP servers。",
     },
   },
   {
-    role: { en: "Team Lead", zh: "团队负责人" },
+    role: { en: "Safety First", zh: "安全第一" },
     pain: {
-      en: "Can't track which configs are outdated, risky to delete, no diff preview",
-      zh: "无法追踪哪些配置过时了，删除有风险，没有差异预览",
+      en: "Scared to delete outdated configs. No way to preview changes. One wrong move and everything breaks.",
+      zh: "害怕删除过时的配置。无法预览变更。一步走错，全盘皆输。",
     },
     gain: {
-      en: "Diff planning system shows exactly what will change before applying",
-      zh: "差异计划系统在应用前准确显示将要发生的变更",
+      en: "Safe mode (never deletes) + Prune mode (strict mirror). Always see exactly what will change before applying.",
+      zh: "Safe 模式（永不删除）+ Prune 模式（严格镜像）。应用前总能准确看到将要发生的变更。",
     },
   },
 ];
@@ -173,21 +182,22 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
     hero: {
       title:
         lang === "en"
-          ? "One Config. Many AI Tools. Zero Pain."
-          : "一处配置，多工具同步，不再折腾",
+          ? "Managing Configs Across Multiple AI Vibe Coding Tools is a Nightmare"
+          : "在多个氛围编程工具间管理配置是噩梦",
       subtitle:
         lang === "en"
-          ? "Sync your AI coding tool configs with a single command"
-          : "一条命令，同步你所有的 AI 编程工具配置",
+          ? "vibe-sync solves this with one command"
+          : "vibe-sync 用一条命令解决这个问题",
       desc:
         lang === "en"
-          ? "vibe-sync keeps your Skills and MCP servers in perfect harmony across Claude Code, Cursor, OpenCode, and Codex. Stop copying configs manually."
-          : "vibe-sync 让你的 Skills 和 MCP servers 在 Claude Code、Cursor、OpenCode 和 Codex 之间保持完美同步。告别手动复制配置。",
+          ? "Each tool has its own directories and formats. Skills, MCP servers, Agents, Commands - they're all different. vibe-sync keeps everything in sync automatically. No more manual copying, no more broken configs."
+          : "每个工具都有自己的目录和格式。Skills、MCP servers、Agents、Commands - 都不一样。vibe-sync 自动保持所有内容同步。不再手动复制，不再有坏掉的配置。",
       getStarted: lang === "en" ? "Get Started" : "开始使用",
       viewGithub: lang === "en" ? "Star on GitHub" : "Star on GitHub",
     },
     problem: {
-      title: lang === "en" ? "The Problem We Solve" : "我们解决的痛点",
+      title:
+        lang === "en" ? "Before & After vibe-sync" : "使用 vibe-sync 前后对比",
       without: lang === "en" ? "Without vibe-sync" : "没有 vibe-sync",
       with: lang === "en" ? "With vibe-sync" : "有了 vibe-sync",
     },
@@ -195,18 +205,16 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
       title: lang === "en" ? "Core Features" : "核心特性",
       subtitle:
         lang === "en"
-          ? "Everything you need for hassle-free config sync"
-          : "无忧配置同步所需的一切",
+          ? "Skills, MCP, Agents, Commands - all synced automatically"
+          : "Skills、MCP、Agents、Commands - 全部自动同步",
     },
     cta: {
       title:
-        lang === "en"
-          ? "Ready to sync your AI tools?"
-          : "准备好同步你的 AI 工具了吗？",
+        lang === "en" ? "Stop Managing Configs Manually" : "不再手动管理配置",
       desc:
         lang === "en"
-          ? "Install vibe-sync and unify your AI coding experience today."
-          : "立即安装 vibe-sync，统一你的 AI 编程体验。",
+          ? "One command to sync everything across all your vibe coding tools."
+          : "一条命令同步所有氛围编程工具的配置。",
       button: lang === "en" ? "Get Started Now" : "立即开始",
     },
   };
@@ -254,13 +262,16 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
                 </Link>
               </div>
 
-              {/* Demo command */}
+              {/* Demo command - Quick Start */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                className="mx-auto mt-8 max-w-3xl"
+                className="mx-auto mt-12 max-w-3xl"
               >
+                <p className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+                  {lang === "en" ? "Try it now" : "立即体验"}
+                </p>
                 <div className="via-primary/20 rounded-2xl bg-gradient-to-r from-transparent to-transparent p-1">
                   <div className="bg-card/80 border-primary/10 rounded-xl border p-6 shadow-2xl backdrop-blur-md">
                     <div className="flex items-center overflow-x-auto text-left font-mono text-sm whitespace-nowrap md:text-base">
