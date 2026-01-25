@@ -204,7 +204,7 @@ No frontmatter, just content.`,
     it("should read user-level MCP servers from .claude.json", async () => {
       mockFs.restore();
       mockFs({
-        "/home": {
+        "/home/user": {
           ".claude.json": JSON.stringify({
             mcpServers: {
               userPostgres: {
@@ -218,7 +218,7 @@ No frontmatter, just content.`,
 
       const userAdapter = new ClaudeCodeAdapter({
         tool: "claude-code",
-        baseDir: "/home",
+        baseDir: "/home/user",
         level: "user",
       });
 

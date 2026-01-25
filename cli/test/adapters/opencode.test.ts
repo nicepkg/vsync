@@ -310,14 +310,14 @@ describe("OpenCodeAdapter", () => {
 
     it("should write user config to .opencode/opencode.json", async () => {
       mockFs({
-        "/home": {
+        "/home/user": {
           ".opencode": {},
         },
       });
 
       const userAdapter = new OpenCodeAdapter({
         tool: "opencode",
-        baseDir: "/home",
+        baseDir: "/home/user",
         level: "user",
       });
 
@@ -334,7 +334,10 @@ describe("OpenCodeAdapter", () => {
 
       expect(result.success).toBe(true);
 
-      const jsonText = await readFile("/home/.opencode/opencode.json", "utf-8");
+      const jsonText = await readFile(
+        "/home/user/.opencode/opencode.json",
+        "utf-8",
+      );
       const config = jsonc.parse(jsonText);
 
       expect(config.mcp["user-server"]).toBeDefined();

@@ -34,5 +34,7 @@ jobs:
       - name: Run TypeScript check
         run: pnpm typecheck
 
-      - name: Run tests
-        run: pnpm test
+  tests:
+    name: Tests
+    uses: ./.github/workflows/tests.yml
+    secrets: inherit
