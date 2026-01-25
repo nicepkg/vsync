@@ -12,6 +12,7 @@ import { getAdapter } from "@src/adapters/registry.js";
 import { loadManifest, saveManifest } from "@src/core/manifest-manager.js";
 import type { ConfigLevel, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
+import { t } from "@src/utils/i18n.js";
 import { loadSyncConfig, readSourceConfig } from "./sync.js";
 
 /**
@@ -43,12 +44,12 @@ export interface CleanPlan {
 export function parseItemName(itemName: string): ParsedItemName {
   const parts = itemName.split("/");
   if (parts.length !== 2) {
-    throw new Error("Invalid item name format. Use 'skill/name' or 'mcp/name'");
+    throw new Error(t("commands.clean.invalidFormat"));
   }
 
   const [type, name] = parts;
   if (type !== "skill" && type !== "mcp") {
-    throw new Error("Invalid item type. Use 'skill' or 'mcp'");
+    throw new Error(t("commands.clean.invalidType"));
   }
 
   return { type: type as "skill" | "mcp", name: name || "" };
@@ -66,44 +67,44 @@ export function formatCleanPlan(plan: CleanPlan): string {
   lines.push("");
 
   if (plan.fromSource) {
-    lines.push(chalk.red.bold("⚠️⚠️⚠️  DANGER ZONE  ⚠️⚠️⚠️"));
+    lines.push(chalk.red.bold(t("commands.clean.dangerZone")));
     lines.push("");
     lines.push(
-      chalk.red(
-        `This will delete from the SOURCE tool (${plan.sourceTool}) AND all targets.`,
-      ),
+      chalk.red(t("commands.clean.deleteFromSource", { tool: plan.sourceTool })),
     );
-    lines.push(chalk.red("This action CANNOT be undone."));
+    lines.push(chalk.red(t("commands.clean.cannotUndo")));
   } else {
-    lines.push(
-      chalk.yellow(
-        "⚠️  This will remove from target tools only (source unchanged)",
-      ),
-    );
+    lines.push(chalk.yellow(`⚠️  ${t("commands.clean.removeTargetsOnly")}`));
   }
 
   lines.push("");
 
   if (plan.targetTools.length === 0 && !plan.fromSource) {
-    lines.push(chalk.gray("Not synced to any targets. Nothing to remove."));
+    lines.push(chalk.gray(t("commands.clean.notSynced")));
     lines.push("");
     return lines.join("\n");
   }
 
   lines.push(
-    chalk.bold(plan.fromSource ? "Will delete from:" : "Will remove from:"),
+    chalk.bold(
+      plan.fromSource
+        ? t("commands.clean.willDeleteFrom")
+        : t("commands.clean.willRemoveFrom"),
+    ),
   );
 
   if (plan.fromSource) {
     if (plan.type === "skill") {
       lines.push(
         chalk.red(
-          `  • ${plan.sourceTool} (.${plan.sourceTool}/skills/${plan.name}/) ← SOURCE`,
+          `  • ${plan.sourceTool} (.${plan.sourceTool}/skills/${plan.name}/) ${t("commands.clean.sourceLabel")}`,
         ),
       );
     } else {
       lines.push(
-        chalk.red(`  • ${plan.sourceTool} (mcp server: ${plan.name}) ← SOURCE`),
+        chalk.red(
+          `  • ${plan.sourceTool} (mcp server: ${plan.name}) ${t("commands.clean.sourceLabel")}`,
+        ),
       );
     }
   }
@@ -118,7 +119,9 @@ export function formatCleanPlan(plan: CleanPlan): string {
 
   if (!plan.fromSource) {
     lines.push("");
-    lines.push(chalk.gray(`Source (${plan.sourceTool}) will NOT be affected.`));
+    lines.push(
+      chalk.gray(t("commands.clean.sourceNotAffected", { tool: plan.sourceTool })),
+    );
   }
 
   lines.push("");
@@ -168,7 +171,9 @@ async function removeItem(
       baseDir: projectDir,
       level,
     });
-    const spinner = ora(`Deleting from source (${sourceTool})...`).start();
+    const spinner = ora(
+      t("commands.clean.deletingFromSource", { tool: sourceTool }),
+    ).start();
 
     try {
       if (parsed.type === "skill") {
@@ -177,10 +182,18 @@ async function removeItem(
         await sourceAdapter.deleteMCPServer(parsed.name);
       }
       spinner.succeed(
-        chalk.red(`🗑️  ${sourceTool}: ${parsed.type}/${parsed.name} deleted`),
+        chalk.red(
+          t("commands.clean.sourceDeleted", {
+            tool: sourceTool,
+            type: parsed.type,
+            name: parsed.name,
+          }),
+        ),
       );
     } catch (error) {
-      spinner.fail(`Failed to delete from ${sourceTool}`);
+      spinner.fail(
+        t("commands.clean.deleteFromSourceFailed", { tool: sourceTool }),
+      );
       throw error;
     }
   }
@@ -188,7 +201,7 @@ async function removeItem(
   // Remove from each target
   for (const tool of targetTools) {
     const adapter = getAdapter({ tool, baseDir: projectDir, level });
-    const spinner = ora(`Removing from ${tool}...`).start();
+    const spinner = ora(t("commands.clean.removingFrom", { tool })).start();
 
     try {
       if (parsed.type === "skill") {
@@ -197,10 +210,10 @@ async function removeItem(
         await adapter.deleteMCPServer(parsed.name);
       }
       spinner.succeed(
-        `${fromSource ? chalk.red("🗑️") : "✓"} ${tool}: ${parsed.type}/${parsed.name} removed`,
+        `${fromSource ? chalk.red("🗑️") : "✓"} ${tool}: ${t("commands.clean.targetRemoved", { type: parsed.type, name: parsed.name })}`,
       );
     } catch (error) {
-      spinner.fail(`Failed to remove from ${tool}`);
+      spinner.fail(t("commands.clean.removeFromTargetFailed", { tool }));
       throw error;
     }
   }
@@ -245,9 +258,9 @@ async function cleanCommand(
     const level: ConfigLevel = options.user ? "user" : "project";
 
     // Load configuration
-    const spinner = ora("Loading configuration...").start();
+    const spinner = ora(t("commands.clean.loadingConfig")).start();
     const config = await loadSyncConfig(projectDir, options.user || false);
-    spinner.succeed("Configuration loaded");
+    spinner.succeed(t("commands.clean.configLoaded"));
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
@@ -261,7 +274,7 @@ async function cleanCommand(
       if (!manifest.items[itemKey]) {
         console.log(
           chalk.yellow(
-            `\n⚠️  Item '${itemName}' not found in manifest. Nothing to clean.\n`,
+            `\n⚠️  ${t("commands.clean.itemNotFound", { item: itemName })}\n`,
           ),
         );
         return;
@@ -294,12 +307,14 @@ async function cleanCommand(
           {
             type: "input",
             name: "confirmName",
-            message: "Type the name to confirm:",
+            message: t("commands.clean.typeNameToConfirm"),
           },
         ]);
 
         if (confirmName !== parsed.name) {
-          console.log(chalk.yellow("\n⚠️  Name mismatch. Cleanup cancelled\n"));
+          console.log(
+            chalk.yellow(`\n⚠️  ${t("commands.clean.nameMismatch")}\n`),
+          );
           return;
         }
 
@@ -309,12 +324,12 @@ async function cleanCommand(
           {
             type: "input",
             name: "confirmAbsolute",
-            message: "Are you absolutely sure? (yes/no)",
+            message: t("commands.clean.absoluteConfirm"),
           },
         ]);
 
         if (confirmAbsolute !== "yes") {
-          console.log(chalk.yellow("\n⚠️  Cleanup cancelled\n"));
+          console.log(chalk.yellow(`\n⚠️  ${t("commands.clean.cancelled")}\n`));
           return;
         }
       } else {
@@ -322,13 +337,13 @@ async function cleanCommand(
           {
             type: "confirm",
             name: "confirm",
-            message: "Confirm removal from targets?",
+            message: t("commands.clean.confirmRemoval"),
             default: false,
           },
         ]);
 
         if (!confirm) {
-          console.log(chalk.yellow("\n⚠️  Cleanup cancelled\n"));
+          console.log(chalk.yellow(`\n⚠️  ${t("commands.clean.cancelled")}\n`));
           return;
         }
       }
@@ -336,7 +351,7 @@ async function cleanCommand(
       // Execute removal
       console.log(
         chalk.cyan(
-          `\n🔧 ${options.fromSource ? "Deleting from source and targets" : "Removing from targets"}...`,
+          `\n🔧 ${options.fromSource ? t("commands.clean.deletingFromSourceAndTargets") : t("commands.clean.removingFromTargets")}`,
         ),
       );
       await removeItem(
@@ -350,11 +365,11 @@ async function cleanCommand(
 
       console.log(
         chalk.green(
-          `\n✓ ${options.fromSource ? "Deletion" : "Cleanup"} completed`,
+          `\n✓ ${options.fromSource ? t("commands.clean.deletionComplete") : t("commands.clean.cleanupComplete")}`,
         ),
       );
       if (!options.fromSource) {
-        console.log(chalk.green("✓ Manifest updated\n"));
+        console.log(chalk.green(`✓ ${t("commands.clean.manifestUpdated")}\n`));
       }
     } else {
       // Interactive mode
@@ -369,18 +384,24 @@ async function cleanCommand(
         {
           type: "list",
           name: "cleanType",
-          message: "What type do you want to clean?",
-          choices: ["Skills", "MCP Servers"],
+          message: t("commands.clean.selectType"),
+          choices: [
+            t("commands.clean.skillsChoice"),
+            t("commands.clean.mcpServersChoice"),
+          ],
         },
       ]);
 
-      const type = cleanType === "Skills" ? "skill" : "mcp";
+      const type =
+        cleanType === t("commands.clean.skillsChoice") ? "skill" : "mcp";
       const items =
         type === "skill" ? sourceData.skills : sourceData.mcpServers;
 
       if (items.length === 0) {
         console.log(
-          chalk.yellow(`\n⚠️  No ${cleanType.toLowerCase()} found.\n`),
+          chalk.yellow(
+            `\n⚠️  ${t("commands.clean.noItemsFound", { type: cleanType.toLowerCase() })}\n`,
+          ),
         );
         return;
       }
@@ -392,7 +413,7 @@ async function cleanCommand(
         {
           type: "checkbox",
           name: "selectedItems",
-          message: "Select items to remove from targets:",
+          message: t("commands.clean.selectItems"),
           choices: items.map((item) => ({
             name: item.name,
             value: item.name,
@@ -402,49 +423,55 @@ async function cleanCommand(
 
       if (selectedItems.length === 0) {
         console.log(
-          chalk.yellow("\n⚠️  No items selected. Cleanup cancelled\n"),
+          chalk.yellow(`\n⚠️  ${t("commands.clean.noItemsSelected")}\n`),
         );
         return;
       }
 
       // Show selected items
-      console.log(chalk.bold(`\nSelected items (${selectedItems.length}):`));
+      console.log(
+        chalk.bold(
+          `\n${t("commands.clean.selectedItems", { count: selectedItems.length })}`,
+        ),
+      );
       for (const name of selectedItems) {
         console.log(`  • ${type}/${name}`);
       }
       console.log("");
 
       // Show warning
-      console.log(
-        chalk.yellow(
-          "⚠️  This will remove from target tools only (source unchanged)\n",
-        ),
-      );
+      console.log(chalk.yellow(`⚠️  ${t("commands.clean.removeTargetsOnly")}\n`));
 
       // Confirm
       const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
         {
           type: "confirm",
           name: "confirm",
-          message: "Confirm removal from targets?",
+          message: t("commands.clean.confirmRemoval"),
           default: false,
         },
       ]);
 
       if (!confirm) {
-        console.log(chalk.yellow("\n⚠️  Cleanup cancelled\n"));
+        console.log(chalk.yellow(`\n⚠️  ${t("commands.clean.cancelled")}\n`));
         return;
       }
 
       // Execute removal for each selected item
-      console.log(chalk.cyan("\n🔧 Removing from targets...\n"));
+      console.log(
+        chalk.cyan(`\n🔧 ${t("commands.clean.removingFromTargets")}\n`),
+      );
 
       for (const name of selectedItems) {
         const itemKey = `${type}/${name}`;
         const targetTools = getSyncedTargets(itemKey, manifest);
 
         if (targetTools.length === 0) {
-          console.log(chalk.gray(`  • ${itemKey}: not synced, skipped`));
+          console.log(
+            chalk.gray(
+              `  • ${itemKey}: ${t("commands.clean.notSyncedSkipped")}`,
+            ),
+          );
           continue;
         }
 
@@ -458,12 +485,14 @@ async function cleanCommand(
         );
       }
 
-      console.log(chalk.green("\n✓ Cleanup completed"));
-      console.log(chalk.green("✓ Manifest updated\n"));
+      console.log(chalk.green(`\n✓ ${t("commands.clean.cleanupComplete")}`));
+      console.log(chalk.green(`✓ ${t("commands.clean.manifestUpdated")}\n`));
     }
   } catch (error) {
     if (error instanceof Error) {
-      console.error(chalk.red(`\n❌ Error: ${error.message}\n`));
+      console.error(
+        chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`),
+      );
       process.exit(1);
     }
   }
@@ -473,16 +502,10 @@ export function createCleanCommand(): Command {
   const command = new Command("clean");
 
   command
-    .description("Remove items from target tools (not from source)")
-    .argument(
-      "[item]",
-      "Item to clean (e.g., 'skill/name' or 'mcp/name'), or omit for interactive mode",
-    )
-    .option("--user", "Use user-level config instead of project-level")
-    .option(
-      "--from-source",
-      "DANGEROUS: Also delete from source tool (requires confirmation)",
-    )
+    .description(t("commands.clean.description"))
+    .argument("[item]", t("commands.clean.itemArgument"))
+    .option("--user", t("commands.clean.userLevelOption"))
+    .option("--from-source", t("commands.clean.fromSourceOption"))
     .action(async (item, options) => {
       await cleanCommand(item, options);
     });
