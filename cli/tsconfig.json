@@ -47,6 +47,7 @@
   "include": [
     "src/**/*",
     "test/**/*",
+    "scripts/**/*",
     "*.mjs",
     "*.cjs",
     "*.js",
