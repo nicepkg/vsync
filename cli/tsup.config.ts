@@ -6,6 +6,9 @@ export default defineConfig({
   dts: true,
   clean: true,
   shims: true,
+  banner: {
+    js: 'import { createRequire } from "module";\nconst require = createRequire(import.meta.url);\n',
+  },
   minify: false,
   sourcemap: true,
   treeshake: true,
