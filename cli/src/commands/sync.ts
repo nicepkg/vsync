@@ -703,6 +703,7 @@ export async function syncCommand(options: {
   dryRun?: boolean;
   prune?: boolean;
   user?: boolean;
+  yes?: boolean;
 }): Promise<void> {
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
@@ -791,19 +792,21 @@ export async function syncCommand(options: {
       return;
     }
 
-    // Prompt for confirmation
-    const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
-      {
-        type: "confirm",
-        name: "confirm",
-        message: t("commands.sync.confirmPrompt"),
-        default: false,
-      },
-    ]);
+    // Prompt for confirmation (skip if --yes flag is provided)
+    if (!options.yes) {
+      const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
+        {
+          type: "confirm",
+          name: "confirm",
+          message: t("commands.sync.confirmPrompt"),
+          default: false,
+        },
+      ]);
 
-    if (!confirm) {
-      console.log(chalk.yellow(`\n⚠️  ${t("commands.sync.cancelled")}\n`));
-      return;
+      if (!confirm) {
+        console.log(chalk.yellow(`\n⚠️  ${t("commands.sync.cancelled")}\n`));
+        return;
+      }
     }
 
     // Setup symlinks if enabled
@@ -898,6 +901,7 @@ export function createSyncCommand(): Command {
     .option("--dry-run", t("commands.sync.dryRunOption"))
     .option("--prune", t("commands.sync.pruneOption"))
     .option("--user", t("commands.sync.userLevelOption"))
+    .option("-y, --yes", t("commands.sync.yesOption"))
     .action(async (options) => {
       await syncCommand(options);
     });

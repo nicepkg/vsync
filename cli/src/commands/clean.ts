@@ -255,7 +255,7 @@ async function removeItem(
  */
 async function cleanCommand(
   itemName: string | undefined,
-  options: { user?: boolean; fromSource?: boolean },
+  options: { user?: boolean; fromSource?: boolean; yes?: boolean },
 ): Promise<void> {
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
@@ -304,9 +304,9 @@ async function cleanCommand(
         return;
       }
 
-      // Confirm
+      // Confirm (--yes flag does NOT skip dangerous --from-source confirmation)
       if (options.fromSource) {
-        // Double confirmation for source deletion
+        // Double confirmation for source deletion (ALWAYS required for safety)
         const { confirmName } = await inquirer.prompt<{ confirmName: string }>([
           {
             type: "input",
@@ -336,7 +336,8 @@ async function cleanCommand(
           console.log(chalk.yellow(`\n⚠️  ${t("commands.clean.cancelled")}\n`));
           return;
         }
-      } else {
+      } else if (!options.yes) {
+        // Skip standard confirmation if --yes flag is provided
         const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
           {
             type: "confirm",
@@ -448,19 +449,21 @@ async function cleanCommand(
         chalk.yellow(`⚠️  ${t("commands.clean.removeTargetsOnly")}\n`),
       );
 
-      // Confirm
-      const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
-        {
-          type: "confirm",
-          name: "confirm",
-          message: t("commands.clean.confirmRemoval"),
-          default: false,
-        },
-      ]);
+      // Confirm (skip if --yes flag is provided)
+      if (!options.yes) {
+        const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
+          {
+            type: "confirm",
+            name: "confirm",
+            message: t("commands.clean.confirmRemoval"),
+            default: false,
+          },
+        ]);
 
-      if (!confirm) {
-        console.log(chalk.yellow(`\n⚠️  ${t("commands.clean.cancelled")}\n`));
-        return;
+        if (!confirm) {
+          console.log(chalk.yellow(`\n⚠️  ${t("commands.clean.cancelled")}\n`));
+          return;
+        }
       }
 
       // Execute removal for each selected item
@@ -510,6 +513,7 @@ export function createCleanCommand(): Command {
     .argument("[item]", t("commands.clean.itemArgument"))
     .option("--user", t("commands.clean.userLevelOption"))
     .option("--from-source", t("commands.clean.fromSourceOption"))
+    .option("-y, --yes", t("commands.clean.yesOption"))
     .action(async (item, options) => {
       await cleanCommand(item, options);
     });
