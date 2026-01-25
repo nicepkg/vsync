@@ -6,13 +6,18 @@
 import fs from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   generateConfig,
   saveConfig as saveInitConfig,
 } from "@src/commands/init.js";
 import { syncCommand } from "@src/commands/sync.js";
 import type { ToolName } from "@src/types/config.js";
+
+// Mock language-config to skip language prompt
+vi.mock("@src/utils/language-config.js", () => ({
+  ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+}));
 
 /**
  * E2E test utilities - high cohesion, single responsibility

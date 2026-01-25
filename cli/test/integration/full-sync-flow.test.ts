@@ -6,11 +6,16 @@
 import fs from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { syncCommand } from "@src/commands/sync.js";
 import { saveConfig } from "@src/core/config-manager.js";
 import { getProjectCacheDir } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
+
+// Mock language-config to skip language prompt
+vi.mock("@src/utils/language-config.js", () => ({
+  ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+}));
 
 describe("Full Sync Flow Integration", () => {
   let testDir: string;
