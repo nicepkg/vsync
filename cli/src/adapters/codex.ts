@@ -4,142 +4,40 @@
  * This adapter supports both read and write operations
  */
 
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import matter from "gray-matter";
-import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
-import { atomicWrite } from "@src/utils/atomic-write.js";
+import type { MCPServer, Agent, Command } from "@src/types/models.js";
 import * as fileOps from "@src/utils/file-ops.js";
-import { hashSkill, hashMCPServer } from "@src/utils/hash.js";
-import {
-  readSupportFiles,
-  writeSupportFiles,
-} from "@src/utils/support-files.js";
-import type {
-  AdapterConfig,
-  ToolAdapter,
-  ValidationResult,
-  WriteResult,
-} from "./base.js";
+import { hashMCPServer } from "@src/utils/hash.js";
+import type { ValidationResult, WriteResult } from "./base.js";
+import { BaseAdapter } from "./base.js";
 
 /**
  * Codex adapter
  * Reads/writes to .codex/ (project) or ~/.codex/ (user)
  * MCP servers in config.toml, skills in directories
  */
-export class CodexAdapter implements ToolAdapter {
-  readonly config: AdapterConfig;
-  readonly toolName = "codex";
-  readonly displayName = "Codex";
+export class CodexAdapter extends BaseAdapter {
+  override readonly toolName = "codex";
+  override readonly displayName = "Codex";
 
-  constructor(config: AdapterConfig) {
-    this.config = config;
-  }
-
-  getConfigDir(): string {
+  override getConfigDir(): string {
     return ".codex";
   }
 
-  getConfigPaths(): string[] {
+  override getConfigPaths(): string[] {
     return [join(this.getConfigDir(), "config.toml")];
   }
 
-  getMCPConfigPaths(): string[] {
+  override getMCPConfigPaths(): string[] {
     return [join(this.getConfigDir(), "config.toml")];
-  }
-
-  getSkillsDir(): string {
-    return join(this.getConfigDir(), "skills");
-  }
-
-  getAgentsDir(): string {
-    return join(this.getConfigDir(), "agents");
-  }
-
-  getCommandsDir(): string {
-    return join(this.getConfigDir(), "commands");
-  }
-
-  private async getMcpConfigExitFullPath(): Promise<string> {
-    const paths = this.getMCPConfigPaths().map((p) =>
-      join(this.config.baseDir, p),
-    );
-    const existingPath = await fileOps.findFirstExistingPath(paths);
-    return existingPath ?? paths[0]!;
-  }
-
-  /**
-   * Read all skills from .codex/skills/
-   * Same structure as Claude Code: each skill is a directory with SKILL.md
-   */
-  async readSkills(): Promise<Skill[]> {
-    const skillsDir = join(this.config.baseDir, this.getSkillsDir());
-
-    try {
-      const entries = await fileOps.readdir(skillsDir, { withFileTypes: true });
-      const skills: Skill[] = [];
-
-      for (const entry of entries) {
-        if (!entry.isDirectory()) {
-          continue;
-        }
-
-        const skillName = entry.name;
-        const skillDir = join(skillsDir, skillName);
-        const skillMdPath = join(skillDir, "SKILL.md");
-
-        try {
-          const skillContent = await readFile(skillMdPath, "utf-8");
-          const parsed = matter(skillContent);
-
-          const supportFiles = await readSupportFiles(skillDir, {
-            exclude: (relativePath) => relativePath === "SKILL.md",
-          });
-
-          const skill: Skill = {
-            name: skillName,
-            content: parsed.content,
-            hash: "",
-          };
-
-          if (parsed.data.description) {
-            skill.description = parsed.data.description as string;
-          }
-          if (Object.keys(parsed.data).length > 0) {
-            skill.metadata = parsed.data;
-          }
-          if (Object.keys(supportFiles).length > 0) {
-            skill.supportFiles = supportFiles;
-          }
-
-          skill.hash = hashSkill(skill);
-          skills.push(skill);
-        } catch (error) {
-          console.warn(
-            `Skipping skill ${skillName}: ${error instanceof Error ? error.message : "Unknown error"}`,
-          );
-        }
-      }
-
-      return skills;
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        return [];
-      }
-      throw error;
-    }
   }
 
   /**
    * Read all MCP servers from config.toml
    * Format: [mcp_servers.<name>]
    */
-  async readMCPServers(): Promise<MCPServer[]> {
-    const mcpConfigPath = await this.getMcpConfigExitFullPath();
+  override async readMCPServers(): Promise<MCPServer[]> {
+    const mcpConfigPath = await this.getMcpConfigPath();
 
     const config =
       await fileOps.readTOML<Record<string, unknown>>(mcpConfigPath);
@@ -242,72 +140,22 @@ export class CodexAdapter implements ToolAdapter {
   /**
    * Read all agents from .codex/agents/
    */
-  async readAgents(): Promise<Agent[]> {
+  override async readAgents(): Promise<Agent[]> {
     return [];
   }
 
   /**
    * Read all commands from .codex/commands/
    */
-  async readCommands(): Promise<Command[]> {
+  override async readCommands(): Promise<Command[]> {
     return [];
-  }
-
-  /**
-   * Write skills to .codex/skills/
-   */
-  async writeSkills(skills: Skill[]): Promise<WriteResult> {
-    const skillsDir = join(this.config.baseDir, this.getSkillsDir());
-
-    try {
-      await fileOps.ensureDir(skillsDir);
-
-      for (const skill of skills) {
-        const skillDir = join(skillsDir, skill.name);
-        await fileOps.ensureDir(skillDir);
-
-        let skillContent = skill.content;
-
-        if (skill.metadata || skill.description) {
-          const frontmatter: Record<string, unknown> = {
-            ...(skill.metadata || {}),
-          };
-
-          if (skill.description) {
-            frontmatter.description = skill.description;
-          }
-
-          frontmatter.name = skill.name;
-          skillContent = matter.stringify(skill.content, frontmatter);
-        }
-
-        const skillMdPath = join(skillDir, "SKILL.md");
-        await atomicWrite(skillMdPath, skillContent);
-
-        await writeSupportFiles(skillDir, skill.supportFiles);
-      }
-
-      return {
-        success: true,
-        count: skills.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing skills",
-      };
-    }
   }
 
   /**
    * Write MCP servers to config.toml
    */
-  async writeMCPServers(servers: MCPServer[]): Promise<WriteResult> {
-    const mcpConfigPath = await this.getMcpConfigExitFullPath();
+  override async writeMCPServers(servers: MCPServer[]): Promise<WriteResult> {
+    const mcpConfigPath = await this.getMcpConfigPath();
 
     try {
       // Ensure .codex directory exists
@@ -430,7 +278,7 @@ export class CodexAdapter implements ToolAdapter {
   /**
    * Write agents to .codex/agents/
    */
-  async writeAgents(agents: Agent[]): Promise<WriteResult> {
+  override async writeAgents(agents: Agent[]): Promise<WriteResult> {
     void agents;
     return {
       success: false,
@@ -442,7 +290,7 @@ export class CodexAdapter implements ToolAdapter {
   /**
    * Write commands to .codex/commands/
    */
-  async writeCommands(commands: Command[]): Promise<WriteResult> {
+  override async writeCommands(commands: Command[]): Promise<WriteResult> {
     void commands;
     return {
       success: false,
@@ -452,29 +300,10 @@ export class CodexAdapter implements ToolAdapter {
   }
 
   /**
-   * Delete a skill from .codex/skills/
-   */
-  async deleteSkill(name: string): Promise<void> {
-    const skillDir = join(this.config.baseDir, this.getSkillsDir(), name);
-
-    try {
-      await fileOps.remove(skillDir);
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
-      }
-    }
-  }
-
-  /**
    * Delete an MCP server from config.toml
    */
-  async deleteMCPServer(name: string): Promise<void> {
-    const mcpConfigPath = await this.getMcpConfigExitFullPath();
+  override async deleteMCPServer(name: string): Promise<void> {
+    const mcpConfigPath = await this.getMcpConfigPath();
 
     const config =
       await fileOps.readTOML<Record<string, unknown>>(mcpConfigPath);
@@ -492,21 +321,21 @@ export class CodexAdapter implements ToolAdapter {
   /**
    * Delete an agent from .codex/agents/
    */
-  async deleteAgent(name: string): Promise<void> {
+  override async deleteAgent(name: string): Promise<void> {
     throw new Error(`Codex does not support agents: ${name}`);
   }
 
   /**
    * Delete a command from .codex/commands/
    */
-  async deleteCommand(name: string): Promise<void> {
+  override async deleteCommand(name: string): Promise<void> {
     throw new Error(`Codex does not support commands: ${name}`);
   }
 
   /**
    * Validate Codex configuration
    */
-  async validate(): Promise<ValidationResult> {
+  override async validate(): Promise<ValidationResult> {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -518,7 +347,7 @@ export class CodexAdapter implements ToolAdapter {
       warnings.push(".codex exists but is not a directory");
     }
 
-    const mcpConfigPath = await this.getMcpConfigExitFullPath();
+    const mcpConfigPath = await this.getMcpConfigPath();
     const mcpConfigStats = await fileOps.stat(mcpConfigPath);
     if (!mcpConfigStats) {
       warnings.push("config.toml not found");

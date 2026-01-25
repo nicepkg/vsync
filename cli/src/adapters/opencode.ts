@@ -4,141 +4,36 @@
  * This adapter is write-only (target tool)
  */
 
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import matter from "gray-matter";
 import * as jsonc from "jsonc-parser";
-import type {
-  MCPServer,
-  Skill,
-  Agent,
-  Command,
-  MCPOAuth,
-} from "@src/types/models.js";
+import type { MCPServer, MCPOAuth } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 import * as fileOps from "@src/utils/file-ops.js";
-import {
-  hashSkill,
-  hashMCPServer,
-  hashAgent,
-  hashCommand,
-} from "@src/utils/hash.js";
-import {
-  readSupportFiles,
-  writeSupportFiles,
-} from "@src/utils/support-files.js";
-import type {
-  AdapterConfig,
-  ToolAdapter,
-  ValidationResult,
-  WriteResult,
-} from "./base.js";
+import { hashMCPServer } from "@src/utils/hash.js";
+import type { ValidationResult, WriteResult } from "./base.js";
+import { BaseAdapter } from "./base.js";
 
 /**
  * OpenCode adapter
  * Writes to .opencode/skills/ and opencode.jsonc
  */
-export class OpenCodeAdapter implements ToolAdapter {
-  readonly config: AdapterConfig;
-  readonly toolName = "opencode";
-  readonly displayName = "OpenCode";
+export class OpenCodeAdapter extends BaseAdapter {
+  override readonly toolName = "opencode";
+  override readonly displayName = "OpenCode";
 
-  constructor(config: AdapterConfig) {
-    this.config = config;
-  }
-
-  getConfigDir(): string {
+  override getConfigDir(): string {
     return ".opencode";
   }
 
-  getConfigPaths(): string[] {
+  override getConfigPaths(): string[] {
     if (this.config.level === "user") {
       return [".opencode/opencode.json", ".opencode/opencode.jsonc"];
     }
     return ["opencode.json", "opencode.jsonc"];
   }
 
-  getMCPConfigPaths(): string[] {
+  override getMCPConfigPaths(): string[] {
     return this.getConfigPaths();
-  }
-
-  getSkillsDir(): string {
-    return join(this.getConfigDir(), "skills");
-  }
-
-  getAgentsDir(): string {
-    return join(this.getConfigDir(), "agents");
-  }
-
-  getCommandsDir(): string {
-    return join(this.getConfigDir(), "commands");
-  }
-
-  private async getMcpConfigExitFullPath(): Promise<string> {
-    const paths = this.getMCPConfigPaths().map((p) =>
-      join(this.config.baseDir, p),
-    );
-    const existingPath = await fileOps.findFirstExistingPath(paths);
-    return existingPath ?? paths[0]!;
-  }
-
-  /**
-   * Write skills to .opencode/skills/
-   * Same structure as Cursor
-   */
-  async writeSkills(skills: Skill[]): Promise<WriteResult> {
-    const skillsDir = join(this.config.baseDir, this.getSkillsDir());
-
-    try {
-      // Ensure skills directory exists
-      await fileOps.ensureDir(skillsDir);
-
-      for (const skill of skills) {
-        const skillDir = join(skillsDir, skill.name);
-        await fileOps.ensureDir(skillDir);
-
-        // Generate SKILL.md content
-        let skillContent = skill.content;
-
-        // Add frontmatter if metadata or description exists
-        if (skill.metadata || skill.description) {
-          const frontmatter: Record<string, unknown> = {
-            ...(skill.metadata || {}),
-          };
-
-          // Add description to frontmatter if present
-          if (skill.description) {
-            frontmatter.description = skill.description;
-          }
-
-          // Add name to frontmatter
-          frontmatter.name = skill.name;
-
-          skillContent = matter.stringify(skill.content, frontmatter);
-        }
-
-        // Write SKILL.md
-        const skillMdPath = join(skillDir, "SKILL.md");
-        await atomicWrite(skillMdPath, skillContent);
-
-        // Write support files
-        await writeSupportFiles(skillDir, skill.supportFiles);
-      }
-
-      return {
-        success: true,
-        count: skills.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing skills",
-      };
-    }
   }
 
   /**
@@ -149,8 +44,8 @@ export class OpenCodeAdapter implements ToolAdapter {
    * - `command` is an array of strings
    * - Environment variables use {env:VAR} format
    */
-  async writeMCPServers(servers: MCPServer[]): Promise<WriteResult> {
-    const mcpConfigJsoncPath = await this.getMcpConfigExitFullPath();
+  override async writeMCPServers(servers: MCPServer[]): Promise<WriteResult> {
+    const mcpConfigJsoncPath = await this.getMcpConfigPath();
 
     try {
       await fileOps.ensureDir(join(this.config.baseDir, this.getConfigDir()));
@@ -237,58 +132,6 @@ export class OpenCodeAdapter implements ToolAdapter {
           error instanceof Error
             ? error.message
             : "Unknown error writing MCP servers",
-      };
-    }
-  }
-
-  /**
-   * Write agents to .opencode/agents/
-   * Each agent is a single .md file
-   */
-  async writeAgents(agents: Agent[]): Promise<WriteResult> {
-    const agentsDir = join(this.config.baseDir, this.getAgentsDir());
-
-    try {
-      // Ensure agents directory exists
-      await fileOps.ensureDir(agentsDir);
-
-      for (const agent of agents) {
-        // Generate agent content
-        let agentContent = agent.content;
-
-        // Add frontmatter if metadata or description exists
-        if (agent.metadata || agent.description) {
-          const frontmatter: Record<string, unknown> = {
-            ...(agent.metadata || {}),
-          };
-
-          // Add description to frontmatter if present
-          if (agent.description) {
-            frontmatter.description = agent.description;
-          }
-
-          // Add name to frontmatter
-          frontmatter.name = agent.name;
-
-          agentContent = matter.stringify(agent.content, frontmatter);
-        }
-
-        const agentMdPath = join(agentsDir, `${agent.name}.md`);
-        await atomicWrite(agentMdPath, agentContent);
-      }
-
-      return {
-        success: true,
-        count: agents.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing agents",
       };
     }
   }
@@ -408,30 +251,10 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   /**
-   * Delete a skill from .opencode/skills/
-   */
-  async deleteSkill(name: string): Promise<void> {
-    const skillDir = join(this.config.baseDir, this.getSkillsDir(), name);
-
-    try {
-      await fileOps.remove(skillDir);
-    } catch (error) {
-      // Ignore errors for non-existent skills
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
-      }
-    }
-  }
-
-  /**
    * Delete an MCP server from opencode.jsonc
    */
-  async deleteMCPServer(name: string): Promise<void> {
-    const mcpConfigJsoncPath = await this.getMcpConfigExitFullPath();
+  override async deleteMCPServer(name: string): Promise<void> {
+    const mcpConfigJsoncPath = await this.getMcpConfigPath();
 
     const { data: config, text: jsoncText } =
       await fileOps.readJSONC<Record<string, unknown>>(mcpConfigJsoncPath);
@@ -456,85 +279,9 @@ export class OpenCodeAdapter implements ToolAdapter {
   }
 
   /**
-   * Write commands to .opencode/commands/
-   * Each command is a single .md file
-   */
-  async writeCommands(commands: Command[]): Promise<WriteResult> {
-    const commandsDir = join(this.config.baseDir, this.getCommandsDir());
-
-    try {
-      // Ensure commands directory exists
-      await fileOps.ensureDir(commandsDir);
-
-      for (const command of commands) {
-        // Generate command content
-        let commandContent = command.content;
-
-        // Add frontmatter if metadata or description exists
-        if (command.metadata || command.description) {
-          const frontmatter: Record<string, unknown> = {
-            ...(command.metadata || {}),
-          };
-
-          // Add description to frontmatter if present
-          if (command.description) {
-            frontmatter.description = command.description;
-          }
-
-          // Add name to frontmatter
-          frontmatter.name = command.name;
-
-          commandContent = matter.stringify(command.content, frontmatter);
-        }
-
-        const commandMdPath = join(commandsDir, `${command.name}.md`);
-        await atomicWrite(commandMdPath, commandContent);
-      }
-
-      return {
-        success: true,
-        count: commands.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing commands",
-      };
-    }
-  }
-
-  /**
-   * Delete an agent from .opencode/agents/
-   */
-  async deleteAgent(name: string): Promise<void> {
-    const agentPath = join(
-      this.config.baseDir,
-      this.getAgentsDir(),
-      `${name}.md`,
-    );
-
-    try {
-      await fileOps.remove(agentPath);
-    } catch (error) {
-      // Ignore errors for non-existent agents
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
-      }
-    }
-  }
-
-  /**
    * Validate OpenCode configuration
    */
-  async validate(): Promise<ValidationResult> {
+  override async validate(): Promise<ValidationResult> {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -548,7 +295,7 @@ export class OpenCodeAdapter implements ToolAdapter {
     }
 
     // Check if opencode.jsonc exists
-    const mcpConfigJsoncPath = await this.getMcpConfigExitFullPath();
+    const mcpConfigJsoncPath = await this.getMcpConfigPath();
     const mcpConfigJsoncStats = await fileOps.stat(mcpConfigJsoncPath);
     if (!mcpConfigJsoncStats) {
       warnings.push("opencode.json not found");
@@ -566,18 +313,8 @@ export class OpenCodeAdapter implements ToolAdapter {
     return result;
   }
 
-  // Read methods - OpenCode is write-only (target tool)
-  // Read methods - use same structure as Cursor, just replace .cursor with .opencode
-  async readSkills(): Promise<Skill[]> {
-    return this.readItemsGeneric<Skill>(
-      this.getSkillsDir(),
-      "SKILL.md",
-      hashSkill,
-    );
-  }
-
-  async readMCPServers(): Promise<MCPServer[]> {
-    const mcpConfigJsoncPath = await this.getMcpConfigExitFullPath();
+  override async readMCPServers(): Promise<MCPServer[]> {
+    const mcpConfigJsoncPath = await this.getMcpConfigPath();
 
     const { data: config } =
       await fileOps.readJSONC<Record<string, unknown>>(mcpConfigJsoncPath);
@@ -652,132 +389,5 @@ export class OpenCodeAdapter implements ToolAdapter {
       servers.push(server);
     }
     return servers;
-  }
-
-  async readAgents(): Promise<Agent[]> {
-    return this.readFlatMarkdownItems<Agent>(this.getAgentsDir(), hashAgent);
-  }
-
-  private async readItemsGeneric<T extends Skill>(
-    dirName: string,
-    fileName: string,
-    hashFn: (item: T) => string,
-  ): Promise<T[]> {
-    const itemsDir = join(this.config.baseDir, dirName);
-    try {
-      const entries = await fileOps.readdir(itemsDir, { withFileTypes: true });
-      const items: T[] = [];
-      for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        const itemName = entry.name;
-        const itemDir = join(itemsDir, itemName);
-        const itemPath = join(itemDir, fileName);
-        try {
-          const content = await readFile(itemPath, "utf-8");
-          const parsed = matter(content);
-          const supportFiles = await readSupportFiles(itemDir, {
-            exclude: (relativePath) => relativePath === fileName,
-          });
-          const item = {
-            name: itemName,
-            content: parsed.content,
-            hash: "",
-          } as T;
-          const itemMeta = item as T & {
-            description?: string;
-            metadata?: Record<string, unknown>;
-            supportFiles?: Record<string, string>;
-          };
-          if (parsed.data.description)
-            itemMeta.description = parsed.data.description;
-          if (Object.keys(parsed.data).length > 0)
-            itemMeta.metadata = parsed.data;
-          if (Object.keys(supportFiles).length > 0)
-            itemMeta.supportFiles = supportFiles;
-          item.hash = hashFn(item);
-          items.push(item);
-        } catch {
-          console.warn(`Skipping ${dirName} ${itemName}`);
-        }
-      }
-      return items;
-    } catch (error) {
-      if (error instanceof Error && "code" in error && error.code === "ENOENT")
-        return [];
-      throw error;
-    }
-  }
-
-  private async readFlatMarkdownItems<T extends Agent | Command>(
-    dirName: string,
-    hashFn: (item: T) => string,
-  ): Promise<T[]> {
-    const itemsDir = join(this.config.baseDir, dirName);
-    try {
-      const entries = await fileOps.readdir(itemsDir, { withFileTypes: true });
-      const items: T[] = [];
-      for (const entry of entries) {
-        if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
-        const itemName = entry.name.slice(0, -3);
-        const itemPath = join(itemsDir, entry.name);
-        try {
-          const content = await readFile(itemPath, "utf-8");
-          const parsed = matter(content);
-          const item = {
-            name: itemName,
-            content: parsed.content,
-            hash: "",
-          } as T;
-          const itemMeta = item as T & {
-            description?: string;
-            metadata?: Record<string, unknown>;
-          };
-          if (parsed.data.description)
-            itemMeta.description = parsed.data.description;
-          if (Object.keys(parsed.data).length > 0)
-            itemMeta.metadata = parsed.data;
-          item.hash = hashFn(item);
-          items.push(item);
-        } catch {
-          console.warn(`Skipping ${dirName} ${itemName}`);
-        }
-      }
-      return items;
-    } catch (error) {
-      if (error instanceof Error && "code" in error && error.code === "ENOENT")
-        return [];
-      throw error;
-    }
-  }
-
-  /**
-   * Delete a command from .opencode/commands/
-   */
-  async deleteCommand(name: string): Promise<void> {
-    const commandPath = join(
-      this.config.baseDir,
-      this.getCommandsDir(),
-      `${name}.md`,
-    );
-
-    try {
-      await fileOps.remove(commandPath);
-    } catch (error) {
-      // Ignore errors for non-existent commands
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
-      }
-    }
-  }
-
-  async readCommands(): Promise<Command[]> {
-    return this.readFlatMarkdownItems<Command>(
-      this.getCommandsDir(),
-      hashCommand,
-    );
   }
 }

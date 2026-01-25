@@ -121,9 +121,10 @@ export function formatPlan(plan: SyncPlan): string {
   // Check if plan is empty
   const hasOperations = Object.values(plan.diffs).some(
     (diff) =>
-      diff.toCreate.length > 0 ||
-      diff.toUpdate.length > 0 ||
-      diff.toDelete.length > 0,
+      diff &&
+      (diff.toCreate.length > 0 ||
+        diff.toUpdate.length > 0 ||
+        diff.toDelete.length > 0),
   );
 
   if (!hasOperations) {

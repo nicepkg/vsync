@@ -3,9 +3,19 @@ import { ClaudeCodeAdapter } from "@src/adapters/claude-code.js";
 import { CodexAdapter } from "@src/adapters/codex.js";
 import { CursorAdapter } from "@src/adapters/cursor.js";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
-import { getAdapter } from "@src/adapters/registry.js";
+import { getAdapter, getAvailableTools } from "@src/adapters/registry.js";
 
 describe("Adapter Registry", () => {
+  describe("getAvailableTools", () => {
+    it("should include built-in tool names", () => {
+      const tools = getAvailableTools();
+      expect(tools).toContain("claude-code");
+      expect(tools).toContain("cursor");
+      expect(tools).toContain("opencode");
+      expect(tools).toContain("codex");
+    });
+  });
+
   describe("getAdapter", () => {
     it("should create ClaudeCodeAdapter for claude-code tool", () => {
       const adapter = getAdapter({

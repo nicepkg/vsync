@@ -55,7 +55,7 @@ function getSyncedTargets(itemKey: string, manifest: Manifest): string {
   }
 
   const syncedTargets = Object.entries(item.targets)
-    .filter(([_, target]) => target.synced)
+    .filter(([_, target]) => target?.synced)
     .map(([toolName]) => toolName);
 
   if (syncedTargets.length === 0) {

@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * Adapter registry - Auto-registration system
- * Add new adapters by importing them and adding to ADAPTERS array
- * Type system automatically infers ToolName from registered adapters
+ * Adapter registry - manual registration
+ * Add new adapters here to make them available to the CLI.
  */
 
 import type { ToolName } from "../types/config.js";
@@ -12,13 +10,14 @@ import { CodexAdapter } from "./codex.js";
 import { CursorAdapter } from "./cursor.js";
 import { OpenCodeAdapter } from "./opencode.js";
 
-/**
- * Registry of all available adapters
- * To add a new adapter:
- * 1. Import the adapter class
- * 2. Add it to this array
- * 3. That's it! Type system auto-updates
- */
+type AdapterConstructor = new (config: AdapterConfig) => ToolAdapter;
+
+type AdapterEntry = {
+  toolName: string;
+  displayName: string;
+  AdapterClass: AdapterConstructor;
+};
+
 export const ADAPTERS = [
   ClaudeCodeAdapter,
   CursorAdapter,
@@ -26,97 +25,36 @@ export const ADAPTERS = [
   CodexAdapter,
 ] as const;
 
-/**
- * Adapter constructor type
- */
-type AdapterConstructor = new (config: AdapterConfig) => ToolAdapter;
+function makeEntry(AdapterClass: AdapterConstructor): AdapterEntry {
+  const instance = new AdapterClass({
+    baseDir: "",
+    tool: "" as ToolName,
+    level: "project",
+  });
 
-/**
- * Adapter registry singleton - Internal use only
- * Manages adapter instantiation and discovery
- */
-class AdapterRegistry {
-  private adapters = new Map<string, AdapterConstructor>();
-  private static instance: AdapterRegistry;
-
-  constructor() {
-    // Auto-register all adapters
-    for (const AdapterClass of ADAPTERS) {
-      const tempInstance = new AdapterClass({
-        baseDir: "",
-        tool: "" as any,
-        level: "project",
-      });
-      this.adapters.set(tempInstance.toolName, AdapterClass);
-    }
-  }
-
-  /**
-   * Get singleton instance
-   */
-  static getInstance(): AdapterRegistry {
-    if (!AdapterRegistry.instance) {
-      AdapterRegistry.instance = new AdapterRegistry();
-    }
-    return AdapterRegistry.instance;
-  }
-
-  /**
-   * Create adapter instance for a tool
-   */
-  create(toolName: string, config: AdapterConfig): ToolAdapter {
-    const AdapterClass = this.adapters.get(toolName);
-    if (!AdapterClass) {
-      const available = Array.from(this.adapters.keys()).join(", ");
-      throw new Error(
-        `Unsupported tool: ${toolName}. Supported tools: ${available}`,
-      );
-    }
-    return new AdapterClass(config);
-  }
-
-  /**
-   * Get all registered tool names
-   */
-  getToolNames(): string[] {
-    return Array.from(this.adapters.keys());
-  }
-
-  /**
-   * Get all adapter metadata (for discovery)
-   */
-  getAllMetadata(): Array<{
-    toolName: string;
-    displayName: string;
-  }> {
-    return Array.from(this.adapters.values()).map((AdapterClass) => {
-      const instance = new AdapterClass({
-        baseDir: "",
-        tool: "" as any,
-        level: "project",
-      });
-      return {
-        toolName: instance.toolName,
-        displayName: instance.displayName,
-      };
-    });
-  }
-
-  /**
-   * Check if a tool is registered
-   */
-  has(toolName: string): boolean {
-    return this.adapters.has(toolName);
-  }
+  return {
+    toolName: instance.toolName,
+    displayName: instance.displayName,
+    AdapterClass,
+  };
 }
 
-/**
- * Global registry instance - Internal use only
- */
-const registry = AdapterRegistry.getInstance();
+const adapterEntries = ADAPTERS.map(makeEntry).sort((a, b) =>
+  a.toolName.localeCompare(b.toolName),
+);
+const adapterMap = new Map(
+  adapterEntries.map((entry) => [entry.toolName, entry]),
+);
 
 export function getAdapter(config: AdapterConfig): ToolAdapter {
-  return registry.create(config.tool, config);
+  const entry = adapterMap.get(config.tool);
+  if (!entry) {
+    const available = Array.from(adapterMap.keys()).join(", ");
+    throw new Error(
+      `Unsupported tool: ${config.tool}. Supported tools: ${available}`,
+    );
+  }
+  return new entry.AdapterClass(config);
 }
 
 /**
@@ -124,7 +62,7 @@ export function getAdapter(config: AdapterConfig): ToolAdapter {
  * Convenience function for registry.getToolNames()
  */
 export function getAvailableTools(): string[] {
-  return registry.getToolNames();
+  return adapterEntries.map((entry) => entry.toolName);
 }
 
 /**
@@ -135,7 +73,7 @@ function createAdapter(
   toolName: string,
   config: Omit<AdapterConfig, "tool">,
 ): ToolAdapter {
-  return registry.create(toolName, { ...config, tool: toolName as ToolName });
+  return getAdapter({ ...config, tool: toolName as ToolName });
 }
 
 /**
@@ -181,9 +119,9 @@ export function getToolConfigFiles(
  * @returns Array of choices for inquirer
  */
 export function getToolChoices(detectedTools: string[] = []) {
-  return registry.getAllMetadata().map((meta) => ({
-    name: meta.displayName,
-    value: meta.toolName,
-    checked: detectedTools.includes(meta.toolName),
+  return adapterEntries.map((entry) => ({
+    name: entry.displayName,
+    value: entry.toolName,
+    checked: detectedTools.includes(entry.toolName),
   }));
 }

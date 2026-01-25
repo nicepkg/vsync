@@ -3,8 +3,15 @@
  * Defines the contract that all tool adapters must implement
  */
 
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import matter from "gray-matter";
 import type { ConfigLevel, ToolName } from "../types/config.js";
 import type { Skill, MCPServer, Agent, Command } from "../types/models.js";
+import { atomicWrite } from "../utils/atomic-write.js";
+import * as fileOps from "../utils/file-ops.js";
+import { hashAgent, hashCommand, hashSkill } from "../utils/hash.js";
+import { readSupportFiles, writeSupportFiles } from "../utils/support-files.js";
 
 /**
  * Adapter configuration
@@ -173,4 +180,353 @@ export interface ToolAdapter {
    * @returns Validation result
    */
   validate(): Promise<ValidationResult>;
+}
+
+export abstract class BaseAdapter implements ToolAdapter {
+  readonly config: AdapterConfig;
+
+  constructor(config: AdapterConfig) {
+    this.config = config;
+  }
+
+  abstract readonly toolName: string;
+  abstract readonly displayName: string;
+  abstract getConfigDir(): string;
+  abstract getConfigPaths(): string[];
+  abstract getMCPConfigPaths(): string[];
+  abstract readMCPServers(): Promise<MCPServer[]>;
+  abstract writeMCPServers(servers: MCPServer[]): Promise<WriteResult>;
+  abstract deleteMCPServer(name: string): Promise<void>;
+  abstract validate(): Promise<ValidationResult>;
+
+  getSkillsDir(): string {
+    return join(this.getConfigDir(), "skills");
+  }
+
+  getAgentsDir(): string {
+    return join(this.getConfigDir(), "agents");
+  }
+
+  getCommandsDir(): string {
+    return join(this.getConfigDir(), "commands");
+  }
+
+  protected resolvePath(relativePath: string): string {
+    return join(this.config.baseDir, relativePath);
+  }
+
+  protected async getMcpConfigPath(): Promise<string> {
+    const paths = this.getMCPConfigPaths().map((path) =>
+      this.resolvePath(path),
+    );
+    const existingPath = await fileOps.findFirstExistingPath(paths);
+    return existingPath ?? paths[0]!;
+  }
+
+  async readSkills(): Promise<Skill[]> {
+    return this.readDirectoryItems<Skill>(
+      this.getSkillsDir(),
+      "SKILL.md",
+      hashSkill,
+    );
+  }
+
+  async readAgents(): Promise<Agent[]> {
+    return this.readFlatItems<Agent>(this.getAgentsDir(), hashAgent);
+  }
+
+  async readCommands(): Promise<Command[]> {
+    return this.readFlatItems<Command>(this.getCommandsDir(), hashCommand);
+  }
+
+  async writeSkills(skills: Skill[]): Promise<WriteResult> {
+    return this.writeDirectoryItems<Skill>(
+      this.getSkillsDir(),
+      "SKILL.md",
+      skills,
+    );
+  }
+
+  async writeAgents(agents: Agent[]): Promise<WriteResult> {
+    return this.writeFlatItems<Agent>(this.getAgentsDir(), agents);
+  }
+
+  async writeCommands(commands: Command[]): Promise<WriteResult> {
+    return this.writeFlatItems<Command>(this.getCommandsDir(), commands);
+  }
+
+  async deleteSkill(name: string): Promise<void> {
+    await this.deleteDirectoryItem(this.getSkillsDir(), name);
+  }
+
+  async deleteAgent(name: string): Promise<void> {
+    await this.deleteFlatItem(this.getAgentsDir(), name);
+  }
+
+  async deleteCommand(name: string): Promise<void> {
+    await this.deleteFlatItem(this.getCommandsDir(), name);
+  }
+
+  protected async readDirectoryItems<T extends Skill>(
+    dirName: string,
+    fileName: string,
+    hashFn: (item: T) => string,
+  ): Promise<T[]> {
+    const itemsDir = this.resolvePath(dirName);
+
+    try {
+      const entries = await fileOps.readdir(itemsDir, { withFileTypes: true });
+      const items: T[] = [];
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) {
+          continue;
+        }
+
+        const itemName = entry.name;
+        const itemDir = join(itemsDir, itemName);
+        const itemPath = join(itemDir, fileName);
+
+        try {
+          const content = await readFile(itemPath, "utf-8");
+          const parsed = matter(content);
+          const supportFiles = await readSupportFiles(itemDir, {
+            exclude: (relativePath) => relativePath === fileName,
+          });
+
+          const item = {
+            name: itemName,
+            content: parsed.content,
+            hash: "",
+          } as T;
+
+          const itemMeta = item as T & {
+            description?: string;
+            metadata?: Record<string, unknown>;
+            supportFiles?: Record<string, string>;
+          };
+
+          if (parsed.data.description) {
+            itemMeta.description = parsed.data.description;
+          }
+          if (Object.keys(parsed.data).length > 0) {
+            itemMeta.metadata = parsed.data;
+          }
+          if (Object.keys(supportFiles).length > 0) {
+            itemMeta.supportFiles = supportFiles;
+          }
+
+          item.hash = hashFn(item);
+          items.push(item);
+        } catch (error) {
+          console.warn(
+            `Skipping ${dirName} ${itemName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
+      }
+
+      return items;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  protected async readFlatItems<T extends Agent | Command>(
+    dirName: string,
+    hashFn: (item: T) => string,
+  ): Promise<T[]> {
+    const itemsDir = this.resolvePath(dirName);
+
+    try {
+      const entries = await fileOps.readdir(itemsDir, { withFileTypes: true });
+      const items: T[] = [];
+
+      for (const entry of entries) {
+        if (!entry.isFile() || !entry.name.endsWith(".md")) {
+          continue;
+        }
+
+        const itemName = entry.name.slice(0, -3);
+        const itemPath = join(itemsDir, entry.name);
+
+        try {
+          const content = await readFile(itemPath, "utf-8");
+          const parsed = matter(content);
+
+          const item = {
+            name: itemName,
+            content: parsed.content,
+            hash: "",
+          } as T;
+
+          const itemMeta = item as T & {
+            description?: string;
+            metadata?: Record<string, unknown>;
+          };
+
+          if (parsed.data.description) {
+            itemMeta.description = parsed.data.description;
+          }
+          if (Object.keys(parsed.data).length > 0) {
+            itemMeta.metadata = parsed.data;
+          }
+
+          item.hash = hashFn(item);
+          items.push(item);
+        } catch (error) {
+          console.warn(
+            `Skipping ${dirName} ${itemName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
+      }
+
+      return items;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  protected async writeDirectoryItems<T extends Skill>(
+    dirName: string,
+    fileName: string,
+    items: T[],
+  ): Promise<WriteResult> {
+    const itemsDir = this.resolvePath(dirName);
+
+    try {
+      await fileOps.ensureDir(itemsDir);
+
+      for (const item of items) {
+        const itemDir = join(itemsDir, item.name);
+        await fileOps.ensureDir(itemDir);
+
+        const hasFrontmatter =
+          Boolean(item.metadata) || Boolean(item.description);
+        let itemContent = item.content;
+
+        if (hasFrontmatter) {
+          const frontmatter: Record<string, unknown> = {
+            ...(item.metadata || {}),
+          };
+          if (item.description) {
+            frontmatter.description = item.description;
+          }
+          frontmatter.name = item.name;
+          itemContent = matter.stringify(item.content, frontmatter);
+        }
+
+        const itemPath = join(itemDir, fileName);
+        await atomicWrite(itemPath, itemContent);
+        await writeSupportFiles(itemDir, item.supportFiles);
+      }
+
+      return {
+        success: true,
+        count: items.length,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        count: 0,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error writing items",
+      };
+    }
+  }
+
+  protected async writeFlatItems<T extends Agent | Command>(
+    dirName: string,
+    items: T[],
+  ): Promise<WriteResult> {
+    const itemsDir = this.resolvePath(dirName);
+
+    try {
+      await fileOps.ensureDir(itemsDir);
+
+      for (const item of items) {
+        const hasFrontmatter =
+          Boolean(item.metadata) || Boolean(item.description);
+        let itemContent = item.content;
+
+        if (hasFrontmatter) {
+          const frontmatter: Record<string, unknown> = {
+            ...(item.metadata || {}),
+          };
+          if (item.description) {
+            frontmatter.description = item.description;
+          }
+          frontmatter.name = item.name;
+          itemContent = matter.stringify(item.content, frontmatter);
+        }
+
+        const itemPath = join(itemsDir, `${item.name}.md`);
+        await atomicWrite(itemPath, itemContent);
+      }
+
+      return {
+        success: true,
+        count: items.length,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        count: 0,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error writing items",
+      };
+    }
+  }
+
+  protected async deleteDirectoryItem(
+    dirName: string,
+    name: string,
+  ): Promise<void> {
+    const itemDir = join(this.resolvePath(dirName), name);
+
+    try {
+      await fileOps.remove(itemDir);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code !== "ENOENT"
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  protected async deleteFlatItem(dirName: string, name: string): Promise<void> {
+    const itemPath = join(this.resolvePath(dirName), `${name}.md`);
+
+    try {
+      await fileOps.remove(itemPath);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code !== "ENOENT"
+      ) {
+        throw error;
+      }
+    }
+  }
 }

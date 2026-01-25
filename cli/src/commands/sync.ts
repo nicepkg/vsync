@@ -130,29 +130,25 @@ export async function readSourceConfig(
  * @returns Map of target data
  */
 async function readTargetConfigs(targetTools: ToolName[]): Promise<
-  Partial<
-    Record<
-      ToolName,
-      {
-        skills: Skill[];
-        mcpServers: MCPServer[];
-        agents: Agent[];
-        commands: VibeCommand[];
-      }
-    >
+  Record<
+    ToolName,
+    {
+      skills: Skill[];
+      mcpServers: MCPServer[];
+      agents: Agent[];
+      commands: VibeCommand[];
+    }
   >
 > {
-  const targetData: Partial<
-    Record<
-      ToolName,
-      {
-        skills: Skill[];
-        mcpServers: MCPServer[];
-        agents: Agent[];
-        commands: VibeCommand[];
-      }
-    >
-  > = {};
+  const targetData = {} as Record<
+    ToolName,
+    {
+      skills: Skill[];
+      mcpServers: MCPServer[];
+      agents: Agent[];
+      commands: VibeCommand[];
+    }
+  >;
 
   // For vibe-sync, target tools are write-only.
   // We rely on the manifest to track what was previously written,

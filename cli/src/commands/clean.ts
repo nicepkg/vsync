@@ -140,7 +140,7 @@ function getSyncedTargets(itemKey: string, manifest: Manifest): ToolName[] {
   }
 
   return Object.entries(item.targets)
-    .filter(([_, target]) => target.synced)
+    .filter(([_, target]) => target?.synced)
     .map(([toolName]) => toolName as ToolName);
 }
 

@@ -4,145 +4,40 @@
  * This adapter is write-only (target tool)
  */
 
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import matter from "gray-matter";
-import type {
-  MCPServer,
-  MCPOAuth,
-  Skill,
-  Agent,
-  Command,
-} from "@src/types/models.js";
-import { atomicWrite } from "@src/utils/atomic-write.js";
+import type { MCPServer, MCPOAuth } from "@src/types/models.js";
 import * as fileOps from "@src/utils/file-ops.js";
-import {
-  hashSkill,
-  hashMCPServer,
-  hashAgent,
-  hashCommand,
-} from "@src/utils/hash.js";
-import {
-  readSupportFiles,
-  writeSupportFiles,
-} from "@src/utils/support-files.js";
-import type {
-  AdapterConfig,
-  ToolAdapter,
-  ValidationResult,
-  WriteResult,
-} from "./base.js";
+import { hashMCPServer } from "@src/utils/hash.js";
+import type { ValidationResult, WriteResult } from "./base.js";
+import { BaseAdapter } from "./base.js";
 
 /**
  * Cursor adapter
  * Writes to .cursor/skills/ and .cursor/mcp.json
  */
-export class CursorAdapter implements ToolAdapter {
-  readonly config: AdapterConfig;
-  readonly toolName = "cursor";
-  readonly displayName = "Cursor";
+export class CursorAdapter extends BaseAdapter {
+  override readonly toolName = "cursor";
+  override readonly displayName = "Cursor";
 
-  constructor(config: AdapterConfig) {
-    this.config = config;
-  }
-
-  getConfigDir(): string {
+  override getConfigDir(): string {
     return ".cursor";
   }
 
-  getConfigPaths(): string[] {
+  override getConfigPaths(): string[] {
     return [];
   }
 
-  getMCPConfigPaths(): string[] {
+  override getMCPConfigPaths(): string[] {
     return [join(this.getConfigDir(), "mcp.json")];
-  }
-
-  getSkillsDir(): string {
-    return join(this.getConfigDir(), "skills");
-  }
-
-  getAgentsDir(): string {
-    return join(this.getConfigDir(), "agents");
-  }
-
-  getCommandsDir(): string {
-    return join(this.getConfigDir(), "commands");
-  }
-
-  private async getMcpConfigExitFullPath(): Promise<string> {
-    const paths = this.getMCPConfigPaths().map((p) =>
-      join(this.config.baseDir, p),
-    );
-    const existingPath = await fileOps.findFirstExistingPath(paths);
-    return existingPath ?? paths[0]!;
-  }
-
-  /**
-   * Write skills to .cursor/skills/
-   * Each skill is a directory with SKILL.md and optional support files
-   */
-  async writeSkills(skills: Skill[]): Promise<WriteResult> {
-    const skillsDir = join(this.config.baseDir, this.getSkillsDir());
-
-    try {
-      // Ensure skills directory exists
-      await fileOps.ensureDir(skillsDir);
-
-      for (const skill of skills) {
-        const skillDir = join(skillsDir, skill.name);
-        await fileOps.ensureDir(skillDir);
-
-        // Generate SKILL.md content
-        let skillContent = skill.content;
-
-        // Add frontmatter if metadata or description exists
-        if (skill.metadata || skill.description) {
-          const frontmatter: Record<string, unknown> = {
-            ...(skill.metadata || {}),
-          };
-
-          // Add description to frontmatter if present
-          if (skill.description) {
-            frontmatter.description = skill.description;
-          }
-
-          // Add name to frontmatter
-          frontmatter.name = skill.name;
-
-          skillContent = matter.stringify(skill.content, frontmatter);
-        }
-
-        // Write SKILL.md
-        const skillMdPath = join(skillDir, "SKILL.md");
-        await atomicWrite(skillMdPath, skillContent);
-
-        // Write support files
-        await writeSupportFiles(skillDir, skill.supportFiles);
-      }
-
-      return {
-        success: true,
-        count: skills.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing skills",
-      };
-    }
   }
 
   /**
    * Write MCP servers to .cursor/mcp.json
    * Cursor uses mcpServers field and supports stdio, HTTP, OAuth
    */
-  async writeMCPServers(servers: MCPServer[]): Promise<WriteResult> {
-    const mcpJsonPath = await this.getMcpConfigExitFullPath();
+  override async writeMCPServers(servers: MCPServer[]): Promise<WriteResult> {
+    const mcpJsonPath = await this.getMcpConfigPath();
 
     try {
       // Ensure .cursor directory exists
@@ -208,82 +103,10 @@ export class CursorAdapter implements ToolAdapter {
   }
 
   /**
-   * Write agents to .cursor/agents/
-   * Each agent is a single .md file
-   */
-  async writeAgents(agents: Agent[]): Promise<WriteResult> {
-    const agentsDir = join(this.config.baseDir, this.getAgentsDir());
-
-    try {
-      // Ensure agents directory exists
-      await fileOps.ensureDir(agentsDir);
-
-      for (const agent of agents) {
-        // Generate agent content
-        let agentContent = agent.content;
-
-        // Add frontmatter if metadata or description exists
-        if (agent.metadata || agent.description) {
-          const frontmatter: Record<string, unknown> = {
-            ...(agent.metadata || {}),
-          };
-
-          // Add description to frontmatter if present
-          if (agent.description) {
-            frontmatter.description = agent.description;
-          }
-
-          // Add name to frontmatter
-          frontmatter.name = agent.name;
-
-          agentContent = matter.stringify(agent.content, frontmatter);
-        }
-
-        const agentMdPath = join(agentsDir, `${agent.name}.md`);
-        await atomicWrite(agentMdPath, agentContent);
-      }
-
-      return {
-        success: true,
-        count: agents.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing agents",
-      };
-    }
-  }
-
-  /**
-   * Delete a skill from .cursor/skills/
-   */
-  async deleteSkill(name: string): Promise<void> {
-    const skillDir = join(this.config.baseDir, this.getSkillsDir(), name);
-
-    try {
-      await fileOps.remove(skillDir);
-    } catch (error) {
-      // Ignore errors for non-existent skills
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
-      }
-    }
-  }
-
-  /**
    * Delete an MCP server from .cursor/mcp.json
    */
-  async deleteMCPServer(name: string): Promise<void> {
-    const mcpJsonPath = await this.getMcpConfigExitFullPath();
+  override async deleteMCPServer(name: string): Promise<void> {
+    const mcpJsonPath = await this.getMcpConfigPath();
 
     const config = await fileOps.readJSON<{
       mcpServers?: Record<string, unknown>;
@@ -292,82 +115,6 @@ export class CursorAdapter implements ToolAdapter {
     if (config?.mcpServers && typeof config.mcpServers === "object") {
       delete config.mcpServers[name];
       await fileOps.writeJSON(mcpJsonPath, config);
-    }
-  }
-
-  /**
-   * Write commands to .cursor/commands/
-   * Each command is a single .md file
-   */
-  async writeCommands(commands: Command[]): Promise<WriteResult> {
-    const commandsDir = join(this.config.baseDir, this.getCommandsDir());
-
-    try {
-      // Ensure commands directory exists
-      await fileOps.ensureDir(commandsDir);
-
-      for (const command of commands) {
-        // Generate command content
-        let commandContent = command.content;
-
-        // Add frontmatter if metadata or description exists
-        if (command.metadata || command.description) {
-          const frontmatter: Record<string, unknown> = {
-            ...(command.metadata || {}),
-          };
-
-          // Add description to frontmatter if present
-          if (command.description) {
-            frontmatter.description = command.description;
-          }
-
-          // Add name to frontmatter
-          frontmatter.name = command.name;
-
-          commandContent = matter.stringify(command.content, frontmatter);
-        }
-
-        const commandMdPath = join(commandsDir, `${command.name}.md`);
-        await atomicWrite(commandMdPath, commandContent);
-      }
-
-      return {
-        success: true,
-        count: commands.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing commands",
-      };
-    }
-  }
-
-  /**
-   * Delete an agent from .cursor/agents/
-   */
-  async deleteAgent(name: string): Promise<void> {
-    const agentPath = join(
-      this.config.baseDir,
-      this.getAgentsDir(),
-      `${name}.md`,
-    );
-
-    try {
-      await fileOps.remove(agentPath);
-    } catch (error) {
-      // Ignore errors for non-existent agents
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
-      }
     }
   }
 
@@ -464,7 +211,7 @@ export class CursorAdapter implements ToolAdapter {
   /**
    * Validate Cursor configuration
    */
-  async validate(): Promise<ValidationResult> {
+  override async validate(): Promise<ValidationResult> {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -480,7 +227,7 @@ export class CursorAdapter implements ToolAdapter {
     }
 
     // Check if mcp.json exists
-    const mcpJsonPath = await this.getMcpConfigExitFullPath();
+    const mcpJsonPath = await this.getMcpConfigPath();
     try {
       await stat(mcpJsonPath);
     } catch {
@@ -499,76 +246,11 @@ export class CursorAdapter implements ToolAdapter {
     return result;
   }
 
-  // Read methods - Cursor is write-only (target tool)
-  /**
-   * Read all skills from .cursor/skills/
-   */
-  async readSkills(): Promise<Skill[]> {
-    const skillsDir = join(this.config.baseDir, this.getSkillsDir());
-
-    try {
-      const entries = await readdir(skillsDir, { withFileTypes: true });
-      const skills: Skill[] = [];
-
-      for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-
-        const skillName = entry.name;
-        const skillDir = join(skillsDir, skillName);
-        const skillMdPath = join(skillDir, "SKILL.md");
-
-        try {
-          const skillContent = await readFile(skillMdPath, "utf-8");
-          const parsed = matter(skillContent);
-
-          const supportFiles = await readSupportFiles(skillDir, {
-            exclude: (relativePath) => relativePath === "SKILL.md",
-          });
-
-          // Build skill object
-          const skill: Skill = {
-            name: skillName,
-            content: parsed.content,
-            hash: "",
-          };
-
-          if (parsed.data.description) {
-            skill.description = parsed.data.description as string;
-          }
-          if (Object.keys(parsed.data).length > 0) {
-            skill.metadata = parsed.data;
-          }
-          if (Object.keys(supportFiles).length > 0) {
-            skill.supportFiles = supportFiles;
-          }
-
-          skill.hash = hashSkill(skill);
-          skills.push(skill);
-        } catch (error) {
-          console.warn(
-            `Skipping skill ${skillName}: ${error instanceof Error ? error.message : "Unknown error"}`,
-          );
-        }
-      }
-
-      return skills;
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        return [];
-      }
-      throw error;
-    }
-  }
-
   /**
    * Read MCP servers from .cursor/mcp.json
    */
-  async readMCPServers(): Promise<MCPServer[]> {
-    const mcpJsonPath = await this.getMcpConfigExitFullPath();
+  override async readMCPServers(): Promise<MCPServer[]> {
+    const mcpJsonPath = await this.getMcpConfigPath();
 
     try {
       const content = await readFile(mcpJsonPath, "utf-8");
@@ -635,140 +317,6 @@ export class CursorAdapter implements ToolAdapter {
         `Failed to read mcp.json: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       return [];
-    }
-  }
-
-  /**
-   * Read all agents from .cursor/agents/
-   */
-  async readAgents(): Promise<Agent[]> {
-    const agentsDir = join(this.config.baseDir, this.getAgentsDir());
-
-    try {
-      const entries = await readdir(agentsDir, { withFileTypes: true });
-      const agents: Agent[] = [];
-
-      for (const entry of entries) {
-        if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
-
-        const agentName = entry.name.slice(0, -3);
-        const agentMdPath = join(agentsDir, entry.name);
-
-        try {
-          const agentContent = await readFile(agentMdPath, "utf-8");
-          const parsed = matter(agentContent);
-
-          const agent: Agent = {
-            name: agentName,
-            content: parsed.content,
-            hash: "",
-          };
-
-          if (parsed.data.description) {
-            agent.description = parsed.data.description as string;
-          }
-          if (Object.keys(parsed.data).length > 0) {
-            agent.metadata = parsed.data;
-          }
-
-          agent.hash = hashAgent(agent);
-          agents.push(agent);
-        } catch (error) {
-          console.warn(
-            `Skipping agent ${agentName}: ${error instanceof Error ? error.message : "Unknown error"}`,
-          );
-        }
-      }
-
-      return agents;
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        return [];
-      }
-      throw error;
-    }
-  }
-
-  /**
-   * Delete a command from .cursor/commands/
-   */
-  async deleteCommand(name: string): Promise<void> {
-    const commandPath = join(
-      this.config.baseDir,
-      this.getCommandsDir(),
-      `${name}.md`,
-    );
-
-    try {
-      await fileOps.remove(commandPath);
-    } catch (error) {
-      // Ignore errors for non-existent commands
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
-      ) {
-        throw error;
-      }
-    }
-  }
-
-  /**
-   * Read all commands from .cursor/commands/
-   */
-  async readCommands(): Promise<Command[]> {
-    const commandsDir = join(this.config.baseDir, this.getCommandsDir());
-
-    try {
-      const entries = await readdir(commandsDir, { withFileTypes: true });
-      const commands: Command[] = [];
-
-      for (const entry of entries) {
-        if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
-
-        const commandName = entry.name.slice(0, -3);
-        const commandMdPath = join(commandsDir, entry.name);
-
-        try {
-          const commandContent = await readFile(commandMdPath, "utf-8");
-          const parsed = matter(commandContent);
-
-          const command: Command = {
-            name: commandName,
-            content: parsed.content,
-            hash: "",
-          };
-
-          if (parsed.data.description) {
-            command.description = parsed.data.description as string;
-          }
-          if (Object.keys(parsed.data).length > 0) {
-            command.metadata = parsed.data;
-          }
-
-          command.hash = hashCommand(command);
-          commands.push(command);
-        } catch (error) {
-          console.warn(
-            `Skipping command ${commandName}: ${error instanceof Error ? error.message : "Unknown error"}`,
-          );
-        }
-      }
-
-      return commands;
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        return [];
-      }
-      throw error;
     }
   }
 }
