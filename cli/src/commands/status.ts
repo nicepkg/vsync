@@ -186,6 +186,7 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
       config.target_tools,
       manifest,
       "safe",
+      config.sync_config,
     );
 
     const hasChanges = Object.values(plan.diffs).some(

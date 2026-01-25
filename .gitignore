@@ -129,3 +129,9 @@ logs/
 **/.vitepress/cache
 **/.vitepress/.temp
 MARKETING.md
+# ====================
+# vibe-sync
+# ====================
+.vibe-sync.json
+.vibe-sync-cache/
+.opencode/

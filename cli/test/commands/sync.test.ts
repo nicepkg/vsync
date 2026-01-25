@@ -115,6 +115,7 @@ describe("Sync Command", () => {
           items: {},
         },
         "safe",
+        { skills: true, mcp: true, agents: false, commands: false },
       );
 
       expect(plan.diffs.cursor).toBeDefined();
@@ -212,6 +213,7 @@ describe("Sync Command", () => {
         ["cursor"],
         manifest,
         "prune",
+        { skills: true, mcp: true, agents: false, commands: false },
       );
 
       expect(plan.diffs.cursor?.toDelete.length).toBeGreaterThan(0);

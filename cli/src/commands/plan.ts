@@ -159,6 +159,7 @@ async function planCommand(options: {
       config.target_tools,
       manifest,
       mode,
+      config.sync_config,
     );
     planSpinner.succeed(t("commands.plan.planGenerated"));
 

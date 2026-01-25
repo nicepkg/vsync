@@ -237,6 +237,7 @@ async function readTargetConfigs(targetTools: ToolName[]): Promise<
  * @param targetTools - Target tool names
  * @param manifest - Current manifest
  * @param mode - Sync mode
+ * @param syncConfig - Sync configuration (what to sync)
  * @param projectDir - Project directory
  * @returns Sync plan
  */
@@ -245,14 +246,17 @@ export async function calculateSyncDiff(
   targetTools: ToolName[],
   manifest: Manifest,
   mode: SyncMode,
+  syncConfig: VibeConfig["sync_config"],
 ): Promise<SyncPlan> {
   const targetData = await readTargetConfigs(targetTools);
 
+  // Filter source data based on sync_config
+  // Only include items that are enabled in configuration
   const plan = generatePlan({
-    sourceSkills: sourceData.skills,
-    sourceMCPServers: sourceData.mcpServers,
-    sourceAgents: sourceData.agents,
-    sourceCommands: sourceData.commands,
+    sourceSkills: syncConfig.skills ? sourceData.skills : [],
+    sourceMCPServers: syncConfig.mcp ? sourceData.mcpServers : [],
+    sourceAgents: syncConfig.agents ? sourceData.agents : [],
+    sourceCommands: syncConfig.commands ? sourceData.commands : [],
     targetSkills: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.skills]),
     ),
@@ -758,6 +762,7 @@ export async function syncCommand(options: {
       config.target_tools,
       manifest,
       mode,
+      config.sync_config,
     );
     planSpinner.succeed(t("commands.sync.planGenerated"));
 
