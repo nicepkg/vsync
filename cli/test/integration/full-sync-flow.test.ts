@@ -3,13 +3,13 @@
  * Tests complete synchronization workflows from source to target tools
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "fs/promises";
-import path from "path";
 import { tmpdir } from "os";
+import path from "path";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { syncCommand } from "@src/commands/sync.js";
-import type { VibeConfig } from "@src/types/config.js";
 import { saveConfig } from "@src/core/config-manager.js";
+import type { VibeConfig } from "@src/types/config.js";
 
 describe("Full Sync Flow Integration", () => {
   let testDir: string;
@@ -82,8 +82,6 @@ This is a test skill content.`;
           agents: false,
           commands: false,
         },
-        mode: "safe",
-        project_root: testDir,
         use_symlinks_for_skills: false, // Disable symlinks for tests
       };
 
@@ -149,8 +147,6 @@ This is a test skill content.`;
           agents: false,
           commands: false,
         },
-        mode: "safe",
-        project_root: testDir,
       };
 
       await saveConfig(config, "project", testDir);
@@ -210,8 +206,6 @@ This is a test agent.`;
           agents: true,
           commands: false,
         },
-        mode: "safe",
-        project_root: testDir,
         use_symlinks_for_skills: false, // Disable symlinks for tests
       };
 
@@ -272,8 +266,7 @@ This is a test command.`;
           agents: false,
           commands: true,
         },
-        mode: "safe",
-        project_root: testDir,
+        use_symlinks_for_skills: false, // Disable symlinks for tests
       };
 
       await saveConfig(config, "project", testDir);
@@ -343,8 +336,6 @@ This is a test command.`;
           agents: false,
           commands: false,
         },
-        mode: "safe",
-        project_root: testDir,
       };
 
       await saveConfig(config, "project", testDir);
@@ -375,9 +366,7 @@ This is a test command.`;
       expect(opencodeMcp.mcp["test-server"].type).toBe("stdio");
       // OpenCode uses ${VAR} not ${env:VAR}
       expect(opencodeMcp.mcp["test-server"].env.API_KEY).toBe("${API_KEY}");
-      expect(opencodeMcp.mcp["test-server"].env.TOKEN).toBe(
-        "${GITHUB_TOKEN}",
-      );
+      expect(opencodeMcp.mcp["test-server"].env.TOKEN).toBe("${GITHUB_TOKEN}");
     });
   });
 
@@ -432,8 +421,7 @@ Content 2`,
           agents: false,
           commands: false,
         },
-        mode: "safe",
-        project_root: testDir,
+        use_symlinks_for_skills: false, // Disable symlinks for tests
       };
 
       await saveConfig(config, "project", testDir);
@@ -531,8 +519,6 @@ Content 2`,
           agents: false,
           commands: false,
         },
-        mode: "prune",
-        project_root: testDir,
       };
 
       await saveConfig(config, "project", testDir);
@@ -587,8 +573,6 @@ Content for multiple targets.`;
           agents: false,
           commands: false,
         },
-        mode: "safe",
-        project_root: testDir,
         use_symlinks_for_skills: false, // Disable symlinks for tests
       };
 
@@ -647,8 +631,6 @@ Content`,
           agents: false,
           commands: false,
         },
-        mode: "safe",
-        project_root: testDir,
         use_symlinks_for_skills: false, // Disable symlinks for tests
       };
 
