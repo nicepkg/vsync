@@ -128,7 +128,6 @@
 
 **关键特性**:
 
-- ✅ 仅支持 stdio 传输
 - ✅ 支持环境变量展开（**必须原样保留**）
 - ⚠️ 写入时禁止 JSON 格式化破坏变量
 
@@ -273,7 +272,7 @@ enabled = true # optional
       "enabled": true, // optional
       "url": "https://jira.example.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${JIRA_TOKEN}"
+        "Authorization": "Bearer {JIRA_TOKEN}"
       }, // optional
       "oauth": {
         "clientId": "{env:MY_MCP_CLIENT_ID}",
@@ -298,15 +297,13 @@ enabled = true # optional
 
 ### 2.3 MCP 配置对比总结表
 
-| 特性             | Claude Code         | Codex         | Cursor            | OpenCode           |
-| ---------------- | ------------------- | ------------- | ----------------- | ------------------ |
-| **配置文件**     | `.mcp.json`         | `config.toml` | `mcp.json`        | `opencode.json(c)` |
-| **MCP 字段名**   | `mcpServers`        | `mcp_Servers` | `mcpServers`      | `mcp` ⚠️           |
-| **User 层支持**  | ❌                  | ✅            | ✅                | ✅                 |
-| **HTTP 传输**    | ❌                  | ❌            | ✅                | ✅                 |
-| **环境变量格式** | `${env:X}` / `${X}` | ❌ 不支持     | `${env:X}` + 5 种 | `${X}`             |
-| **注释支持**     | ❌                  | ❌            | ❌                | ✅ JSONC           |
-| **type 字段**    | ❌ 隐式             | ❌ 隐式       | ❌ 隐式           | ✅ 必填            |
+| 特性             | Claude Code  | Codex         | Cursor                  | OpenCode           |
+| ---------------- | ------------ | ------------- | ----------------------- | ------------------ |
+| **配置文件**     | `.mcp.json`  | `config.toml` | `mcp.json`              | `opencode.json(c)` |
+| **MCP 字段名**   | `mcpServers` | `mcp_Servers` | `mcpServers`            | `mcp` ⚠️           |
+| **User 层支持**  | ✅           | ✅            | ✅                      | ✅                 |
+| **HTTP 传输**    | ✅           | ✅            | ✅                      | ✅                 |
+| **环境变量格式** | `${X}`       | ❌ 不支持     | `${env:X}` + 5 个固定的 | `{env:X}`          |
 
 ---
 
@@ -1224,7 +1221,7 @@ async function updateManifest(
 
 **目标**: 打通核心流程，验证价值
 
-**包含**:
+**MVP包含**:
 
 - ✅ Project 层（User 层 v1.1）
 - ✅ Claude Code 作为配置源
@@ -1236,12 +1233,12 @@ async function updateManifest(
 - ✅ Manifest 管理
 - ✅ 原子化写入
 
-**不包含**:
+**v1.1包含**:
 
-- ❌ Agents 和 Commands（v1.1）
-- ❌ Codex 支持（v1.1）
-- ❌ User 层（v1.1）
-- ❌ import 命令（v1.1）
+- ✅ Agents 和 Commands（v1.1）
+- ✅ Codex 支持（v1.1）
+- ✅ User 层（v1.1）
+- ✅ import 命令（v1.1）
 
 ### 8.2 开发阶段
 

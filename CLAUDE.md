@@ -2,7 +2,7 @@
 
 **Single source of truth → Compile to multiple formats → Diff-based sync**
 
-Syncs Skills & MCP configurations across Claude Code, Cursor, OpenCode.
+Syncs Skills, MCP, Agents & Commands across Claude Code, Cursor, OpenCode, Codex.
 
 ---
 
@@ -34,13 +34,19 @@ Before ANY work:
 // ⚠️ CRITICAL: Each tool has DIFFERENT formats
 
 // OpenCode
-{ "mcp": { "type": "stdio", "env": { "X": "${VAR}" } } }
-//  ^^^      ^^^^^^              ^^^^^^^^
-//  NOT mcpServers!  Required!   No env: prefix!
+{ "mcp": { "type": "stdio", "environment": { "X": "{env:VAR}" } } }
+//  ^^^      ^^^^^^                          ^^^^^^^^^^^
+//  NOT mcpServers!  Required!               Curly braces!
 
-// Cursor / Claude Code
+// Claude Code
+{ "mcpServers": { "env": { "X": "${VAR}" } } }
+//              No type field    ^^^^^^^
+//                              Dollar sign, no env: prefix
+
+// Cursor
 { "mcpServers": { "env": { "X": "${env:VAR}" } } }
-//              No type field    ^^^^^^^^
+//              No type field    ^^^^^^^^^^^^
+//                              Dollar sign WITH env: prefix
 ```
 
 ### 3. Environment Variables
@@ -118,9 +124,9 @@ These commands auto-read TASKS.md, PRD, and guide TDD workflow.
 
 ---
 
-## 🎯 MVP Scope (See TASKS.md for phases)
+## 🎯 Current Scope (See TASKS.md for phases)
 
-**INCLUDED:**
+**MVP (v1.0) - COMPLETE:**
 
 - ✅ Skills + MCP sync
 - ✅ Claude Code (source) → Cursor, OpenCode (targets)
@@ -128,23 +134,31 @@ These commands auto-read TASKS.md, PRD, and guide TDD workflow.
 - ✅ Project-level config
 - ✅ Atomic writes
 
-**EXCLUDED (v1.1):**
+**v1.1 - COMPLETE:**
 
-- ❌ Agents, Commands
-- ❌ Codex adapter
-- ❌ User-level config
+- ✅ Agents + Commands sync
+- ✅ Codex adapter
+- ✅ User-level config
+
+**v1.2 - IN PROGRESS:**
+
+- 🟡 Performance optimization
+- 🟡 Watch mode
+- 🟡 GitHub Action integration
 
 ---
 
 ## ⚠️ Common Mistakes (Full list in PRD Section 2)
 
-| ❌ Wrong               | ✅ Correct       |
-| ---------------------- | ---------------- |
-| OpenCode: `mcpServers` | `mcp`            |
-| OpenCode: no `type`    | `type: "stdio"`  |
-| OpenCode: `${env:VAR}` | `${VAR}`         |
-| `fs.writeFile()`       | `atomicWrite()`  |
-| Implement first        | Test first (TDD) |
+| ❌ Wrong                     | ✅ Correct             |
+| ---------------------------- | ---------------------- |
+| OpenCode: `mcpServers`       | `mcp`                  |
+| OpenCode: no `type`          | `type: "local/remote"` |
+| OpenCode: `${env:VAR}`       | `{env:VAR}`            |
+| Claude Code: `${env:VAR}`    | `${VAR}`               |
+| Cursor: `${VAR}` (uppercase) | `${env:VAR}`           |
+| `fs.writeFile()`             | `atomicWrite()`        |
+| Implement first              | Test first (TDD)       |
 
 ---
 

@@ -1,6 +1,8 @@
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { ClaudeCodeAdapter } from "@src/adapters/claude-code.js";
+import type { MCPServer } from "@src/types/models.js";
+import * as fileOps from "@src/utils/file-ops.js";
 
 describe("ClaudeCodeAdapter", () => {
   let adapter: ClaudeCodeAdapter;
@@ -337,29 +339,224 @@ Command content`,
     });
   });
 
-  describe("write methods", () => {
-    it("should throw error for writeSkills (read-only)", async () => {
-      await expect(adapter.writeSkills([])).rejects.toThrow(
-        "Claude Code adapter is read-only",
+  describe("writeMCPServers", () => {
+    it("should write stdio MCP servers to .mcp.json", async () => {
+      const servers: MCPServer[] = [
+        {
+          name: "new-server",
+          type: "stdio",
+          command: "npx",
+          args: ["-y", "new-package"],
+          env: {
+            API_KEY: "${env:API_KEY}",
+          },
+          hash: "new123",
+        },
+      ];
+
+      const result = await adapter.writeMCPServers(servers);
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>("/project/.mcp.json");
+
+      expect(config).toBeDefined();
+      expect(config!.mcpServers?.["new-server"]).toBeDefined();
+      const serverConfig = config!.mcpServers?.["new-server"] as Record<
+        string,
+        unknown
+      >;
+      expect(serverConfig.command).toBe("npx");
+      expect(serverConfig.args).toEqual(["-y", "new-package"]);
+      expect((serverConfig.env as Record<string, string>).API_KEY).toBe(
+        "${env:API_KEY}",
       );
     });
 
-    it("should throw error for writeMCPServers (read-only)", async () => {
-      await expect(adapter.writeMCPServers([])).rejects.toThrow(
-        "Claude Code adapter is read-only",
-      );
+    it("should preserve environment variable formats", async () => {
+      const servers: MCPServer[] = [
+        {
+          name: "env-test",
+          type: "stdio",
+          command: "test-command",
+          env: {
+            TOKEN: "${env:GITHUB_TOKEN}",
+            PATH: "${workspaceFolder}/bin",
+            DB_URL: "${DATABASE_URL}",
+          },
+          hash: "env456",
+        },
+      ];
+
+      await adapter.writeMCPServers(servers);
+
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>("/project/.mcp.json");
+
+      expect(config).toBeDefined();
+      const serverConfig = config!.mcpServers?.["env-test"] as Record<
+        string,
+        unknown
+      >;
+      const env = serverConfig.env as Record<string, string>;
+      expect(env.TOKEN).toBe("${env:GITHUB_TOKEN}");
+      expect(env.PATH).toBe("${workspaceFolder}/bin");
+      expect(env.DB_URL).toBe("${DATABASE_URL}");
     });
 
-    it("should throw error for deleteSkill (read-only)", async () => {
-      await expect(adapter.deleteSkill("test")).rejects.toThrow(
-        "Claude Code adapter is read-only",
-      );
+    it("should preserve existing servers when adding new ones", async () => {
+      const servers: MCPServer[] = [
+        {
+          name: "additional",
+          type: "stdio",
+          command: "additional-command",
+          hash: "add789",
+        },
+      ];
+
+      await adapter.writeMCPServers(servers);
+
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>("/project/.mcp.json");
+
+      expect(config).toBeDefined();
+      // Existing servers should still be there
+      expect(config!.mcpServers?.["postgres"]).toBeDefined();
+      expect(config!.mcpServers?.["sqlite"]).toBeDefined();
+      // New server should be added
+      expect(config!.mcpServers?.["additional"]).toBeDefined();
     });
 
-    it("should throw error for deleteMCPServer (read-only)", async () => {
-      await expect(adapter.deleteMCPServer("test")).rejects.toThrow(
-        "Claude Code adapter is read-only",
-      );
+    it("should update existing server", async () => {
+      const servers: MCPServer[] = [
+        {
+          name: "postgres",
+          type: "stdio",
+          command: "updated-command",
+          args: ["--updated"],
+          hash: "upd012",
+        },
+      ];
+
+      await adapter.writeMCPServers(servers);
+
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>("/project/.mcp.json");
+
+      expect(config).toBeDefined();
+      const serverConfig = config!.mcpServers?.["postgres"] as Record<
+        string,
+        unknown
+      >;
+      expect(serverConfig.command).toBe("updated-command");
+      expect(serverConfig.args).toEqual(["--updated"]);
+    });
+
+    it("should handle servers without optional fields", async () => {
+      const servers: MCPServer[] = [
+        {
+          name: "minimal",
+          type: "stdio",
+          command: "minimal-command",
+          hash: "min345",
+        },
+      ];
+
+      const result = await adapter.writeMCPServers(servers);
+
+      expect(result.success).toBe(true);
+
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>("/project/.mcp.json");
+
+      expect(config).toBeDefined();
+      const serverConfig = config!.mcpServers?.["minimal"] as Record<
+        string,
+        unknown
+      >;
+      expect(serverConfig.command).toBe("minimal-command");
+      expect(serverConfig.args).toBeUndefined();
+      expect(serverConfig.env).toBeUndefined();
+    });
+
+    it("should create .mcp.json if missing", async () => {
+      const emptyAdapter = new ClaudeCodeAdapter({
+        tool: "claude-code",
+        baseDir: "/empty",
+        level: "project",
+      });
+
+      const servers: MCPServer[] = [
+        {
+          name: "first-server",
+          type: "stdio",
+          command: "first-command",
+          hash: "first678",
+        },
+      ];
+
+      const result = await emptyAdapter.writeMCPServers(servers);
+
+      expect(result.success).toBe(true);
+
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>("/empty/.mcp.json");
+
+      expect(config).toBeDefined();
+      expect(config!.mcpServers?.["first-server"]).toBeDefined();
+    });
+  });
+
+  describe("deleteMCPServer", () => {
+    it("should remove MCP server from config", async () => {
+      await adapter.deleteMCPServer("postgres");
+
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>("/project/.mcp.json");
+
+      expect(config).toBeDefined();
+      expect(config!.mcpServers?.["postgres"]).toBeUndefined();
+      // Other server should still exist
+      expect(config!.mcpServers?.["sqlite"]).toBeDefined();
+    });
+
+    it("should handle deleting non-existent server", async () => {
+      await expect(
+        adapter.deleteMCPServer("non-existent"),
+      ).resolves.not.toThrow();
+    });
+
+    it("should preserve other servers when deleting", async () => {
+      // Add another server
+      await adapter.writeMCPServers([
+        {
+          name: "to-delete",
+          type: "stdio",
+          command: "delete-me",
+          hash: "del901",
+        },
+      ]);
+
+      // Delete it
+      await adapter.deleteMCPServer("to-delete");
+
+      const config = await fileOps.readJSON<{
+        mcpServers?: Record<string, unknown>;
+      }>("/project/.mcp.json");
+
+      expect(config).toBeDefined();
+      expect(config!.mcpServers?.["to-delete"]).toBeUndefined();
+      expect(config!.mcpServers?.["postgres"]).toBeDefined();
+      expect(config!.mcpServers?.["sqlite"]).toBeDefined();
     });
   });
 });
