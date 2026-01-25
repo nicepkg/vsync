@@ -409,7 +409,9 @@ export async function executeSyncPlan(
               if (isUnsupportedFeature(writeResult)) {
                 debug(`${tool}: Skills not supported, skipping`);
               } else {
-                result.errors.push(writeResult.error || "Failed to write skills");
+                result.errors.push(
+                  writeResult.error || "Failed to write skills",
+                );
                 result.success = false;
                 throw new Error("Skill write failed - initiating rollback");
               }
@@ -471,7 +473,9 @@ export async function executeSyncPlan(
               if (isUnsupportedFeature(writeResult)) {
                 debug(`${tool}: Agents not supported, skipping`);
               } else {
-                result.errors.push(writeResult.error || "Failed to write agents");
+                result.errors.push(
+                  writeResult.error || "Failed to write agents",
+                );
                 result.success = false;
                 throw new Error("Agent write failed - initiating rollback");
               }

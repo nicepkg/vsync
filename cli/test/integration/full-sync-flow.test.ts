@@ -9,6 +9,7 @@ import path from "path";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { syncCommand } from "@src/commands/sync.js";
 import { saveConfig } from "@src/core/config-manager.js";
+import { getProjectCacheDir } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
 
 describe("Full Sync Flow Integration", () => {
@@ -28,7 +29,15 @@ describe("Full Sync Flow Integration", () => {
     claudeDir = path.join(testDir, ".claude");
     cursorDir = path.join(testDir, ".cursor");
     opencodeDir = path.join(testDir, ".opencode");
-    cacheDir = path.join(testDir, ".vibe-sync-cache");
+    // Cache dir is now in user home directory
+    cacheDir = getProjectCacheDir(testDir);
+
+    // Clean cache directory if it exists from previous test
+    try {
+      await fs.rm(cacheDir, { recursive: true, force: true });
+    } catch {
+      // Ignore errors if cache dir doesn't exist
+    }
 
     // Create directory structure
     await fs.mkdir(path.join(claudeDir, "skills"), { recursive: true });
@@ -48,6 +57,13 @@ describe("Full Sync Flow Integration", () => {
 
     // Cleanup test directory
     await fs.rm(testDir, { recursive: true, force: true });
+
+    // Cleanup cache directory in user home
+    try {
+      await fs.rm(cacheDir, { recursive: true, force: true });
+    } catch {
+      // Ignore errors if cache dir doesn't exist
+    }
   });
 
   describe("Claude Code → Cursor sync", () => {

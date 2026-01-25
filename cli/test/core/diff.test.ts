@@ -143,7 +143,7 @@ describe("Diff Calculator", () => {
       version: "1.0.0",
       last_synced: "2026-01-24T10:00:00Z",
       items: {
-        skill1: {
+        "skill/skill1": {
           type: "skill",
           name: "skill1",
           hash: "hash-skill1",
@@ -156,7 +156,7 @@ describe("Diff Calculator", () => {
             },
           },
         },
-        skill2: {
+        "skill/skill2": {
           type: "skill",
           name: "skill2",
           hash: "hash-skill2-old",
@@ -169,7 +169,7 @@ describe("Diff Calculator", () => {
             },
           },
         },
-        skill3: {
+        "skill/skill3": {
           type: "skill",
           name: "skill3",
           hash: "hash-skill3",
@@ -182,7 +182,7 @@ describe("Diff Calculator", () => {
             },
           },
         },
-        postgres: {
+        "mcp/postgres": {
           type: "mcp",
           name: "postgres",
           hash: "hash-postgres",
@@ -195,7 +195,7 @@ describe("Diff Calculator", () => {
             },
           },
         },
-        sqlite: {
+        "mcp/sqlite": {
           type: "mcp",
           name: "sqlite",
           hash: "hash-sqlite-old",
@@ -552,7 +552,7 @@ describe("Diff Calculator", () => {
           version: "1.0.0",
           last_synced: "2026-01-24T10:00:00Z",
           items: {
-            skill1: {
+            "skill/skill1": {
               type: "skill",
               name: "skill1",
               hash: "original-hash",

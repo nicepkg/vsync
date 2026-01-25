@@ -153,7 +153,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
   // Process skills from source
   for (const sourceSkill of sourceSkills) {
     const targetSkill = targetSkillMap.get(sourceSkill.name);
-    const manifestItem = manifest.items[sourceSkill.name];
+    const manifestItem = manifest.items[`skill/${sourceSkill.name}`];
 
     const comparison = compareHashes(
       sourceSkill.hash,
@@ -196,7 +196,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
   // Process skills in target but not in source (potential deletes)
   for (const targetSkill of targetSkills) {
     if (!sourceSkillMap.has(targetSkill.name)) {
-      const manifestItem = manifest.items[targetSkill.name];
+      const manifestItem = manifest.items[`skill/${targetSkill.name}`];
 
       const comparison = compareHashes(
         null,
@@ -221,7 +221,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
   // Process MCP servers from source
   for (const sourceMCP of sourceMCPServers) {
     const targetMCP = targetMCPMap.get(sourceMCP.name);
-    const manifestItem = manifest.items[sourceMCP.name];
+    const manifestItem = manifest.items[`mcp/${sourceMCP.name}`];
 
     const comparison = compareHashes(
       sourceMCP.hash,
@@ -264,7 +264,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
   // Process MCP servers in target but not in source (potential deletes)
   for (const targetMCP of targetMCPServers) {
     if (!sourceMCPMap.has(targetMCP.name)) {
-      const manifestItem = manifest.items[targetMCP.name];
+      const manifestItem = manifest.items[`mcp/${targetMCP.name}`];
 
       const comparison = compareHashes(
         null,
@@ -289,7 +289,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
   // Process agents from source
   for (const sourceAgent of sourceAgents) {
     const targetAgent = targetAgentMap.get(sourceAgent.name);
-    const manifestItem = manifest.items[sourceAgent.name];
+    const manifestItem = manifest.items[`agent/${sourceAgent.name}`];
 
     const comparison = compareHashes(
       sourceAgent.hash,
@@ -332,7 +332,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
   // Process agents in target but not in source (potential deletes)
   for (const targetAgent of targetAgents) {
     if (!sourceAgentMap.has(targetAgent.name)) {
-      const manifestItem = manifest.items[targetAgent.name];
+      const manifestItem = manifest.items[`agent/${targetAgent.name}`];
 
       const comparison = compareHashes(
         null,
@@ -357,7 +357,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
   // Process commands from source
   for (const sourceCommand of sourceCommands) {
     const targetCommand = targetCommandMap.get(sourceCommand.name);
-    const manifestItem = manifest.items[sourceCommand.name];
+    const manifestItem = manifest.items[`command/${sourceCommand.name}`];
 
     const comparison = compareHashes(
       sourceCommand.hash,
@@ -400,7 +400,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
   // Process commands in target but not in source (potential deletes)
   for (const targetCommand of targetCommands) {
     if (!sourceCommandMap.has(targetCommand.name)) {
-      const manifestItem = manifest.items[targetCommand.name];
+      const manifestItem = manifest.items[`command/${targetCommand.name}`];
 
       const comparison = compareHashes(
         null,

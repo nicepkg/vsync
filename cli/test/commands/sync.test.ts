@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
@@ -10,6 +12,24 @@ import {
   updateManifestAfterSync,
 } from "@src/commands/sync.js";
 import type { VibeConfig, ToolName } from "@src/types/config.js";
+
+// Cross-platform test paths
+const TEST_HOME =
+  process.platform === "win32" ? "C:\\Users\\test" : "/home/test";
+const TEST_PROJECT = process.platform === "win32" ? "C:\\project" : "/project";
+
+// Calculate hash for test project path
+const getHash = (path: string): string => {
+  const resolved = resolve(path);
+  return createHash("sha256").update(resolved).digest("hex").slice(0, 16);
+};
+
+const PROJECT_HASH = getHash(TEST_PROJECT);
+
+// Mock os.homedir
+vi.mock("node:os", () => ({
+  homedir: () => TEST_HOME,
+}));
 
 describe("Sync Command", () => {
   const sampleConfig: VibeConfig = {
@@ -24,16 +44,22 @@ describe("Sync Command", () => {
   };
 
   beforeEach(() => {
-    mockFs({
-      "/project": {
-        ".vibe-sync.json": JSON.stringify(sampleConfig),
-        ".vibe-sync-cache": {
-          "manifest.json": JSON.stringify({
-            version: "1.0.0",
-            last_synced: "",
-            items: {},
-          }),
+    const mockFsConfig: any = {
+      [TEST_HOME]: {
+        ".vibe-sync": {
+          cache: {
+            [PROJECT_HASH]: {
+              "manifest.json": JSON.stringify({
+                version: "1.0.0",
+                last_synced: "",
+                items: {},
+              }),
+            },
+          },
         },
+      },
+      [TEST_PROJECT]: {
+        ".vibe-sync.json": JSON.stringify(sampleConfig),
         ".claude": {
           skills: {
             "test-skill": {
@@ -51,7 +77,9 @@ describe("Sync Command", () => {
         },
         ".cursor": {},
       },
-    });
+    };
+
+    mockFs(mockFsConfig);
   });
 
   afterEach(() => {
@@ -61,18 +89,20 @@ describe("Sync Command", () => {
 
   describe("Configuration Loading", () => {
     it("should load project config", async () => {
-      const config = await loadSyncConfig("/project", false);
+      const config = await loadSyncConfig(TEST_PROJECT, false);
 
       expect(config.source_tool).toBe("claude-code");
       expect(config.target_tools).toEqual(["cursor"]);
     });
 
     it("should throw error if config not found", async () => {
-      mockFs({
-        "/empty": {},
-      });
+      const TEST_EMPTY = process.platform === "win32" ? "C:\\empty" : "/empty";
+      const mockFsConfig: any = {
+        [TEST_EMPTY]: {},
+      };
+      mockFs(mockFsConfig);
 
-      await expect(loadSyncConfig("/empty", false)).rejects.toThrow();
+      await expect(loadSyncConfig(TEST_EMPTY, false)).rejects.toThrow();
     });
   });
 
@@ -80,7 +110,7 @@ describe("Sync Command", () => {
     it("should read source configurations", async () => {
       const result = await readSourceConfig(
         "claude-code",
-        "/project",
+        TEST_PROJECT,
         "project",
       );
 
@@ -153,7 +183,7 @@ describe("Sync Command", () => {
       const result = await executeSyncPlan(
         plan,
         sourceData,
-        "/project",
+        "TEST_PROJECT",
         "project",
       );
 
@@ -176,7 +206,10 @@ describe("Sync Command", () => {
 
       // Verify no files were written to cursor
       await expect(
-        readFile("/project/.cursor/skills/test-skill/SKILL.md", "utf-8"),
+        readFile(
+          join(TEST_PROJECT, ".cursor", "skills", "test-skill", "SKILL.md"),
+          "utf-8",
+        ),
       ).rejects.toThrow();
     });
   });
@@ -230,12 +263,16 @@ describe("Sync Command", () => {
         deleted: [],
       };
 
-      await updateManifestAfterSync(operations, "cursor", "/project");
+      await updateManifestAfterSync(operations, "cursor", TEST_PROJECT);
 
-      const content = await readFile(
-        "/project/.vibe-sync-cache/manifest.json",
-        "utf-8",
+      const manifestPath = join(
+        TEST_HOME,
+        ".vibe-sync",
+        "cache",
+        PROJECT_HASH,
+        "manifest.json",
       );
+      const content = await readFile(manifestPath, "utf-8");
       const manifest = JSON.parse(content);
 
       expect(manifest.items["skill/test-skill"]).toBeDefined();
@@ -274,20 +311,27 @@ describe("Sync Command", () => {
     });
 
     it("should handle manifest load errors gracefully", async () => {
-      mockFs({
-        "/project": {
-          ".vibe-sync.json": JSON.stringify(sampleConfig),
-          ".vibe-sync-cache": {
-            "manifest.json": "{ invalid json",
+      const mockFsConfig: any = {
+        [TEST_HOME]: {
+          ".vibe-sync": {
+            cache: {
+              [PROJECT_HASH]: {
+                "manifest.json": "{ invalid json",
+              },
+            },
           },
+        },
+        [TEST_PROJECT]: {
+          ".vibe-sync.json": JSON.stringify(sampleConfig),
           ".claude": {
             skills: {},
           },
         },
-      });
+      };
+      mockFs(mockFsConfig);
 
       // Should not throw, should handle gracefully
-      const config = await loadSyncConfig("/project", false);
+      const config = await loadSyncConfig(TEST_PROJECT, false);
       expect(config).toBeDefined();
     });
   });

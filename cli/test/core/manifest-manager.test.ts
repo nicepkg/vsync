@@ -1,6 +1,8 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import mockFs from "mock-fs";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   loadManifest,
   saveManifest,
@@ -13,6 +15,26 @@ import {
   pruneOrphanedItems,
 } from "@src/core/manifest-manager.js";
 import type { Manifest } from "@src/types/manifest.js";
+
+// Cross-platform test paths
+const TEST_HOME =
+  process.platform === "win32" ? "C:\\Users\\test" : "/home/test";
+const TEST_PROJECT = process.platform === "win32" ? "C:\\project" : "/project";
+const TEST_EMPTY = process.platform === "win32" ? "C:\\empty" : "/empty";
+
+// Calculate hashes for test paths
+const getHash = (path: string): string => {
+  const resolved = resolve(path);
+  return createHash("sha256").update(resolved).digest("hex").slice(0, 16);
+};
+
+const PROJECT_HASH = getHash(TEST_PROJECT);
+const EMPTY_HASH = getHash(TEST_EMPTY);
+
+// Mock os.homedir
+vi.mock("node:os", () => ({
+  homedir: () => TEST_HOME,
+}));
 
 describe("Manifest Manager", () => {
   const sampleManifest: Manifest = {
@@ -43,14 +65,22 @@ describe("Manifest Manager", () => {
   };
 
   beforeEach(() => {
-    mockFs({
-      "/project": {
-        ".vibe-sync-cache": {
-          "manifest.json": JSON.stringify(sampleManifest),
+    const mockFsConfig: any = {
+      [TEST_HOME]: {
+        ".vibe-sync": {
+          cache: {
+            [PROJECT_HASH]: {
+              "manifest.json": JSON.stringify(sampleManifest),
+            },
+            [EMPTY_HASH]: {},
+          },
         },
       },
-      "/empty": {},
-    });
+      [TEST_PROJECT]: {},
+      [TEST_EMPTY]: {},
+    };
+
+    mockFs(mockFsConfig);
   });
 
   afterEach(() => {
@@ -58,9 +88,16 @@ describe("Manifest Manager", () => {
   });
 
   describe("getManifestPath", () => {
-    it("should return manifest path in cache directory", () => {
-      const path = getManifestPath("/project");
-      expect(path).toBe("/project/.vibe-sync-cache/manifest.json");
+    it("should return manifest path in user cache directory", () => {
+      const path = getManifestPath(TEST_PROJECT);
+      const expected = join(
+        TEST_HOME,
+        ".vibe-sync",
+        "cache",
+        PROJECT_HASH,
+        "manifest.json",
+      );
+      expect(path).toBe(expected);
     });
   });
 
@@ -76,14 +113,14 @@ describe("Manifest Manager", () => {
 
   describe("loadManifest", () => {
     it("should load existing manifest", async () => {
-      const manifest = await loadManifest("/project");
+      const manifest = await loadManifest(TEST_PROJECT);
 
       expect(manifest.version).toBe("1.0.0");
       expect(Object.keys(manifest.items)).toHaveLength(2);
     });
 
     it("should create empty manifest if file doesn't exist", async () => {
-      const manifest = await loadManifest("/empty");
+      const manifest = await loadManifest(TEST_EMPTY);
 
       expect(manifest.version).toBe("1.0.0");
       expect(manifest.items).toEqual({});
@@ -111,12 +148,16 @@ describe("Manifest Manager", () => {
         items: {},
       };
 
-      await saveManifest(manifest, "/empty");
+      await saveManifest(manifest, TEST_EMPTY);
 
-      const saved = await readFile(
-        "/empty/.vibe-sync-cache/manifest.json",
-        "utf-8",
+      const savedPath = join(
+        TEST_HOME,
+        ".vibe-sync",
+        "cache",
+        EMPTY_HASH,
+        "manifest.json",
       );
+      const saved = await readFile(savedPath, "utf-8");
       const parsed = JSON.parse(saved);
 
       expect(parsed.version).toBe("1.0.0");
@@ -124,33 +165,37 @@ describe("Manifest Manager", () => {
 
     it("should format JSON with indentation", async () => {
       const manifest = createEmptyManifest();
-      await saveManifest(manifest, "/empty");
+      await saveManifest(manifest, TEST_EMPTY);
 
-      const saved = await readFile(
-        "/empty/.vibe-sync-cache/manifest.json",
-        "utf-8",
+      const savedPath = join(
+        TEST_HOME,
+        ".vibe-sync",
+        "cache",
+        EMPTY_HASH,
+        "manifest.json",
       );
+      const saved = await readFile(savedPath, "utf-8");
       expect(saved).toContain("\n");
     });
   });
 
   describe("getItemHash", () => {
     it("should return hash for existing skill", async () => {
-      const manifest = await loadManifest("/project");
+      const manifest = await loadManifest(TEST_PROJECT);
       const hash = getItemHash(manifest, "skill", "test-skill");
 
       expect(hash).toBe("abc123");
     });
 
     it("should return hash for existing MCP server", async () => {
-      const manifest = await loadManifest("/project");
+      const manifest = await loadManifest(TEST_PROJECT);
       const hash = getItemHash(manifest, "mcp", "postgres");
 
       expect(hash).toBe("xyz789");
     });
 
     it("should return undefined for non-existent item", async () => {
-      const manifest = await loadManifest("/project");
+      const manifest = await loadManifest(TEST_PROJECT);
       const hash = getItemHash(manifest, "skill", "non-existent");
 
       expect(hash).toBeUndefined();

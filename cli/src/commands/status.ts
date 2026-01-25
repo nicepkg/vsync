@@ -3,11 +3,13 @@
  * Display sync status and configuration info
  */
 
+import { homedir } from "node:os";
+import { relative } from "node:path";
 import { cwd } from "node:process";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
-import { loadManifest } from "@src/core/manifest-manager.js";
+import { loadManifest, getManifestPath } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import { t } from "@src/utils/i18n.js";
@@ -104,9 +106,16 @@ export function formatStatus(data: StatusData): string {
     chalk.cyan(`${t("commands.status.configuration")}:     `) +
       (data.config.level === "user" ? "~/.vibe-sync.json" : ".vibe-sync.json"),
   );
+
+  // Show manifest path relative to home directory
+  const manifestPath = getManifestPath();
+  const home = homedir();
+  const displayPath = manifestPath.startsWith(home)
+    ? `~/${relative(home, manifestPath)}`
+    : manifestPath;
+
   lines.push(
-    chalk.cyan(`${t("commands.status.manifest")}:          `) +
-      ".vibe-sync-cache/manifest.json",
+    chalk.cyan(`${t("commands.status.manifest")}:          `) + displayPath,
   );
   lines.push("");
 
