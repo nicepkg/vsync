@@ -219,13 +219,8 @@ This is a test agent.`;
         yes: true,
       });
 
-      // Verify agent was synced to Cursor
-      const cursorAgentPath = path.join(
-        cursorDir,
-        "agents",
-        "test-agent",
-        "AGENT.md",
-      );
+      // Verify agent was synced to Cursor (agents are flat .md files, not in subdirectories)
+      const cursorAgentPath = path.join(cursorDir, "agents", "test-agent.md");
       const exists = await fs
         .access(cursorAgentPath)
         .then(() => true)
@@ -279,12 +274,11 @@ This is a test command.`;
         yes: true,
       });
 
-      // Verify command was synced to Cursor
+      // Verify command was synced to Cursor (commands are flat .md files, not in subdirectories)
       const cursorCommandPath = path.join(
         cursorDir,
         "commands",
-        "test-command",
-        "COMMAND.md",
+        "test-command.md",
       );
       const exists = await fs
         .access(cursorCommandPath)
@@ -348,12 +342,20 @@ This is a test command.`;
         yes: true,
       });
 
-      // Verify MCP config was synced with OpenCode format
-      const opencodeMcpPath = path.join(opencodeDir, "opencode.jsonc");
-      const exists = await fs
+      // Verify MCP config was synced with OpenCode format (project-level: opencode.json or opencode.jsonc in root)
+      let opencodeMcpPath = path.join(testDir, "opencode.json");
+      let exists = await fs
         .access(opencodeMcpPath)
         .then(() => true)
         .catch(() => false);
+
+      if (!exists) {
+        opencodeMcpPath = path.join(testDir, "opencode.jsonc");
+        exists = await fs
+          .access(opencodeMcpPath)
+          .then(() => true)
+          .catch(() => false);
+      }
 
       expect(exists).toBe(true);
 
@@ -362,11 +364,15 @@ This is a test command.`;
 
       // OpenCode uses "mcp" not "mcpServers"
       expect(opencodeMcp.mcp["test-server"]).toBeDefined();
-      // OpenCode requires "type" field
-      expect(opencodeMcp.mcp["test-server"].type).toBe("stdio");
-      // OpenCode uses ${VAR} not ${env:VAR}
-      expect(opencodeMcp.mcp["test-server"].env.API_KEY).toBe("${API_KEY}");
-      expect(opencodeMcp.mcp["test-server"].env.TOKEN).toBe("${GITHUB_TOKEN}");
+      // OpenCode requires "type" field (stdio -> local, http/oauth -> remote)
+      expect(opencodeMcp.mcp["test-server"].type).toBe("local");
+      // OpenCode uses "environment" not "env", and ${VAR} not ${env:VAR}
+      expect(opencodeMcp.mcp["test-server"].environment.API_KEY).toBe(
+        "${API_KEY}",
+      );
+      expect(opencodeMcp.mcp["test-server"].environment.TOKEN).toBe(
+        "${GITHUB_TOKEN}",
+      );
     });
   });
 
@@ -490,15 +496,19 @@ Content 2`,
             version: "1.0.0",
             last_sync: new Date().toISOString(),
             items: {
-              "skills/skill1": {
+              "skill/skill1": {
+                type: "skill",
+                name: "skill1",
                 hash: "abc123",
                 last_synced: new Date().toISOString(),
-                targets: ["cursor"],
+                targets: { cursor: new Date().toISOString() },
               },
-              "skills/skill2": {
+              "skill/skill2": {
+                type: "skill",
+                name: "skill2",
                 hash: "def456",
                 last_synced: new Date().toISOString(),
-                targets: ["cursor"],
+                targets: { cursor: new Date().toISOString() },
               },
             },
           },
@@ -519,6 +529,7 @@ Content 2`,
           agents: false,
           commands: false,
         },
+        use_symlinks_for_skills: false, // Disable symlinks for tests
       };
 
       await saveConfig(config, "project", testDir);
@@ -656,12 +667,12 @@ Content`,
       const manifestContent = await fs.readFile(manifestPath, "utf-8");
       const manifest = JSON.parse(manifestContent);
 
-      // Verify manifest has the skill entry
-      expect(manifest.items["skills/tracked-skill"]).toBeDefined();
-      expect(manifest.items["skills/tracked-skill"].targets).toContain(
-        "cursor",
-      );
-      expect(manifest.items["skills/tracked-skill"].hash).toBeDefined();
+      // Verify manifest has the skill entry (key format is "skill/name" not "skills/name")
+      expect(manifest.items["skill/tracked-skill"]).toBeDefined();
+      expect(
+        manifest.items["skill/tracked-skill"].targets.cursor,
+      ).toBeDefined();
+      expect(manifest.items["skill/tracked-skill"].hash).toBeDefined();
     });
   });
 });
