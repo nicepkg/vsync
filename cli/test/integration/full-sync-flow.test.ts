@@ -489,26 +489,39 @@ Content 2`,
 
       // Create initial manifest with skill2
       const manifestPath = path.join(cacheDir, "manifest.json");
+      const timestamp = new Date().toISOString();
       await fs.writeFile(
         manifestPath,
         JSON.stringify(
           {
             version: "1.0.0",
-            last_sync: new Date().toISOString(),
+            last_sync: timestamp,
             items: {
               "skill/skill1": {
                 type: "skill",
                 name: "skill1",
                 hash: "abc123",
-                last_synced: new Date().toISOString(),
-                targets: { cursor: new Date().toISOString() },
+                last_synced: timestamp,
+                targets: {
+                  cursor: {
+                    synced: true,
+                    hash: "abc123",
+                    last_synced: timestamp,
+                  },
+                },
               },
               "skill/skill2": {
                 type: "skill",
                 name: "skill2",
                 hash: "def456",
-                last_synced: new Date().toISOString(),
-                targets: { cursor: new Date().toISOString() },
+                last_synced: timestamp,
+                targets: {
+                  cursor: {
+                    synced: true,
+                    hash: "def456",
+                    last_synced: timestamp,
+                  },
+                },
               },
             },
           },
