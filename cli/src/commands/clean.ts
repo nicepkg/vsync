@@ -13,7 +13,8 @@ import { loadManifest, saveManifest } from "@src/core/manifest-manager.js";
 import type { ConfigLevel, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import { t } from "@src/utils/i18n.js";
-import { loadSyncConfig, readSourceConfig } from "./sync.js";
+import { readSourceConfig } from "./sync.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 
 /**
  * Parsed item name
@@ -261,9 +262,9 @@ async function cleanCommand(
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
     const level: ConfigLevel = options.user ? "user" : "project";
 
-    // Load configuration
+    // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.clean.loadingConfig")).start();
-    const config = await loadSyncConfig(projectDir, options.user || false);
+    const config = await ensureConfig(projectDir, options.user || false, spinner);
     spinner.succeed(t("commands.clean.configLoaded"));
 
     // Load manifest

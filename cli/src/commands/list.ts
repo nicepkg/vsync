@@ -11,7 +11,8 @@ import { loadManifest } from "@src/core/manifest-manager.js";
 import type { Manifest } from "@src/types/manifest.js";
 import type { MCPServer, Skill } from "@src/types/models.js";
 import { t } from "@src/utils/i18n.js";
-import { loadSyncConfig, readSourceConfig } from "./sync.js";
+import { readSourceConfig } from "./sync.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 
 /**
  * Extract description from skill content
@@ -260,9 +261,9 @@ async function listCommand(
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
 
-    // Load configuration
+    // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.list.loadingConfig")).start();
-    const config = await loadSyncConfig(projectDir, options.user || false);
+    const config = await ensureConfig(projectDir, options.user || false, spinner);
     spinner.succeed(t("commands.list.configLoaded"));
 
     // Load manifest

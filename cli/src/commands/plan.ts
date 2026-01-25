@@ -12,7 +12,8 @@ import { validatePlan } from "@src/core/planner.js";
 import type { SyncMode } from "@src/types/config.js";
 import type { DiffResult, SyncPlan } from "@src/types/plan.js";
 import { t } from "@src/utils/i18n.js";
-import { calculateSyncDiff, loadSyncConfig, readSourceConfig } from "./sync.js";
+import { calculateSyncDiff, readSourceConfig } from "./sync.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 
 /**
  * Format detailed plan with hash comparisons and reasons
@@ -128,9 +129,9 @@ async function planCommand(options: {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
     const mode: SyncMode = options.prune ? "prune" : "safe";
 
-    // Load configuration
+    // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.plan.loadingConfig")).start();
-    const config = await loadSyncConfig(projectDir, options.user || false);
+    const config = await ensureConfig(projectDir, options.user || false, spinner);
     spinner.succeed(t("commands.plan.configLoaded"));
 
     // Read source configuration

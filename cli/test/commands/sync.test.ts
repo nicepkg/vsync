@@ -4,13 +4,13 @@ import { join, resolve } from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
-  loadSyncConfig,
   readSourceConfig,
   calculateSyncDiff,
   executeSyncPlan,
   syncCommand,
   updateManifestAfterSync,
 } from "@src/commands/sync.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 import type { VibeConfig, ToolName } from "@src/types/config.js";
 
 // Cross-platform test paths
@@ -96,7 +96,7 @@ describe("Sync Command", () => {
 
   describe("Configuration Loading", () => {
     it("should load project config", async () => {
-      const config = await loadSyncConfig(TEST_PROJECT, false);
+      const config = await ensureConfig(TEST_PROJECT, false);
 
       expect(config.source_tool).toBe("claude-code");
       expect(config.target_tools).toEqual(["cursor"]);
@@ -109,7 +109,7 @@ describe("Sync Command", () => {
       };
       mockFs(mockFsConfig);
 
-      await expect(loadSyncConfig(TEST_EMPTY, false)).rejects.toThrow();
+      await expect(ensureConfig(TEST_EMPTY, false)).rejects.toThrow();
     });
   });
 
@@ -342,7 +342,7 @@ describe("Sync Command", () => {
       mockFs(mockFsConfig);
 
       // Should not throw, should handle gracefully
-      const config = await loadSyncConfig(TEST_PROJECT, false);
+      const config = await ensureConfig(TEST_PROJECT, false);
       expect(config).toBeDefined();
     });
   });

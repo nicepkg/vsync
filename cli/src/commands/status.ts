@@ -13,7 +13,8 @@ import { loadManifest, getManifestPath } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import { t } from "@src/utils/i18n.js";
-import { loadSyncConfig, readSourceConfig, calculateSyncDiff } from "./sync.js";
+import { readSourceConfig, calculateSyncDiff } from "./sync.js";
+import { ensureConfig } from "@src/utils/config-loader.js";
 
 /**
  * Status display data
@@ -170,9 +171,9 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
 
-    // Load configuration
+    // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.status.loadingConfig")).start();
-    const config = await loadSyncConfig(projectDir, options.user || false);
+    const config = await ensureConfig(projectDir, options.user || false, spinner);
     spinner.succeed(t("commands.status.configLoaded"));
 
     // Load manifest
