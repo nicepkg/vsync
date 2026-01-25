@@ -1,5 +1,5 @@
 {
-  "name": "vibe-sync",
+  "name": "vibe-sync-repo",
   "version": "1.0.1",
   "private": true,
   "type": "module",
@@ -14,21 +14,26 @@
     "build:website": "pnpm --filter website build",
     "start:website": "pnpm --filter website start",
     "start:static-website": "pnpm --filter website start:static",
-    "dev:cli": "pnpm --filter cli dev",
-    "build:cli": "pnpm --filter cli build",
+    "dev:cli": "pnpm --filter vibe-sync dev",
+    "build:cli": "pnpm --filter vibe-sync build",
     "test": "pnpm -r run test",
     "test:coverage": "pnpm -r run test:coverage",
     "lint": "pnpm -r run lint",
     "lint:fix": "pnpm -r run lint:fix",
     "typecheck": "pnpm -r run typecheck",
-    "clean": "rm -rf node_modules website/node_modules website/.next",
-    "prepare": "husky"
+    "clean": "rm -rf node_modules vibe-sync/node_modules website/node_modules website/.next",
+    "prepare": "husky",
+    "changeset": "changeset",
+    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "ci:publish": "pnpm -r publish --access public --no-git-checks"
   },
   "engines": {
     "node": ">=24.0.0",
     "pnpm": ">=10.0.0"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^20.3.1",
     "@commitlint/types": "^20.3.1",

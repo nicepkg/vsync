@@ -8,17 +8,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  NODE_VERSION: '24'
-  PNPM_VERSION: '10'
 
 jobs:
   lint-and-typecheck:
@@ -31,11 +27,6 @@ jobs:
 
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-          install-dependencies: 'true'
-          setup-cache: 'true'
 
       - name: Run ESLint
         run: pnpm lint

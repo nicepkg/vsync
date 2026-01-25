@@ -23,10 +23,6 @@ env:
   WEBSITE_DIR: 'website'
   BUILD_OUTPUT_DIR: 'website/out'
   BUILD_COMMAND: 'pnpm build:website'
-  
-  # Node.js Configuration
-  NODE_VERSION: '24'
-  PNPM_VERSION: '10'
 
 jobs:
   build:
@@ -37,11 +33,6 @@ jobs:
 
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
-          install-dependencies: 'true'
-          setup-cache: 'true'
 
       - name: Build website
         run: ${{ env.BUILD_COMMAND }}
@@ -71,8 +62,6 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
           install-dependencies: 'false'
           setup-cache: 'false'
 
@@ -105,8 +94,6 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          pnpm-version: ${{ env.PNPM_VERSION }}
           install-dependencies: 'false'
           setup-cache: 'false'
 

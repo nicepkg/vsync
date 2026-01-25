@@ -1,0 +1,39 @@
+name: Preview Packages
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: preview-packages-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          # when you add a new package, add a new line here
+          - name: "vibe-sync"
+            dir: "cli"
+          # - name: "package2"
+          #   dir: "package2"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Build package
+        run: pnpm --filter "${{ matrix.package.name }}" build
+
+      - name: Publish preview to pkg.pr.new
+        run: npx pkg-pr-new publish "./${{ matrix.package.dir }}"

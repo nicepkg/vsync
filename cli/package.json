@@ -1,8 +1,11 @@
 {
-  "name": "@vibe-sync/cli",
+  "name": "vibe-sync",
   "version": "1.0.0",
   "description": "CLI for vibe-sync - AI coding tool config synchronizer",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "vibe-sync": "./dist/index.js"
   },
@@ -17,7 +20,8 @@
     "test:ui": "vitest --ui",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "prepack": "pnpm build"
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
