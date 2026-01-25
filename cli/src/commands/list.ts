@@ -10,6 +10,7 @@ import ora from "ora";
 import { loadManifest } from "@src/core/manifest-manager.js";
 import type { Manifest } from "@src/types/manifest.js";
 import type { MCPServer, Skill } from "@src/types/models.js";
+import { t } from "@src/utils/i18n.js";
 import { loadSyncConfig, readSourceConfig } from "./sync.js";
 
 /**
@@ -51,7 +52,7 @@ function extractDescription(content: string): string {
 function getSyncedTargets(itemKey: string, manifest: Manifest): string {
   const item = manifest.items[itemKey];
   if (!item || !item.targets) {
-    return chalk.gray("Not synced");
+    return chalk.gray(t("commands.list.notSynced"));
   }
 
   const syncedTargets = Object.entries(item.targets)
@@ -59,7 +60,7 @@ function getSyncedTargets(itemKey: string, manifest: Manifest): string {
     .map(([toolName]) => toolName);
 
   if (syncedTargets.length === 0) {
-    return chalk.gray("Not synced");
+    return chalk.gray(t("commands.list.notSynced"));
   }
 
   // Truncate if too many
@@ -101,13 +102,15 @@ export function formatSkillsTable(
 
   lines.push("");
   lines.push(
-    chalk.bold(`Skills (${skills.length} items) - Source: ${sourceTool}`),
+    chalk.bold(
+      t("commands.list.skillsTitle", { count: skills.length, source: sourceTool }),
+    ),
   );
   lines.push("━".repeat(80));
   lines.push("");
 
   if (skills.length === 0) {
-    lines.push(chalk.gray("No skills found"));
+    lines.push(chalk.gray(t("commands.list.noSkills")));
     lines.push("");
     return lines.join("\n");
   }
@@ -172,14 +175,17 @@ export function formatMCPTable(
   lines.push("");
   lines.push(
     chalk.bold(
-      `MCP Servers (${mcpServers.length} items) - Source: ${sourceTool}`,
+      t("commands.list.mcpTitle", {
+        count: mcpServers.length,
+        source: sourceTool,
+      }),
     ),
   );
   lines.push("━".repeat(90));
   lines.push("");
 
   if (mcpServers.length === 0) {
-    lines.push(chalk.gray("No MCP servers found"));
+    lines.push(chalk.gray(t("commands.list.noMCP")));
     lines.push("");
     return lines.join("\n");
   }
@@ -252,23 +258,23 @@ async function listCommand(
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
 
     // Load configuration
-    const spinner = ora("Loading configuration...").start();
+    const spinner = ora(t("commands.list.loadingConfig")).start();
     const config = await loadSyncConfig(projectDir, options.user || false);
-    spinner.succeed("Configuration loaded");
+    spinner.succeed(t("commands.list.configLoaded"));
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
 
     // Read source data
     const readSpinner = ora(
-      `Reading ${config.source_tool} configuration...`,
+      t("commands.list.reading", { tool: config.source_tool }),
     ).start();
     const sourceData = await readSourceConfig(
       config.source_tool,
       projectDir,
       config.level,
     );
-    readSpinner.succeed("Configuration read");
+    readSpinner.succeed(t("commands.list.configRead"));
 
     // Display based on type
     if (!type || type === "skills") {
@@ -292,14 +298,16 @@ async function listCommand(
     if (type && type !== "skills" && type !== "mcp") {
       console.error(
         chalk.red(
-          `\n❌ Error: Unknown type '${type}'. Use 'skills' or 'mcp'\n`,
+          `\n❌ ${t("common.error")}: ${t("commands.list.unknownType", { type })}\n`,
         ),
       );
       process.exit(1);
     }
   } catch (error) {
     if (error instanceof Error) {
-      console.error(chalk.red(`\n❌ Error: ${error.message}\n`));
+      console.error(
+        chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`),
+      );
       process.exit(1);
     }
   }
@@ -309,9 +317,9 @@ export function createListCommand(): Command {
   const command = new Command("list");
 
   command
-    .description("List all synced items (skills or MCP servers)")
-    .argument("[type]", "Type to list: 'skills', 'mcp', or omit for both")
-    .option("--user", "Use user-level config instead of project-level")
+    .description(t("commands.list.description"))
+    .argument("[type]", t("commands.list.typeArgument"))
+    .option("--user", t("commands.list.userLevelOption"))
     .action(async (type, options) => {
       await listCommand(type, options);
     });

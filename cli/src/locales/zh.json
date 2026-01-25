@@ -96,9 +96,25 @@
       "statusReady": "状态就绪"
     },
     "list": {
-      "description": "列出所有技能和 MCP 服务器",
-      "loading": "正在加载项目...",
-      "itemsLoaded": "项目已加载"
+      "description": "列出所有已同步的项目（技能或 MCP 服务器）",
+      "typeArgument": "要列出的类型：'skills'、'mcp'，或省略以显示全部",
+      "userLevelOption": "使用用户级配置而不是项目级配置",
+      "loadingConfig": "正在加载配置...",
+      "configLoaded": "配置已加载",
+      "reading": "正在读取 {tool} 配置...",
+      "configRead": "配置已读取",
+      "skillsTitle": "技能 ({count} 个项目) - 源: {source}",
+      "mcpTitle": "MCP 服务器 ({count} 个项目) - 源: {source}",
+      "noSkills": "未找到技能",
+      "noMCP": "未找到 MCP 服务器",
+      "tableHeaderName": "名称",
+      "tableHeaderDescription": "描述",
+      "tableHeaderSyncedTo": "已同步到",
+      "tableHeaderHash": "哈希",
+      "tableHeaderType": "类型",
+      "tableHeaderCommand": "命令/URL",
+      "notSynced": "未同步",
+      "unknownType": "未知类型 '{type}'。使用 'skills' 或 'mcp'"
     },
     "clean": {
       "description": "从目标工具中删除项目（不删除源）",

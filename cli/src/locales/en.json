@@ -96,9 +96,25 @@
       "statusReady": "Status ready"
     },
     "list": {
-      "description": "List all skills and MCP servers",
-      "loading": "Loading items...",
-      "itemsLoaded": "Items loaded"
+      "description": "List all synced items (skills or MCP servers)",
+      "typeArgument": "Type to list: 'skills', 'mcp', or omit for both",
+      "userLevelOption": "Use user-level config instead of project-level",
+      "loadingConfig": "Loading configuration...",
+      "configLoaded": "Configuration loaded",
+      "reading": "Reading {tool} configuration...",
+      "configRead": "Configuration read",
+      "skillsTitle": "Skills ({count} items) - Source: {source}",
+      "mcpTitle": "MCP Servers ({count} items) - Source: {source}",
+      "noSkills": "No skills found",
+      "noMCP": "No MCP servers found",
+      "tableHeaderName": "Name",
+      "tableHeaderDescription": "Description",
+      "tableHeaderSyncedTo": "Synced To",
+      "tableHeaderHash": "Hash",
+      "tableHeaderType": "Type",
+      "tableHeaderCommand": "Command/URL",
+      "notSynced": "Not synced",
+      "unknownType": "Unknown type '{type}'. Use 'skills' or 'mcp'"
     },
     "clean": {
       "description": "Remove items from target tools (not from source)",
