@@ -1,9 +1,9 @@
-# vibe-sync MVP Implementation Tasks
+# vibe-sync Implementation Tasks
 
-**Version**: 3.0.0
+**Version**: 3.1.0
 **Project**: vibe-sync - AI Coding Tool Config Synchronizer
-**Timeline**: 11-18 days
-**Last Updated**: 2026-01-24
+**Timeline**: 15-23 days (including v1.2 features)
+**Last Updated**: 2026-01-25
 
 ---
 
@@ -12,9 +12,10 @@
 This document tracks all implementation tasks for vibe-sync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
 
 **Current Status**: 🟢 Phase 7 Complete (v1.1 Extensions)
-**Next Phase**: Phase 8 - Performance & Advanced Features
+**Next Phase**: Phase 8/9/10 - Advanced Features (parallel track)
 
-**Progress**: 6/8 phases complete (MVP v1.0 ✅ + v1.1 ✅)
+**Progress**: 6/10 phases complete (MVP v1.0 ✅ + v1.1 ✅)
+**Roadmap**: v1.2 will include Phase 8 (Performance) + Phase 9 (Symlinks) + Phase 10 (i18n)
 
 ---
 
@@ -99,10 +100,10 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] `hashMCPServer(server)` - Hash MCP server object
 - [x] Implement `cli/src/utils/atomic-write.ts`
   - [x] `atomicWrite(path, content)` - Atomic file write with fsync
-- [x] Implement `cli/src/utils/env-vars.ts`
-  - [x] `preserveEnvVars(content)` - Preserve ${...} variables
-  - [x] `normalizeEnvVar(value, format)` - Convert env var formats
-  - [x] `extractEnvVars(text)` - Extract env var names
+- [ ] Implement `cli/src/utils/env-vars.ts` ⚠️ Not needed - functionality inlined in adapters
+  - [x] `preserveEnvVars(content)` - Implemented in adapter-specific methods
+  - [x] `normalizeEnvVar(value, format)` - Implemented as `toOpenCodeEnvVars()`, `normalizeCursorVars()`
+  - [ ] `extractEnvVars(text)` - Not implemented (not critical for MVP)
 
 **Phase 1 Deliverables**:
 
@@ -373,13 +374,13 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 5.2 Environment Variable Preservation
 
-- [x] Implement `src/utils/env-vars.ts`
-  - [x] Test regex for `${env:VAR}` detection
-  - [x] Test preservation during JSON stringify
-  - [x] Test format conversion (Claude Code ↔ Cursor ↔ OpenCode)
+- [x] Environment variable handling (implemented in adapters, not as standalone util)
+  - [x] Test regex for `${env:VAR}` detection (in adapter tests)
+  - [x] Test preservation during JSON stringify (in adapter tests)
+  - [x] Test format conversion (Claude Code ↔ Cursor ↔ OpenCode) (in adapter tests)
 - [x] Add validation tests
-  - [x] Ensure variables not expanded
-  - [x] Ensure correct format per tool
+  - [x] Ensure variables not expanded (verified in cursor.test.ts, opencode.test.ts)
+  - [x] Ensure correct format per tool (verified in all adapter tests)
 
 ### 5.3 Rollback Mechanism
 
@@ -402,16 +403,17 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 6.1 Unit Tests
 
-- [ ] Test coverage for all modules
-  - [ ] Adapters: >90% coverage
-  - [ ] Core logic: >95% coverage
-  - [ ] Utils: 100% coverage
-- [ ] Edge case testing
-  - [ ] Empty configurations
-  - [ ] Missing files
-  - [ ] Invalid JSON/JSONC
-  - [ ] Permission errors
-  - [ ] Disk full scenarios
+- [x] Test coverage for all modules (26 test files, 352 tests passing)
+  - [x] Adapters: Good coverage (all adapters have comprehensive tests)
+  - [x] Core logic: Good coverage (diff, planner, manifest-manager, config-manager)
+  - [x] Utils: Good coverage (atomic-write, hash, file-ops)
+  - [ ] Formal coverage measurement (need to run coverage tool)
+- [x] Edge case testing (partially done)
+  - [x] Empty configurations
+  - [x] Missing files
+  - [x] Invalid JSON/JSONC
+  - [ ] Permission errors (not tested)
+  - [ ] Disk full scenarios (not tested)
 
 ### 6.2 Integration Tests
 
@@ -479,11 +481,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Phase 6 Deliverables**:
 
-- ✅ >90% test coverage
-- ✅ All integration tests passing
-- ✅ E2E tests passing
-- ✅ Documentation complete
-- ✅ Error handling polished
+- [x] Unit tests complete (26 test files, 352 tests passing)
+- [ ] Integration tests (not implemented)
+- [ ] E2E tests (not implemented)
+- [ ] Documentation (README, API docs not written)
+- [ ] Error handling (basic error handling done, polish incomplete)
 
 ---
 
@@ -627,13 +629,243 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Phase 8 Deliverables**:
 
-- ✅ Parallel sync working
-- ✅ Watch mode functional
-- ✅ GitHub Action template ready
+- [ ] Parallel sync working
+- [ ] Watch mode functional
+- [ ] GitHub Action template ready
 
 ---
 
-## Post-v1.1 Future Ideas
+---
+
+## Phase 9: Skills Symlink Support (1-2 days)
+
+**Goal**: Add symlink support for skills to avoid duplicating large skill folders across multiple tools
+
+**Background**: Skills folders can contain many files (templates, scripts, examples). Users don't want to copy hundreds of files to each AI tool's directory. Using symlinks keeps one source of truth and saves disk space.
+
+### 9.1 Configuration Extension
+
+- [ ] Extend `cli/src/types/config.ts`
+  - [ ] Add `use_symlinks_for_skills?: boolean` to `VibeConfig`
+  - [ ] Add `symlink_source?: ToolName` to track which tool is the symlink source
+  - [ ] Update schema validation
+
+### 9.2 Symlink Detection & Prompt
+
+- [ ] Implement symlink detection in `cli/src/commands/sync.ts`
+  - [ ] Check if target skills directory is a symlink
+  - [ ] Check if target skills directory exists and has content
+  - [ ] Detect first-time sync (no manifest entry for skills)
+- [ ] Add interactive prompt (only on first sync)
+  - [ ] Show source tool selection confirmation
+  - [ ] Ask: "Skills folder may contain many files. Use symlinks instead of copying?"
+  - [ ] Show warning: "This will DELETE existing skills folders in other tools"
+  - [ ] Show benefits: "Saves disk space, keeps single source of truth"
+  - [ ] Confirm action with Y/n
+
+### 9.3 Symlink Creation Logic
+
+- [ ] Implement `cli/src/utils/symlink.ts`
+  - [ ] `createSymlink(target, source)` - Cross-platform symlink creation
+  - [ ] `isSymlink(path)` - Check if path is a symlink
+  - [ ] `resolveSymlink(path)` - Resolve symlink to real path
+  - [ ] Handle Windows vs Unix symlinks
+- [ ] Update sync workflow
+  - [ ] If `use_symlinks_for_skills: true`:
+    - [ ] Delete target skills directory (with confirmation)
+    - [ ] Create symlink pointing to source tool's skills directory
+    - [ ] Update manifest to record symlink usage
+  - [ ] If `use_symlinks_for_skills: false`:
+    - [ ] Use normal copy behavior (current implementation)
+
+### 9.4 Adapter Updates
+
+- [ ] Update `cli/src/adapters/base.ts`
+  - [ ] `writeSkills()` - Skip if target is a symlink
+  - [ ] `readSkills()` - Follow symlinks when reading
+  - [ ] `deleteSkill()` - Handle symlinked directories
+- [ ] Update all adapters (claude-code, cursor, opencode, codex)
+  - [ ] Verify symlink handling works correctly
+  - [ ] Test read/write operations on symlinked directories
+
+### 9.5 Safety & Error Handling
+
+- [ ] Implement safety checks
+  - [ ] Prevent circular symlinks
+  - [ ] Detect broken symlinks and warn user
+  - [ ] Handle permission errors on symlink creation
+  - [ ] Validate symlink points to valid skills directory
+- [ ] Add rollback support
+  - [ ] Backup before deleting skills folders
+  - [ ] Restore on error
+
+### 9.6 Testing
+
+- [ ] Write unit tests
+  - [ ] Test symlink creation on Unix
+  - [ ] Test symlink creation on Windows
+  - [ ] Test symlink detection
+  - [ ] Test read/write through symlinks
+- [ ] Write integration tests
+  - [ ] Test first-time sync with symlink option
+  - [ ] Test sync after symlink is established
+  - [ ] Test converting from copy to symlink
+  - [ ] Test converting from symlink to copy
+
+**Phase 9 Deliverables**:
+
+- [ ] Symlink support working on Unix and Windows
+- [ ] Interactive prompt for first-time sync
+- [ ] Config option to enable/disable symlinks
+- [ ] All tests passing
+- [ ] Documentation updated
+
+---
+
+## Phase 10: Multi-language Support (i18n) (2-3 days)
+
+**Goal**: Support Chinese and English languages for all CLI output
+
+**Background**: Make vibe-sync accessible to Chinese-speaking developers. Detect or prompt for language preference on first run, store in user-level config.
+
+### 10.1 i18n Infrastructure
+
+- [ ] Add i18n dependency
+  - [ ] Install `i18next` or use custom simple i18n
+  - [ ] Or use lightweight JSON-based approach
+- [ ] Create language files
+  - [ ] `cli/src/locales/en.json` - English translations
+  - [ ] `cli/src/locales/zh.json` - Chinese (Simplified) translations
+  - [ ] Structure: nested JSON by module (commands, errors, prompts, etc.)
+
+### 10.2 Configuration Extension
+
+- [ ] Extend user-level config
+  - [ ] Add `language?: 'en' | 'zh'` to user-level `VibeConfig`
+  - [ ] Update `cli/src/core/config-manager.ts`
+    - [ ] Load language from `~/.vibe-sync.json`
+    - [ ] Default to system language if not set
+  - [ ] Store language preference in user config (not project)
+
+### 10.3 Language Detection & Selection
+
+- [ ] Implement `cli/src/utils/i18n.ts`
+  - [ ] `detectSystemLanguage()` - Detect from `process.env.LANG`
+  - [ ] `loadLanguage(lang)` - Load translation file
+  - [ ] `t(key, params?)` - Translate function with interpolation
+  - [ ] `setLanguage(lang)` - Switch language
+- [ ] Add language prompt (first run only)
+  - [ ] Check if `~/.vibe-sync.json` exists
+  - [ ] If not, prompt: "选择语言 / Choose language:"
+  - [ ] Options: "中文" / "English"
+  - [ ] Save choice to `~/.vibe-sync.json`
+
+### 10.4 Translation Coverage
+
+- [ ] Translate all CLI output
+  - [ ] Command descriptions and help text
+  - [ ] Interactive prompts (inquirer questions)
+  - [ ] Success/error messages
+  - [ ] Progress indicators (ora spinners)
+  - [ ] Table headers (list command)
+  - [ ] Plan output (sync plan display)
+- [ ] Key modules to translate:
+  - [ ] `cli/src/commands/*.ts` - All command outputs
+  - [ ] `cli/src/core/planner.ts` - Plan formatting
+  - [ ] `cli/src/index.ts` - CLI setup and help
+  - [ ] Error messages throughout codebase
+
+### 10.5 Translation Files Structure
+
+```json
+// en.json
+{
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "commands": {
+    "init": {
+      "welcome": "🚀 Welcome to vibe-sync!",
+      "selectTools": "Which AI coding tools do you use?",
+      "selectSource": "Which tool should be the configuration source?"
+    },
+    "sync": {
+      "reading": "📖 Reading source ({tool})...",
+      "foundSkills": "✓ Found {count} skills",
+      "foundMCP": "✓ Found {count} MCP servers"
+    }
+  },
+  "errors": {
+    "configNotFound": "Configuration file not found. Run 'vibe-sync init' first.",
+    "invalidConfig": "Invalid configuration: {message}"
+  }
+}
+```
+
+```json
+// zh.json
+{
+  "common": {
+    "yes": "是",
+    "no": "否",
+    "cancel": "取消",
+    "confirm": "确认"
+  },
+  "commands": {
+    "init": {
+      "welcome": "🚀 欢迎使用 vibe-sync！",
+      "selectTools": "您使用哪些 AI 编程工具？",
+      "selectSource": "哪个工具应作为配置源？"
+    },
+    "sync": {
+      "reading": "📖 正在读取源配置 ({tool})...",
+      "foundSkills": "✓ 发现 {count} 个技能",
+      "foundMCP": "✓ 发现 {count} 个 MCP 服务器"
+    }
+  },
+  "errors": {
+    "configNotFound": "未找到配置文件。请先运行 'vibe-sync init'。",
+    "invalidConfig": "无效的配置：{message}"
+  }
+}
+```
+
+### 10.6 Testing
+
+- [ ] Write unit tests
+  - [ ] Test language detection
+  - [ ] Test translation loading
+  - [ ] Test `t()` function with interpolation
+  - [ ] Test language switching
+- [ ] Write integration tests
+  - [ ] Test first-run language prompt
+  - [ ] Test commands in English
+  - [ ] Test commands in Chinese
+  - [ ] Test missing translation fallback
+
+### 10.7 Documentation
+
+- [ ] Update README.md
+  - [ ] Add Chinese version (README.zh.md)
+  - [ ] Document language configuration
+  - [ ] Show how to change language
+- [ ] Update help text
+  - [ ] Add `--lang` flag to override language
+
+**Phase 10 Deliverables**:
+
+- [ ] Full i18n support for English and Chinese
+- [ ] Language selection on first run
+- [ ] All CLI output translated
+- [ ] Tests passing for both languages
+- [ ] Bilingual documentation
+
+---
+
+## Post-v1.2 Future Ideas
 
 - [ ] Web dashboard for sync management
 - [ ] Cloud sync via GitHub Gists
@@ -641,30 +873,34 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 - [ ] Plugin system for custom adapters
 - [ ] AI-powered config migration
 - [ ] VSCode extension
+- [ ] Additional languages (Japanese, Korean, Spanish)
 
 ---
 
 ## Progress Tracking
 
-**Overall Progress**: 6/8 phases complete (MVP v1.0 ✅ + v1.1 ✅, ready for v1.2)
+**Overall Progress**: 6/10 phases complete (MVP v1.0 ✅ + v1.1 ✅, planning v1.2)
 
-| Phase   | Status         | Start Date | End Date   | Notes                        |
-| ------- | -------------- | ---------- | ---------- | ---------------------------- |
-| Phase 1 | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Foundation                   |
-| Phase 2 | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Adapters                     |
-| Phase 3 | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Diff & Plan                  |
-| Phase 4 | 🟢 Complete    | 2026-01-24 | 2026-01-25 | CLI Commands                 |
-| Phase 5 | 🟢 Complete    | 2026-01-25 | 2026-01-25 | Safety & Reliability         |
-| Phase 6 | ⏸️ Deferred    | -          | -          | Testing (deferred post-v1.1) |
-| Phase 7 | 🟢 Complete    | 2026-01-25 | 2026-01-25 | v1.1 Extensions              |
-| Phase 8 | 🔴 Not Started | -          | -          | Performance & Advanced       |
+| Phase    | Status         | Start Date | End Date   | Notes                        |
+| -------- | -------------- | ---------- | ---------- | ---------------------------- |
+| Phase 1  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Foundation                   |
+| Phase 2  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Adapters                     |
+| Phase 3  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Diff & Plan                  |
+| Phase 4  | 🟢 Complete    | 2026-01-24 | 2026-01-25 | CLI Commands                 |
+| Phase 5  | 🟢 Complete    | 2026-01-25 | 2026-01-25 | Safety & Reliability         |
+| Phase 6  | 🟡 Partial     | 2026-01-25 | -          | Unit tests ✅, docs/E2E ❌   |
+| Phase 7  | 🟢 Complete    | 2026-01-25 | 2026-01-25 | v1.1 Extensions              |
+| Phase 8  | 🔴 Not Started | -          | -          | Performance & Advanced       |
+| Phase 9  | 🔴 Not Started | -          | -          | Skills Symlink Support       |
+| Phase 10 | 🔴 Not Started | -          | -          | Multi-language (i18n)        |
 
 **Legend**:
 
 - 🔴 Not Started
-- 🟡 In Progress
+- 🟡 In Progress / Partially Complete
 - 🟢 Complete
 - 🔵 Blocked
+- ⏸️ Deferred
 
 ---
 
@@ -680,4 +916,4 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 ---
 
 **Last Updated**: 2026-01-25
-**Next Action**: Start Phase 8 - Performance & Advanced Features
+**Next Action**: Choose Phase 8 (Performance) OR Phase 9 (Symlinks) OR Phase 10 (i18n)
