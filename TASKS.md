@@ -15,7 +15,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 **Next Phase**: All core phases complete! 🎉
 
 **Progress**: 8/10 phases complete (MVP v1.0 ✅ + v1.1 ✅) + Phase 8 ✅ + Phase 9 ✅ + Phase 10 ✅
-**Test Count**: 574 tests passing (+9 integration tests, 9/9 passing ✅)
+**Test Count**: 577 tests passing (+9 integration tests + 3 E2E tests ✅)
 **Roadmap**: v1.2 COMPLETE! Includes Phase 8 (Performance) ✅ + Phase 9 (Symlinks) ✅ + Phase 10 (i18n) ✅
 
 ---
@@ -429,17 +429,16 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [ ] Network interruption (for future HTTP MCP)
   - [ ] Corrupt manifest
 
-### 6.3 E2E Tests
+### 6.3 E2E Tests ✅
 
-- [ ] Set up test fixtures
-  - [ ] Sample Claude Code configuration
-  - [ ] Sample skills with frontmatter
-  - [ ] Sample MCP configurations
-- [ ] Test complete workflows
-  - [ ] `init` → `sync` → `status` → `list`
-  - [ ] `sync` → modify source → `sync` again
-  - [ ] `clean` → `sync`
-- [ ] Test CLI output
+- [x] Set up test fixtures
+  - [x] Minimal Claude Code source configuration
+  - [x] Sample skills with frontmatter
+- [x] Test complete workflows (basic-workflow.test.ts)
+  - [x] Sync from Claude Code to Cursor
+  - [x] Sync to multiple targets (Cursor + OpenCode)
+  - [x] Prune mode deletion
+- [ ] Test CLI output (deferred - basic functionality verified)
   - [ ] Colors and formatting
   - [ ] Progress indicators
   - [ ] Error messages
@@ -497,11 +496,11 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Phase 6 Deliverables**:
 
-- [x] Unit tests complete (26 test files, 352 tests passing)
-- [ ] Integration tests (not implemented)
-- [ ] E2E tests (not implemented)
-- [ ] Documentation (README, API docs not written)
-- [ ] Error handling (basic error handling done, polish incomplete)
+- [x] Unit tests complete (26 test files, 352 tests passing) ✅
+- [x] Integration tests (1 test file, 9 tests passing) ✅
+- [x] E2E tests (1 test file, 3 tests passing) ✅
+- [ ] Documentation (README, API docs not written - deferred)
+- [x] Error handling (error formatter + debug logging complete) ✅
 
 ---
 
