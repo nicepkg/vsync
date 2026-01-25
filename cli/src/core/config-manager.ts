@@ -159,6 +159,11 @@ export function mergeConfigs(
     merged.use_symlinks_for_skills = useSymlinks;
   }
 
+  // Add language preference from user config (user preference, not overridden by project)
+  if (userConfig.language !== undefined) {
+    merged.language = userConfig.language;
+  }
+
   return merged;
 }
 
@@ -282,6 +287,13 @@ export function validateConfig(config: VibeConfig): ValidationResult {
     typeof config.use_symlinks_for_skills !== "boolean"
   ) {
     errors.push("use_symlinks_for_skills must be a boolean");
+  }
+
+  // Validate language (optional 'en' | 'zh')
+  if (config.language !== undefined) {
+    if (config.language !== "en" && config.language !== "zh") {
+      errors.push("language must be 'en' or 'zh'");
+    }
   }
 
   return {

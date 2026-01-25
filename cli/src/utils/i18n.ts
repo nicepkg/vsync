@@ -8,46 +8,29 @@
  * - DRY: Single translate function with parameter interpolation
  */
 
-import { readFile } from "node:fs/promises";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
-/**
- * Supported languages
- */
-export type Language = "en" | "zh";
+import enTranslations from "../locales/en.json";
+import zhTranslations from "../locales/zh.json";
 
 /**
  * Translation data structure
  */
-type Translations = Record<string, any>;
+type Translations = typeof enTranslations;
+
+const locales = {
+  en: enTranslations,
+  zh: zhTranslations,
+} as const satisfies Record<string, Translations>;
+
+/**
+ * Supported languages
+ */
+export type Language = keyof typeof locales;
 
 /**
  * Current language and loaded translations
  */
 let currentLanguage: Language = "en";
-let translations: Translations = {};
-
-/**
- * Get the locales directory path
- * Handles both ESM (__dirname not available) and test environments
- */
-function getLocalesDir(): string {
-  // Check for test environment with mocked __dirname
-  if (typeof (globalThis as any).__dirname === "string") {
-    return join((globalThis as any).__dirname, "..", "locales");
-  }
-
-  try {
-    // Try ESM approach for production
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    return join(__dirname, "..", "locales");
-  } catch {
-    // Final fallback
-    return join(process.cwd(), "src", "locales");
-  }
-}
+let translations: Translations = enTranslations;
 
 /**
  * Detect system language from environment variables
@@ -82,11 +65,7 @@ export async function loadLanguage(lang: Language): Promise<void> {
   }
 
   try {
-    const localesDir = getLocalesDir();
-    const filePath = join(localesDir, `${lang}.json`);
-    const content = await readFile(filePath, "utf-8");
-
-    translations = JSON.parse(content);
+    translations = locales[lang];
     currentLanguage = lang;
   } catch (error) {
     if (error instanceof Error) {

@@ -1,5 +1,4 @@
-import mockFs from "mock-fs";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   detectSystemLanguage,
   loadLanguage,
@@ -9,65 +8,9 @@ import {
 } from "@src/utils/i18n.js";
 
 describe("i18n Utilities", () => {
-  const enTranslations = {
-    common: {
-      yes: "Yes",
-      no: "No",
-      cancel: "Cancel",
-    },
-    commands: {
-      init: {
-        welcome: "Welcome to vibe-sync!",
-        selectTools: "Which AI coding tools do you use?",
-      },
-      sync: {
-        reading: "Reading source ({tool})...",
-        foundSkills: "Found {count} skills",
-      },
-    },
-    errors: {
-      configNotFound: "Configuration file not found",
-      invalidConfig: "Invalid configuration: {message}",
-    },
-  };
-
-  const zhTranslations = {
-    common: {
-      yes: "是",
-      no: "否",
-      cancel: "取消",
-    },
-    commands: {
-      init: {
-        welcome: "欢迎使用 vibe-sync!",
-        selectTools: "您使用哪些 AI 编码工具?",
-      },
-      sync: {
-        reading: "正在读取源配置 ({tool})...",
-        foundSkills: "找到 {count} 个技能",
-      },
-    },
-    errors: {
-      configNotFound: "未找到配置文件",
-      invalidConfig: "无效的配置: {message}",
-    },
-  };
-
-  beforeEach(() => {
-    mockFs({
-      "/project/src/locales": {
-        "en.json": JSON.stringify(enTranslations),
-        "zh.json": JSON.stringify(zhTranslations),
-      },
-    });
-
-    // Mock __dirname for locales path resolution
-    vi.stubGlobal("__dirname", "/project/src/utils");
-  });
-
-  afterEach(() => {
-    mockFs.restore();
-    vi.unstubAllGlobals();
+  afterEach(async () => {
+    // Reset to English after each test
+    await loadLanguage("en");
   });
 
   describe("detectSystemLanguage", () => {
@@ -133,12 +76,11 @@ describe("i18n Utilities", () => {
       );
     });
 
-    it("should throw error when translation file is missing", async () => {
-      mockFs({
-        "/project/src/locales": {},
-      });
-
-      await expect(loadLanguage("en")).rejects.toThrow();
+    it("should handle already loaded translations", async () => {
+      // Translations are now compile-time imports, so they're always available
+      await loadLanguage("en");
+      const translation = t("common.yes");
+      expect(translation).toBe("Yes");
     });
   });
 
@@ -154,12 +96,12 @@ describe("i18n Utilities", () => {
 
     it("should translate nested key", () => {
       const translation = t("commands.init.welcome");
-      expect(translation).toBe("Welcome to vibe-sync!");
+      expect(translation).toBe("🚀 Welcome to vibe-sync!");
     });
 
     it("should interpolate single parameter", () => {
       const translation = t("commands.sync.reading", { tool: "claude-code" });
-      expect(translation).toBe("Reading source (claude-code)...");
+      expect(translation).toBe("Reading claude-code configuration...");
     });
 
     it("should interpolate multiple parameters", () => {
@@ -174,7 +116,7 @@ describe("i18n Utilities", () => {
 
     it("should handle missing interpolation parameters", () => {
       const translation = t("commands.sync.reading");
-      expect(translation).toBe("Reading source ({tool})...");
+      expect(translation).toBe("Reading {tool} configuration...");
     });
 
     it("should switch language dynamically", async () => {
@@ -208,26 +150,15 @@ describe("i18n Utilities", () => {
       await loadLanguage("en");
     });
 
-    it("should handle empty translation object", async () => {
-      mockFs({
-        "/project/src/locales": {
-          "en.json": JSON.stringify({}),
-        },
-      });
-
+    it("should work with compile-time imported translations", async () => {
+      // Translations are now compile-time imports (more efficient)
       await loadLanguage("en");
-      const translation = t("any.key");
-      expect(translation).toBe("any.key");
-    });
+      const translation = t("common.yes");
+      expect(translation).toBe("Yes");
 
-    it("should handle invalid JSON gracefully", async () => {
-      mockFs({
-        "/project/src/locales": {
-          "en.json": "{ invalid json }",
-        },
-      });
-
-      await expect(loadLanguage("en")).rejects.toThrow();
+      await setLanguage("zh");
+      const zhTranslation = t("common.yes");
+      expect(zhTranslation).toBe("是");
     });
 
     it("should handle numeric interpolation values", () => {

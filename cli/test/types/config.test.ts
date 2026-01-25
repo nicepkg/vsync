@@ -109,5 +109,52 @@ describe("Config Types", () => {
 
       expect(config.use_symlinks_for_skills).toBeUndefined();
     });
+
+    it("should support language preference in user-level config", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: {
+          skills: true,
+          mcp: true,
+        },
+        language: "zh",
+      };
+
+      expect(config.language).toBe("zh");
+    });
+
+    it("should support English language preference", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: {
+          skills: true,
+          mcp: true,
+        },
+        language: "en",
+      };
+
+      expect(config.language).toBe("en");
+    });
+
+    it("should allow config without language preference (backwards compatible)", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: {
+          skills: true,
+          mcp: true,
+        },
+      };
+
+      expect(config.language).toBeUndefined();
+    });
   });
 });

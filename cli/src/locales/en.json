@@ -38,7 +38,7 @@
       "completedWithErrors": "Sync completed with errors",
       "settingUpSymlinks": "Setting up symlinks for skills directories...",
       "symlinksConfigured": "Symlinks configured",
-      "symlinksF failed": "Failed to setup symlinks"
+      "symlinksFailed": "Failed to setup symlinks"
     },
     "plan": {
       "description": "Show sync plan without executing",

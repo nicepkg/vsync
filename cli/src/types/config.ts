@@ -70,4 +70,11 @@ export interface VibeConfig {
    * @since v1.2
    */
   use_symlinks_for_skills?: boolean;
+  /**
+   * User interface language preference
+   * Only applicable for user-level config (~/.vibe-sync.json)
+   * Defaults to system language if not set
+   * @since v1.2
+   */
+  language?: "en" | "zh";
 }

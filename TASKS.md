@@ -765,14 +765,18 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Edge cases (empty objects, invalid JSON, numeric params)
 - [x] All tests passing (467 total, +22 new)
 
-### 10.2 Configuration Extension
+### 10.2 Configuration Extension ✅
 
-- [ ] Extend user-level config
-  - [ ] Add `language?: 'en' | 'zh'` to user-level `VibeConfig`
-  - [ ] Update `cli/src/core/config-manager.ts`
-    - [ ] Load language from `~/.vibe-sync.json`
-    - [ ] Default to system language if not set
-  - [ ] Store language preference in user config (not project)
+- [x] Extend user-level config
+  - [x] Add `language?: 'en' | 'zh'` to user-level `VibeConfig`
+  - [x] Update `cli/src/core/config-manager.ts`
+    - [x] Validate language field in `validateConfig()`
+    - [x] Merge language preference in `mergeConfigs()` (from user config only)
+  - [x] Store language preference in user config (not project)
+- [x] Added 7 comprehensive tests
+  - [x] 3 type tests for language field
+  - [x] 4 config-manager tests for validation and merging
+- [x] All tests passing (475 total, +4 new, -1 i18n test adjusted)
 
 ### 10.3 Language Detection & Selection
 

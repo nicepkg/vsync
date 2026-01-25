@@ -279,6 +279,63 @@ describe("Config Manager", () => {
         "use_symlinks_for_skills must be a boolean",
       );
     });
+
+    it("should accept valid language preference", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+        language: "zh",
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+    });
+
+    it("should accept config without language (backwards compatible)", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+    });
+
+    it("should reject invalid language value", () => {
+      const config = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+        language: "fr", // Should be 'en' or 'zh'
+      } as any;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("language must be 'en' or 'zh'");
+    });
+
+    it("should reject language with invalid type", () => {
+      const config = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+        language: 123, // Should be string
+      } as any;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("language must be 'en' or 'zh'");
+    });
   });
 
   describe("mergeConfigs", () => {
@@ -456,6 +513,52 @@ describe("Config Manager", () => {
 
       // Should inherit from user config
       expect(merged.use_symlinks_for_skills).toBe(true);
+    });
+
+    it("should preserve language preference from user config", () => {
+      const userConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+        language: "zh",
+      };
+
+      const projectConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor", "opencode"],
+        sync_config: { skills: true, mcp: false },
+      };
+
+      const merged = mergeConfigs(userConfig, projectConfig);
+
+      // Language should come from user config (user preference)
+      expect(merged.language).toBe("zh");
+    });
+
+    it("should not have language if neither config has it", () => {
+      const userConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+      };
+
+      const projectConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor", "opencode"],
+        sync_config: { skills: true, mcp: false },
+      };
+
+      const merged = mergeConfigs(userConfig, projectConfig);
+
+      expect(merged.language).toBeUndefined();
     });
   });
 
