@@ -778,18 +778,28 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] 4 config-manager tests for validation and merging
 - [x] All tests passing (475 total, +4 new, -1 i18n test adjusted)
 
-### 10.3 Language Detection & Selection
+### 10.3 Language Detection & Selection ✅
 
-- [ ] Implement `cli/src/utils/i18n.ts`
-  - [ ] `detectSystemLanguage()` - Detect from `process.env.LANG`
-  - [ ] `loadLanguage(lang)` - Load translation file
-  - [ ] `t(key, params?)` - Translate function with interpolation
-  - [ ] `setLanguage(lang)` - Switch language
-- [ ] Add language prompt (first run only)
-  - [ ] Check if `~/.vibe-sync.json` exists
-  - [ ] If not, prompt: "选择语言 / Choose language:"
-  - [ ] Options: "中文" / "English"
-  - [ ] Save choice to `~/.vibe-sync.json`
+- [x] Implement `cli/src/utils/language-prompt.ts`
+  - [x] `shouldPromptForLanguage()` - Check if user config exists
+  - [x] `promptForLanguage()` - Bilingual prompt ("Choose language / 选择语言:")
+  - [x] `initializeLanguage()` - Initialize i18n with detection and prompting
+  - [x] Integration with existing `detectSystemLanguage()` from Phase 10.1
+  - [x] Uses existing `loadConfig()` and `saveConfig()` from config-manager
+- [x] Add language prompt (first run only)
+  - [x] Check if `~/.vibe-sync.json` exists via `shouldPromptForLanguage()`
+  - [x] If not, prompt: "Choose language / 选择语言:" (English first per linter)
+  - [x] Options: "English" / "中文"
+  - [x] Save choice to `~/.vibe-sync.json` with minimal config
+  - [x] Falls back to system language if prompt is skipped
+- [x] Added 14 comprehensive tests
+  - [x] `shouldPromptForLanguage()` - Config existence checks
+  - [x] `promptForLanguage()` - Bilingual prompt behavior
+  - [x] `initializeLanguage()` - Full flow (prompt, detect, save)
+  - [x] Edge cases (corrupted config, no prompt, custom directories)
+- [x] All tests passing (489 total, +14 new)
+- [x] TypeScript compilation passing
+- [x] ESLint passing (9 warnings for `any` types - acceptable)
 
 ### 10.4 Translation Coverage
 
