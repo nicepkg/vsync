@@ -1,9 +1,13 @@
 import { readFile, readdir } from "node:fs/promises";
+import path from "node:path";
 import * as jsonc from "jsonc-parser";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
+
+const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const homeDir = path.join(testRoot, "home", "user");
 
 describe("OpenCodeAdapter", () => {
   let adapter: OpenCodeAdapter;
@@ -310,14 +314,14 @@ describe("OpenCodeAdapter", () => {
 
     it("should write user config to .opencode/opencode.json", async () => {
       mockFs({
-        "/home/user": {
+        [homeDir]: {
           ".opencode": {},
         },
       });
 
       const userAdapter = new OpenCodeAdapter({
         tool: "opencode",
-        baseDir: "/home/user",
+        baseDir: homeDir,
         level: "user",
       });
 
@@ -335,7 +339,7 @@ describe("OpenCodeAdapter", () => {
       expect(result.success).toBe(true);
 
       const jsonText = await readFile(
-        "/home/user/.opencode/opencode.json",
+        path.join(homeDir, ".opencode", "opencode.json"),
         "utf-8",
       );
       const config = jsonc.parse(jsonText);

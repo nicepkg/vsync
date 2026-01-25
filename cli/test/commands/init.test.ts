@@ -1,9 +1,13 @@
 import { readFile, access } from "node:fs/promises";
+import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 // Import for module side-effects (needed for dynamic imports in tests)
 import "@src/commands/init.js";
 import type { VibeConfig, ToolName } from "@src/types/config.js";
+
+const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const homeDir = path.join(testRoot, "home", "user");
 
 describe("Init Command", () => {
   beforeEach(() => {
@@ -16,7 +20,7 @@ describe("Init Command", () => {
         ".cursor": {},
       },
       "/empty": {},
-      "/home/user": {},
+      [homeDir]: {},
     });
   });
 
@@ -202,10 +206,13 @@ describe("Init Command", () => {
       };
 
       await import("@src/commands/init.js").then((m) =>
-        m.saveConfig(config, "/home/user"),
+        m.saveConfig(config, homeDir),
       );
 
-      const content = await readFile("/home/user/.vibe-sync.json", "utf-8");
+      const content = await readFile(
+        path.join(homeDir, ".vibe-sync.json"),
+        "utf-8",
+      );
       const parsed = JSON.parse(content);
 
       expect(parsed.source_tool).toBe("claude-code");
