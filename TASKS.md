@@ -596,14 +596,19 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 8.1 Performance Optimization
 
-- [ ] Parallel sync for multiple targets
-  - [ ] Update `executeSyncPlan()` to sync targets in parallel
-  - [ ] Use `Promise.all()` for concurrent writes
-  - [ ] Ensure rollback still works with parallel execution
-- [ ] Incremental sync optimization
-  - [ ] Only read changed files
-  - [ ] Cache parsed configs
-  - [ ] Skip unchanged items early
+- [x] Parallel sync for multiple targets
+  - [x] Implemented `SyncExecutor` for single-target sync
+  - [x] Implemented `ParallelSyncOrchestrator` for multi-target coordination
+  - [x] Uses `Promise.allSettled()` for fault tolerance
+  - [x] Rollback works correctly with parallel execution
+  - [x] All tests passing (367 total)
+- [x] Incremental sync optimization
+  - [x] Implemented `FileCache` for tracking file changes (mtime/size)
+  - [x] Implemented `IncrementalReader` for optimized file reading
+  - [x] Only reads changed files based on metadata
+  - [x] Caches parsed results in memory
+  - [x] Persists file cache to disk for cross-session optimization
+  - [x] All tests passing (33 new tests, 400 total)
 - [ ] Benchmark and measure improvements
 
 ### 8.2 Watch Mode
