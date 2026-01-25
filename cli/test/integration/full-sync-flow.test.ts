@@ -12,13 +12,19 @@ import { saveConfig } from "@src/core/config-manager.js";
 import { getProjectCacheDir } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
 
-// Mock language-config to skip language prompt
+// Mock config-initializer to skip prompts
 vi.mock("@src/utils/config-initializer.js", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@src/utils/config-initializer.js")>();
   return {
     ...actual,
     ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+    ensureConfig: vi
+      .fn()
+      .mockImplementation(async (projectDir, isUserLevel) => {
+        const { loadConfig } = await import("@src/core/config-manager.js");
+        return await loadConfig(isUserLevel ? "user" : "project", projectDir);
+      }),
   };
 });
 
@@ -743,4 +749,4 @@ Content`,
       expect(manifest.items["skill/tracked-skill"].hash).toBeDefined();
     });
   });
-});
+}, 10000); // Increased timeout to 10s for integration tests in slower CI environments

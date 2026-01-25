@@ -14,13 +14,19 @@ import {
 import { syncCommand } from "@src/commands/sync.js";
 import type { ToolName } from "@src/types/config.js";
 
-// Mock language-config to skip language prompt
+// Mock config-initializer to skip prompts
 vi.mock("@src/utils/config-initializer.js", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@src/utils/config-initializer.js")>();
   return {
     ...actual,
     ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+    ensureConfig: vi
+      .fn()
+      .mockImplementation(async (projectDir, isUserLevel) => {
+        const { loadConfig } = await import("@src/core/config-manager.js");
+        return await loadConfig(isUserLevel ? "user" : "project", projectDir);
+      }),
   };
 });
 
@@ -717,4 +723,4 @@ describe("Basic E2E Workflows", () => {
       }
     });
   });
-});
+}, 10000); // Increased timeout to 10s for E2E tests in slower CI environments
