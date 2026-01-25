@@ -810,12 +810,16 @@ export async function syncCommand(options: {
 
     // Prompt for confirmation (skip if --yes flag is provided)
     if (!options.yes) {
+      // Safe mode (no deletes) defaults to Yes - non-destructive
+      // Prune mode (with deletes) defaults to No - requires explicit confirmation
+      const defaultConfirm = mode === "safe";
+
       const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
         {
           type: "confirm",
           name: "confirm",
           message: t("commands.sync.confirmPrompt"),
-          default: false,
+          default: defaultConfirm,
         },
       ]);
 
