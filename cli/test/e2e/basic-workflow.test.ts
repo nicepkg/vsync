@@ -108,6 +108,58 @@ class E2ETestHelper {
       return null;
     }
   }
+
+  /**
+   * Get MCP config path for a given tool
+   */
+  static getMCPConfigPath(projectDir: string, tool: ToolName): string {
+    const mcpPaths: Record<ToolName, string> = {
+      "claude-code": ".mcp.json",
+      cursor: ".cursor/mcp.json",
+      opencode: "opencode.json",
+      codex: ".mcp.json",
+    };
+
+    return path.join(projectDir, mcpPaths[tool]);
+  }
+
+  /**
+   * Get agent path for a given tool
+   */
+  static getAgentPath(
+    projectDir: string,
+    tool: ToolName,
+    agentName: string,
+  ): string {
+    const toolConfigDirs: Record<ToolName, string> = {
+      "claude-code": ".claude",
+      cursor: ".cursor",
+      opencode: ".opencode",
+      codex: ".codex",
+    };
+
+    const configDir = toolConfigDirs[tool];
+    return path.join(projectDir, configDir, "agents", `${agentName}.md`);
+  }
+
+  /**
+   * Get command path for a given tool
+   */
+  static getCommandPath(
+    projectDir: string,
+    tool: ToolName,
+    commandName: string,
+  ): string {
+    const toolConfigDirs: Record<ToolName, string> = {
+      "claude-code": ".claude",
+      cursor: ".cursor",
+      opencode: ".opencode",
+      codex: ".codex",
+    };
+
+    const configDir = toolConfigDirs[tool];
+    return path.join(projectDir, configDir, "commands", `${commandName}.md`);
+  }
 }
 
 /**
@@ -126,12 +178,15 @@ class E2ETestFixture {
   async initVibeSync(
     source: ToolName,
     targets: ToolName[],
-    options?: { useSymlinks?: boolean },
+    options?: {
+      useSymlinks?: boolean;
+      syncItems?: Array<"skills" | "mcp" | "agents" | "commands">;
+    },
   ): Promise<void> {
     const config = await generateConfig({
       tools: [source, ...targets],
       source,
-      syncItems: ["skills", "mcp"],
+      syncItems: options?.syncItems ?? ["skills", "mcp"],
       isUserLevel: false,
     });
 
@@ -167,6 +222,72 @@ description: ${skillName} skill
   async removeSkill(skillName: string): Promise<void> {
     const skillDir = path.join(this.projectDir, ".claude", "skills", skillName);
     await fs.rm(skillDir, { recursive: true, force: true });
+  }
+
+  /**
+   * Create an MCP server configuration in Claude Code source
+   */
+  async createMCPServer(
+    serverName: string,
+    config?: {
+      command?: string;
+      args?: string[];
+      env?: Record<string, string>;
+    },
+  ): Promise<void> {
+    const mcpConfigPath = path.join(this.projectDir, ".mcp.json");
+    const mcpConfig = {
+      mcpServers: {
+        [serverName]: {
+          command: config?.command || "npx",
+          args: config?.args || ["-y", "@modelcontextprotocol/server-memory"],
+          ...(config?.env && { env: config.env }),
+        },
+      },
+    };
+
+    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  }
+
+  /**
+   * Create an agent in Claude Code source
+   */
+  async createAgent(agentName: string, content?: string): Promise<void> {
+    const agentDir = path.join(this.projectDir, ".claude", "agents");
+    await fs.mkdir(agentDir, { recursive: true });
+
+    const agentContent =
+      content ||
+      `---
+name: ${agentName}
+description: ${agentName} agent
+---
+# ${agentName} Agent
+`;
+
+    await fs.writeFile(path.join(agentDir, `${agentName}.md`), agentContent);
+  }
+
+  /**
+   * Create a command in Claude Code source
+   */
+  async createCommand(commandName: string, content?: string): Promise<void> {
+    const commandDir = path.join(this.projectDir, ".claude", "commands");
+    await fs.mkdir(commandDir, { recursive: true });
+
+    const commandContent =
+      content ||
+      `---
+name: ${commandName}
+description: ${commandName} command
+---
+# ${commandName} Command
+`;
+
+    await fs.writeFile(
+      path.join(commandDir, `${commandName}.md`),
+      commandContent,
+    );
   }
 }
 
@@ -368,6 +489,193 @@ describe("Basic E2E Workflows", () => {
 
         expect(isSymlink).toBe(true);
         expect(realSymlinkTarget).toBe(realSourceDir);
+      }
+    });
+  });
+
+  describe("MCP Sync", () => {
+    it("should sync MCP servers from Claude Code to Cursor", async () => {
+      // Arrange
+      await fixture.createMCPServer("memory", {
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-memory"],
+      });
+      await fixture.initVibeSync("claude-code", ["cursor"], {
+        syncItems: ["mcp"],
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert
+      const cursorMCPPath = E2ETestHelper.getMCPConfigPath(testDir, "cursor");
+      const mcpContent = await fs.readFile(cursorMCPPath, "utf-8");
+      const mcpConfig = JSON.parse(mcpContent);
+
+      expect(mcpConfig.mcpServers).toBeDefined();
+      expect(mcpConfig.mcpServers.memory).toBeDefined();
+      expect(mcpConfig.mcpServers.memory.command).toBe("npx");
+      expect(mcpConfig.mcpServers.memory.args).toEqual([
+        "-y",
+        "@modelcontextprotocol/server-memory",
+      ]);
+    });
+
+    it("should preserve environment variables in MCP config", async () => {
+      // Arrange
+      await fixture.createMCPServer("github", {
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-github"],
+        env: {
+          GITHUB_TOKEN: "${env:GITHUB_TOKEN}",
+        },
+      });
+      await fixture.initVibeSync("claude-code", ["cursor"], {
+        syncItems: ["mcp"],
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert - env vars should be preserved, not expanded
+      const cursorMCPPath = E2ETestHelper.getMCPConfigPath(testDir, "cursor");
+      const mcpContent = await fs.readFile(cursorMCPPath, "utf-8");
+      const mcpConfig = JSON.parse(mcpContent);
+
+      expect(mcpConfig.mcpServers.github.env).toBeDefined();
+      expect(mcpConfig.mcpServers.github.env.GITHUB_TOKEN).toBe(
+        "${env:GITHUB_TOKEN}",
+      );
+    });
+
+    it("should sync MCP servers to OpenCode with correct format", async () => {
+      // Arrange
+      await fixture.createMCPServer("memory", {
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-memory"],
+        env: {
+          API_KEY: "${env:API_KEY}",
+        },
+      });
+      await fixture.initVibeSync("claude-code", ["opencode"], {
+        syncItems: ["mcp"],
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert - OpenCode uses different format
+      const opencodeMCPPath = E2ETestHelper.getMCPConfigPath(
+        testDir,
+        "opencode",
+      );
+      const mcpContent = await fs.readFile(opencodeMCPPath, "utf-8");
+      const mcpConfig = JSON.parse(mcpContent);
+
+      expect(mcpConfig.mcp).toBeDefined(); // OpenCode uses 'mcp', not 'mcpServers'
+      expect(mcpConfig.mcp.memory).toBeDefined();
+      expect(mcpConfig.mcp.memory.type).toBe("local"); // OpenCode requires 'type' field
+      expect(mcpConfig.mcp.memory.command).toEqual([
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory",
+      ]);
+      expect(mcpConfig.mcp.memory.environment.API_KEY).toBe("{env:API_KEY}"); // OpenCode format
+    });
+  });
+
+  describe("Agents Sync", () => {
+    it("should sync agents from Claude Code to Cursor", async () => {
+      // Arrange
+      await fixture.createAgent(
+        "test-agent",
+        "---\nname: test-agent\n---\n# Test Agent\n",
+      );
+      await fixture.initVibeSync("claude-code", ["cursor"], {
+        syncItems: ["skills", "agents"], // Need skills or mcp for validation
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert
+      const cursorAgentPath = E2ETestHelper.getAgentPath(
+        testDir,
+        "cursor",
+        "test-agent",
+      );
+      const agentContent = await fs.readFile(cursorAgentPath, "utf-8");
+      expect(agentContent).toContain("Test Agent");
+    });
+
+    it("should sync agents to multiple targets", async () => {
+      // Arrange
+      await fixture.createAgent("code-reviewer");
+      await fixture.initVibeSync("claude-code", ["cursor", "opencode"], {
+        syncItems: ["skills", "agents"], // Need skills or mcp for validation
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert - both targets should have the agent
+      const targets: ToolName[] = ["cursor", "opencode"];
+      for (const target of targets) {
+        const agentPath = E2ETestHelper.getAgentPath(
+          testDir,
+          target,
+          "code-reviewer",
+        );
+        const exists = await E2ETestHelper.fileExists(agentPath);
+        expect(exists).toBe(true);
+      }
+    });
+  });
+
+  describe("Commands Sync", () => {
+    it("should sync commands from Claude Code to Cursor", async () => {
+      // Arrange
+      await fixture.createCommand(
+        "test-cmd",
+        "---\nname: test-cmd\n---\n# Test Command\n",
+      );
+      await fixture.initVibeSync("claude-code", ["cursor"], {
+        syncItems: ["skills", "commands"], // Need skills or mcp for validation
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert
+      const cursorCommandPath = E2ETestHelper.getCommandPath(
+        testDir,
+        "cursor",
+        "test-cmd",
+      );
+      const commandContent = await fs.readFile(cursorCommandPath, "utf-8");
+      expect(commandContent).toContain("Test Command");
+    });
+
+    it("should sync commands to multiple targets", async () => {
+      // Arrange
+      await fixture.createCommand("deploy");
+      await fixture.initVibeSync("claude-code", ["cursor", "opencode"], {
+        syncItems: ["skills", "commands"], // Need skills or mcp for validation
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert - both targets should have the command
+      const targets: ToolName[] = ["cursor", "opencode"];
+      for (const target of targets) {
+        const commandPath = E2ETestHelper.getCommandPath(
+          testDir,
+          target,
+          "deploy",
+        );
+        const exists = await E2ETestHelper.fileExists(commandPath);
+        expect(exists).toBe(true);
       }
     });
   });
