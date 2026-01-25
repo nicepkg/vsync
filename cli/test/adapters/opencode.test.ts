@@ -682,43 +682,4 @@ Command content`,
       expect(commands[0]!.content).toBe("Command content");
     });
   });
-
-  describe("validate", () => {
-    it("should validate existing configuration", async () => {
-      const result = await adapter.validate();
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it("should warn when .opencode directory missing", async () => {
-      const emptyAdapter = new OpenCodeAdapter({
-        tool: "opencode",
-        baseDir: "/empty",
-        level: "project",
-      });
-
-      const result = await emptyAdapter.validate();
-
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings?.some((w) => w.includes(".opencode"))).toBe(true);
-    });
-
-    it("should warn when opencode.json is missing", async () => {
-      mockFs({
-        "/project": {
-          ".opencode": {
-            skills: {},
-          },
-        },
-      });
-
-      const result = await adapter.validate();
-
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings?.some((w) => w.includes("opencode.json"))).toBe(
-        true,
-      );
-    });
-  });
 });

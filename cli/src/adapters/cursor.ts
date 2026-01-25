@@ -4,12 +4,12 @@
  * This adapter is write-only (target tool)
  */
 
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { MCPServer, MCPOAuth } from "@src/types/models.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
-import type { ValidationResult, WriteResult } from "./base.js";
+import type { WriteResult } from "./base.js";
 import { BaseAdapter } from "./base.js";
 
 /**
@@ -206,44 +206,6 @@ export class CursorAdapter extends BaseAdapter {
     }
 
     return auth;
-  }
-
-  /**
-   * Validate Cursor configuration
-   */
-  override async validate(): Promise<ValidationResult> {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    // Check if .cursor directory exists
-    const cursorDir = join(this.config.baseDir, this.getConfigDir());
-    try {
-      const stats = await stat(cursorDir);
-      if (!stats.isDirectory()) {
-        warnings.push(".cursor exists but is not a directory");
-      }
-    } catch {
-      warnings.push(".cursor directory not found");
-    }
-
-    // Check if mcp.json exists
-    const mcpJsonPath = await this.getMcpConfigPath();
-    try {
-      await stat(mcpJsonPath);
-    } catch {
-      warnings.push("mcp.json not found");
-    }
-
-    const result: ValidationResult = {
-      valid: errors.length === 0,
-      errors,
-    };
-
-    if (warnings.length > 0) {
-      result.warnings = warnings;
-    }
-
-    return result;
   }
 
   /**

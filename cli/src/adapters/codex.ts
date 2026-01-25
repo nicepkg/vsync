@@ -8,7 +8,7 @@ import { join } from "node:path";
 import type { MCPServer, Agent, Command } from "@src/types/models.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
-import type { ValidationResult, WriteResult } from "./base.js";
+import type { WriteResult } from "./base.js";
 import { BaseAdapter } from "./base.js";
 
 /**
@@ -330,38 +330,5 @@ export class CodexAdapter extends BaseAdapter {
    */
   override async deleteCommand(name: string): Promise<void> {
     throw new Error(`Codex does not support commands: ${name}`);
-  }
-
-  /**
-   * Validate Codex configuration
-   */
-  override async validate(): Promise<ValidationResult> {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    const codexDir = join(this.config.baseDir, this.getConfigDir());
-    const codexDirStats = await fileOps.stat(codexDir);
-    if (!codexDirStats) {
-      warnings.push(".codex directory not found");
-    } else if (!codexDirStats.isDirectory()) {
-      warnings.push(".codex exists but is not a directory");
-    }
-
-    const mcpConfigPath = await this.getMcpConfigPath();
-    const mcpConfigStats = await fileOps.stat(mcpConfigPath);
-    if (!mcpConfigStats) {
-      warnings.push("config.toml not found");
-    }
-
-    const result: ValidationResult = {
-      valid: errors.length === 0,
-      errors,
-    };
-
-    if (warnings.length > 0) {
-      result.warnings = warnings;
-    }
-
-    return result;
   }
 }

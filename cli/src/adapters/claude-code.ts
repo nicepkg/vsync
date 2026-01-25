@@ -8,7 +8,7 @@ import { join } from "node:path";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
-import type { WriteResult, ValidationResult } from "./base.js";
+import type { WriteResult } from "./base.js";
 import { BaseAdapter } from "./base.js";
 
 /**
@@ -94,42 +94,6 @@ export class ClaudeCodeAdapter extends BaseAdapter {
       );
       return [];
     }
-  }
-
-  /**
-   * Validate Claude Code configuration
-   */
-  override async validate(): Promise<ValidationResult> {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    // Check if .claude directory exists
-    const configDirPath = join(this.config.baseDir, this.getConfigDir());
-    const configDirStats = await fileOps.stat(configDirPath);
-    if (!configDirStats) {
-      warnings.push(".claude directory not found");
-    } else if (!configDirStats.isDirectory()) {
-      warnings.push(".claude exists but is not a directory");
-    }
-
-    // Check if .mcp.json exists
-    const mcpJsonPath = await this.getMcpConfigPath();
-    const mcpJsonStats = await fileOps.stat(mcpJsonPath);
-    if (!mcpJsonStats) {
-      warnings.push(".mcp.json not found");
-    }
-
-    const result: ValidationResult = {
-      valid: errors.length === 0,
-      errors,
-    };
-
-    // Add warnings only if present
-    if (warnings.length > 0) {
-      result.warnings = warnings;
-    }
-
-    return result;
   }
 
   // Write methods - Claude Code is read-only (source tool)

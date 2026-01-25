@@ -337,43 +337,6 @@ Command content`,
     });
   });
 
-  describe("validate", () => {
-    it("should validate existing configuration", async () => {
-      const result = await adapter.validate();
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it("should warn when .claude directory missing", async () => {
-      const emptyAdapter = new ClaudeCodeAdapter({
-        tool: "claude-code",
-        baseDir: "/empty",
-        level: "project",
-      });
-
-      const result = await emptyAdapter.validate();
-
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings?.length).toBeGreaterThan(0);
-    });
-
-    it("should warn when .mcp.json missing", async () => {
-      mockFs({
-        "/project": {
-          ".claude": {
-            skills: {},
-          },
-        },
-      });
-
-      const result = await adapter.validate();
-
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings?.some((w) => w.includes("mcp.json"))).toBe(true);
-    });
-  });
-
   describe("write methods", () => {
     it("should throw error for writeSkills (read-only)", async () => {
       await expect(adapter.writeSkills([])).rejects.toThrow(

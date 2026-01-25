@@ -615,41 +615,4 @@ Command content`,
       expect(oauth?.auth?.scopes).toEqual(["read", "write"]);
     });
   });
-
-  describe("validate", () => {
-    it("should validate existing configuration", async () => {
-      const result = await adapter.validate();
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it("should warn when .cursor directory missing", async () => {
-      const emptyAdapter = new CursorAdapter({
-        tool: "cursor",
-        baseDir: "/empty",
-        level: "project",
-      });
-
-      const result = await emptyAdapter.validate();
-
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings?.some((w) => w.includes(".cursor"))).toBe(true);
-    });
-
-    it("should warn when mcp.json missing", async () => {
-      mockFs({
-        "/project": {
-          ".cursor": {
-            skills: {},
-          },
-        },
-      });
-
-      const result = await adapter.validate();
-
-      expect(result.warnings).toBeDefined();
-      expect(result.warnings?.some((w) => w.includes("mcp.json"))).toBe(true);
-    });
-  });
 });

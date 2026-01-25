@@ -10,7 +10,7 @@ import type { MCPServer, MCPOAuth } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
-import type { ValidationResult, WriteResult } from "./base.js";
+import type { WriteResult } from "./base.js";
 import { BaseAdapter } from "./base.js";
 
 /**
@@ -276,41 +276,6 @@ export class OpenCodeAdapter extends BaseAdapter {
         await atomicWrite(mcpConfigJsoncPath, updatedText);
       }
     }
-  }
-
-  /**
-   * Validate OpenCode configuration
-   */
-  override async validate(): Promise<ValidationResult> {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    // Check if .opencode directory exists
-    const opencodeDir = join(this.config.baseDir, this.getConfigDir());
-    const opencodeDirStats = await fileOps.stat(opencodeDir);
-    if (!opencodeDirStats) {
-      warnings.push(".opencode directory not found");
-    } else if (!opencodeDirStats.isDirectory()) {
-      warnings.push(".opencode exists but is not a directory");
-    }
-
-    // Check if opencode.jsonc exists
-    const mcpConfigJsoncPath = await this.getMcpConfigPath();
-    const mcpConfigJsoncStats = await fileOps.stat(mcpConfigJsoncPath);
-    if (!mcpConfigJsoncStats) {
-      warnings.push("opencode.json not found");
-    }
-
-    const result: ValidationResult = {
-      valid: errors.length === 0,
-      errors,
-    };
-
-    if (warnings.length > 0) {
-      result.warnings = warnings;
-    }
-
-    return result;
   }
 
   override async readMCPServers(): Promise<MCPServer[]> {

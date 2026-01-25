@@ -173,13 +173,6 @@ export interface ToolAdapter {
    * @param name - Command name
    */
   deleteCommand(name: string): Promise<void>;
-
-  // Validation
-  /**
-   * Validate the tool's configuration
-   * @returns Validation result
-   */
-  validate(): Promise<ValidationResult>;
 }
 
 export abstract class BaseAdapter implements ToolAdapter {
@@ -197,7 +190,6 @@ export abstract class BaseAdapter implements ToolAdapter {
   abstract readMCPServers(): Promise<MCPServer[]>;
   abstract writeMCPServers(servers: MCPServer[]): Promise<WriteResult>;
   abstract deleteMCPServer(name: string): Promise<void>;
-  abstract validate(): Promise<ValidationResult>;
 
   getSkillsDir(): string {
     return join(this.getConfigDir(), "skills");

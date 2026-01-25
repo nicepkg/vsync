@@ -321,50 +321,6 @@ command = "npx"`,
     });
   });
 
-  describe("Validation", () => {
-    it("should validate when .codex directory exists", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {
-          ".codex": {
-            "config.toml": "",
-          },
-        },
-      });
-
-      const result = await adapter.validate();
-
-      expect(result.valid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it("should warn when .codex directory doesn't exist", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {},
-      });
-
-      const result = await adapter.validate();
-
-      expect(result.valid).toBe(true);
-      expect(result.warnings).toContain(".codex directory not found");
-    });
-
-    it("should warn when config.toml doesn't exist", async () => {
-      mockFs.restore();
-      mockFs({
-        [baseDir]: {
-          ".codex": {},
-        },
-      });
-
-      const result = await adapter.validate();
-
-      expect(result.valid).toBe(true);
-      expect(result.warnings).toContain("config.toml not found");
-    });
-  });
-
   describe("Hash Computation", () => {
     it("should compute hash for skills", async () => {
       mockFs.restore();
