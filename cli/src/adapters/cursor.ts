@@ -33,6 +33,80 @@ export class CursorAdapter extends BaseAdapter {
   }
 
   /**
+   * Read MCP servers from .cursor/mcp.json
+   */
+  override async readMCPServers(): Promise<MCPServer[]> {
+    const mcpJsonPath = await this.getMcpConfigPath();
+
+    try {
+      const content = await readFile(mcpJsonPath, "utf-8");
+      const config = JSON.parse(content);
+
+      if (!config.mcpServers || typeof config.mcpServers !== "object") {
+        return [];
+      }
+
+      const servers: MCPServer[] = [];
+
+      for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
+        const rawConfig = serverConfig as Record<string, unknown>;
+
+        const hasCommand = typeof rawConfig.command === "string";
+        const hasAuth =
+          rawConfig.auth !== undefined && typeof rawConfig.auth === "object";
+        const hasUrl = typeof rawConfig.url === "string";
+
+        let type: MCPServer["type"] = "stdio";
+        if (hasCommand) {
+          type = "stdio";
+        } else if (hasAuth) {
+          type = "oauth";
+        } else if (hasUrl) {
+          type = "http";
+        }
+
+        const server: MCPServer = {
+          name,
+          type,
+          hash: "",
+        };
+
+        if (rawConfig.command) server.command = rawConfig.command as string;
+        if (rawConfig.args) server.args = rawConfig.args as string[];
+        if (rawConfig.env) server.env = rawConfig.env as Record<string, string>;
+        if (rawConfig.url) server.url = rawConfig.url as string;
+        if (rawConfig.headers)
+          server.headers = rawConfig.headers as Record<string, string>;
+        if (rawConfig.auth && typeof rawConfig.auth === "object") {
+          const normalized = this.fromCursorAuth(
+            rawConfig.auth as Record<string, unknown>,
+          );
+          if (normalized) {
+            server.auth = normalized;
+          }
+        }
+
+        server.hash = hashMCPServer(server);
+        servers.push(server);
+      }
+
+      return servers;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      console.warn(
+        `Failed to read mcp.json: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      return [];
+    }
+  }
+
+  /**
    * Write MCP servers to .cursor/mcp.json
    * Cursor uses mcpServers field and supports stdio, HTTP, OAuth
    */
@@ -206,79 +280,5 @@ export class CursorAdapter extends BaseAdapter {
     }
 
     return auth;
-  }
-
-  /**
-   * Read MCP servers from .cursor/mcp.json
-   */
-  override async readMCPServers(): Promise<MCPServer[]> {
-    const mcpJsonPath = await this.getMcpConfigPath();
-
-    try {
-      const content = await readFile(mcpJsonPath, "utf-8");
-      const config = JSON.parse(content);
-
-      if (!config.mcpServers || typeof config.mcpServers !== "object") {
-        return [];
-      }
-
-      const servers: MCPServer[] = [];
-
-      for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
-        const rawConfig = serverConfig as Record<string, unknown>;
-
-        const hasCommand = typeof rawConfig.command === "string";
-        const hasAuth =
-          rawConfig.auth !== undefined && typeof rawConfig.auth === "object";
-        const hasUrl = typeof rawConfig.url === "string";
-
-        let type: MCPServer["type"] = "stdio";
-        if (hasCommand) {
-          type = "stdio";
-        } else if (hasAuth) {
-          type = "oauth";
-        } else if (hasUrl) {
-          type = "http";
-        }
-
-        const server: MCPServer = {
-          name,
-          type,
-          hash: "",
-        };
-
-        if (rawConfig.command) server.command = rawConfig.command as string;
-        if (rawConfig.args) server.args = rawConfig.args as string[];
-        if (rawConfig.env) server.env = rawConfig.env as Record<string, string>;
-        if (rawConfig.url) server.url = rawConfig.url as string;
-        if (rawConfig.headers)
-          server.headers = rawConfig.headers as Record<string, string>;
-        if (rawConfig.auth && typeof rawConfig.auth === "object") {
-          const normalized = this.fromCursorAuth(
-            rawConfig.auth as Record<string, unknown>,
-          );
-          if (normalized) {
-            server.auth = normalized;
-          }
-        }
-
-        server.hash = hashMCPServer(server);
-        servers.push(server);
-      }
-
-      return servers;
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        return [];
-      }
-      console.warn(
-        `Failed to read mcp.json: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-      return [];
-    }
   }
 }

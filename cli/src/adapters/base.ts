@@ -223,14 +223,6 @@ export abstract class BaseAdapter implements ToolAdapter {
     );
   }
 
-  async readAgents(): Promise<Agent[]> {
-    return this.readFlatItems<Agent>(this.getAgentsDir(), hashAgent);
-  }
-
-  async readCommands(): Promise<Command[]> {
-    return this.readFlatItems<Command>(this.getCommandsDir(), hashCommand);
-  }
-
   async writeSkills(skills: Skill[]): Promise<WriteResult> {
     return this.writeDirectoryItems<Skill>(
       this.getSkillsDir(),
@@ -239,20 +231,28 @@ export abstract class BaseAdapter implements ToolAdapter {
     );
   }
 
-  async writeAgents(agents: Agent[]): Promise<WriteResult> {
-    return this.writeFlatItems<Agent>(this.getAgentsDir(), agents);
-  }
-
-  async writeCommands(commands: Command[]): Promise<WriteResult> {
-    return this.writeFlatItems<Command>(this.getCommandsDir(), commands);
-  }
-
   async deleteSkill(name: string): Promise<void> {
     await this.deleteDirectoryItem(this.getSkillsDir(), name);
   }
 
+  async readAgents(): Promise<Agent[]> {
+    return this.readFlatItems<Agent>(this.getAgentsDir(), hashAgent);
+  }
+
+  async writeAgents(agents: Agent[]): Promise<WriteResult> {
+    return this.writeFlatItems<Agent>(this.getAgentsDir(), agents);
+  }
+
   async deleteAgent(name: string): Promise<void> {
     await this.deleteFlatItem(this.getAgentsDir(), name);
+  }
+
+  async readCommands(): Promise<Command[]> {
+    return this.readFlatItems<Command>(this.getCommandsDir(), hashCommand);
+  }
+
+  async writeCommands(commands: Command[]): Promise<WriteResult> {
+    return this.writeFlatItems<Command>(this.getCommandsDir(), commands);
   }
 
   async deleteCommand(name: string): Promise<void> {

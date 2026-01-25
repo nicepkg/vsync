@@ -36,6 +36,84 @@ export class OpenCodeAdapter extends BaseAdapter {
     return this.getConfigPaths();
   }
 
+  override async readMCPServers(): Promise<MCPServer[]> {
+    const mcpConfigJsoncPath = await this.getMcpConfigPath();
+
+    const { data: config } =
+      await fileOps.readJSONC<Record<string, unknown>>(mcpConfigJsoncPath);
+
+    if (!config?.mcp || typeof config.mcp !== "object") {
+      return [];
+    }
+
+    const servers: MCPServer[] = [];
+    for (const [name, serverConfig] of Object.entries(
+      config.mcp as Record<string, unknown>,
+    )) {
+      const raw = serverConfig as Record<string, unknown>;
+      const rawType =
+        raw.type === "local" || raw.type === "remote" ? raw.type : null;
+      if (!rawType) {
+        console.warn(`Skipping MCP server ${name}: invalid type`);
+        continue;
+      }
+
+      const isRemote = rawType === "remote";
+      const server: MCPServer = {
+        name,
+        type: isRemote && raw.oauth ? "oauth" : isRemote ? "http" : "stdio",
+        hash: "",
+      };
+
+      if (rawType === "local") {
+        if (!Array.isArray(raw.command)) {
+          console.warn(`Skipping MCP server ${name}: invalid command`);
+          continue;
+        }
+        const [command, ...args] = raw.command;
+        if (typeof command !== "string") {
+          console.warn(`Skipping MCP server ${name}: invalid command`);
+          continue;
+        }
+        server.command = command;
+        const safeArgs = args.filter(
+          (arg): arg is string => typeof arg === "string",
+        );
+        if (safeArgs.length > 0) {
+          server.args = safeArgs;
+        }
+      } else {
+        if (typeof raw.url !== "string") {
+          console.warn(`Skipping MCP server ${name}: invalid url`);
+          continue;
+        }
+        server.url = raw.url;
+      }
+
+      if (raw.environment && typeof raw.environment === "object") {
+        server.env = this.fromOpenCodeEnvVars(
+          raw.environment as Record<string, unknown>,
+        ) as Record<string, string>;
+      }
+      if (raw.headers && typeof raw.headers === "object") {
+        server.headers = this.fromOpenCodeEnvVars(
+          raw.headers as Record<string, unknown>,
+        ) as Record<string, string>;
+      }
+      if (isRemote && raw.oauth && typeof raw.oauth === "object") {
+        const auth = this.fromOpenCodeOAuth(
+          raw.oauth as Record<string, unknown>,
+        );
+        if (auth) {
+          server.auth = auth;
+        }
+      }
+      server.hash = hashMCPServer(server);
+      servers.push(server);
+    }
+    return servers;
+  }
+
   /**
    * Write MCP servers to opencode.jsonc
    * OpenCode uses:
@@ -133,6 +211,34 @@ export class OpenCodeAdapter extends BaseAdapter {
             ? error.message
             : "Unknown error writing MCP servers",
       };
+    }
+  }
+
+  /**
+   * Delete an MCP server from opencode.jsonc
+   */
+  override async deleteMCPServer(name: string): Promise<void> {
+    const mcpConfigJsoncPath = await this.getMcpConfigPath();
+
+    const { data: config, text: jsoncText } =
+      await fileOps.readJSONC<Record<string, unknown>>(mcpConfigJsoncPath);
+
+    if (config?.mcp && typeof config.mcp === "object") {
+      const mcpObj = config.mcp as Record<string, unknown>;
+
+      // Check if server exists
+      if (mcpObj[name] !== undefined) {
+        // Use jsonc.modify to remove the server (preserves comments)
+        const edits = jsonc.modify(jsoncText, ["mcp", name], undefined, {
+          formattingOptions: {
+            insertSpaces: true,
+            tabSize: 2,
+          },
+        });
+        const updatedText = jsonc.applyEdits(jsoncText, edits);
+
+        await atomicWrite(mcpConfigJsoncPath, updatedText);
+      }
     }
   }
 
@@ -248,111 +354,5 @@ export class OpenCodeAdapter extends BaseAdapter {
     }
 
     return auth;
-  }
-
-  /**
-   * Delete an MCP server from opencode.jsonc
-   */
-  override async deleteMCPServer(name: string): Promise<void> {
-    const mcpConfigJsoncPath = await this.getMcpConfigPath();
-
-    const { data: config, text: jsoncText } =
-      await fileOps.readJSONC<Record<string, unknown>>(mcpConfigJsoncPath);
-
-    if (config?.mcp && typeof config.mcp === "object") {
-      const mcpObj = config.mcp as Record<string, unknown>;
-
-      // Check if server exists
-      if (mcpObj[name] !== undefined) {
-        // Use jsonc.modify to remove the server (preserves comments)
-        const edits = jsonc.modify(jsoncText, ["mcp", name], undefined, {
-          formattingOptions: {
-            insertSpaces: true,
-            tabSize: 2,
-          },
-        });
-        const updatedText = jsonc.applyEdits(jsoncText, edits);
-
-        await atomicWrite(mcpConfigJsoncPath, updatedText);
-      }
-    }
-  }
-
-  override async readMCPServers(): Promise<MCPServer[]> {
-    const mcpConfigJsoncPath = await this.getMcpConfigPath();
-
-    const { data: config } =
-      await fileOps.readJSONC<Record<string, unknown>>(mcpConfigJsoncPath);
-
-    if (!config?.mcp || typeof config.mcp !== "object") {
-      return [];
-    }
-
-    const servers: MCPServer[] = [];
-    for (const [name, serverConfig] of Object.entries(
-      config.mcp as Record<string, unknown>,
-    )) {
-      const raw = serverConfig as Record<string, unknown>;
-      const rawType =
-        raw.type === "local" || raw.type === "remote" ? raw.type : null;
-      if (!rawType) {
-        console.warn(`Skipping MCP server ${name}: invalid type`);
-        continue;
-      }
-
-      const isRemote = rawType === "remote";
-      const server: MCPServer = {
-        name,
-        type: isRemote && raw.oauth ? "oauth" : isRemote ? "http" : "stdio",
-        hash: "",
-      };
-
-      if (rawType === "local") {
-        if (!Array.isArray(raw.command)) {
-          console.warn(`Skipping MCP server ${name}: invalid command`);
-          continue;
-        }
-        const [command, ...args] = raw.command;
-        if (typeof command !== "string") {
-          console.warn(`Skipping MCP server ${name}: invalid command`);
-          continue;
-        }
-        server.command = command;
-        const safeArgs = args.filter(
-          (arg): arg is string => typeof arg === "string",
-        );
-        if (safeArgs.length > 0) {
-          server.args = safeArgs;
-        }
-      } else {
-        if (typeof raw.url !== "string") {
-          console.warn(`Skipping MCP server ${name}: invalid url`);
-          continue;
-        }
-        server.url = raw.url;
-      }
-
-      if (raw.environment && typeof raw.environment === "object") {
-        server.env = this.fromOpenCodeEnvVars(
-          raw.environment as Record<string, unknown>,
-        ) as Record<string, string>;
-      }
-      if (raw.headers && typeof raw.headers === "object") {
-        server.headers = this.fromOpenCodeEnvVars(
-          raw.headers as Record<string, unknown>,
-        ) as Record<string, string>;
-      }
-      if (isRemote && raw.oauth && typeof raw.oauth === "object") {
-        const auth = this.fromOpenCodeOAuth(
-          raw.oauth as Record<string, unknown>,
-        );
-        if (auth) {
-          server.auth = auth;
-        }
-      }
-      server.hash = hashMCPServer(server);
-      servers.push(server);
-    }
-    return servers;
   }
 }

@@ -138,20 +138,6 @@ export class CodexAdapter extends BaseAdapter {
   }
 
   /**
-   * Read all agents from .codex/agents/
-   */
-  override async readAgents(): Promise<Agent[]> {
-    return [];
-  }
-
-  /**
-   * Read all commands from .codex/commands/
-   */
-  override async readCommands(): Promise<Command[]> {
-    return [];
-  }
-
-  /**
    * Write MCP servers to config.toml
    */
   override async writeMCPServers(servers: MCPServer[]): Promise<WriteResult> {
@@ -261,44 +247,6 @@ export class CodexAdapter extends BaseAdapter {
     }
   }
 
-  private extractEnvVarName(value: string): string | null {
-    const envMatch =
-      value.match(/^\$\{env:([A-Z0-9_]+)\}$/) ||
-      value.match(/^\$\{([A-Z0-9_]+)\}$/);
-    return envMatch?.[1] ?? null;
-  }
-
-  private extractBearerTokenEnvVar(value: string): string | null {
-    const bearerMatch =
-      value.match(/^Bearer\s+\$\{env:([A-Z0-9_]+)\}$/) ||
-      value.match(/^Bearer\s+\$\{([A-Z0-9_]+)\}$/);
-    return bearerMatch?.[1] ?? null;
-  }
-
-  /**
-   * Write agents to .codex/agents/
-   */
-  override async writeAgents(agents: Agent[]): Promise<WriteResult> {
-    void agents;
-    return {
-      success: false,
-      count: 0,
-      error: "Codex does not support agents",
-    };
-  }
-
-  /**
-   * Write commands to .codex/commands/
-   */
-  override async writeCommands(commands: Command[]): Promise<WriteResult> {
-    void commands;
-    return {
-      success: false,
-      count: 0,
-      error: "Codex does not support commands",
-    };
-  }
-
   /**
    * Delete an MCP server from config.toml
    */
@@ -319,6 +267,25 @@ export class CodexAdapter extends BaseAdapter {
   }
 
   /**
+   * Read all agents from .codex/agents/
+   */
+  override async readAgents(): Promise<Agent[]> {
+    return [];
+  }
+
+  /**
+   * Write agents to .codex/agents/
+   */
+  override async writeAgents(agents: Agent[]): Promise<WriteResult> {
+    void agents;
+    return {
+      success: false,
+      count: 0,
+      error: "Codex does not support agents",
+    };
+  }
+
+  /**
    * Delete an agent from .codex/agents/
    */
   override async deleteAgent(name: string): Promise<void> {
@@ -326,9 +293,42 @@ export class CodexAdapter extends BaseAdapter {
   }
 
   /**
+   * Read all commands from .codex/commands/
+   */
+  override async readCommands(): Promise<Command[]> {
+    return [];
+  }
+
+  /**
+   * Write commands to .codex/commands/
+   */
+  override async writeCommands(commands: Command[]): Promise<WriteResult> {
+    void commands;
+    return {
+      success: false,
+      count: 0,
+      error: "Codex does not support commands",
+    };
+  }
+
+  /**
    * Delete a command from .codex/commands/
    */
   override async deleteCommand(name: string): Promise<void> {
     throw new Error(`Codex does not support commands: ${name}`);
+  }
+
+  private extractEnvVarName(value: string): string | null {
+    const envMatch =
+      value.match(/^\$\{env:([A-Z0-9_]+)\}$/) ||
+      value.match(/^\$\{([A-Z0-9_]+)\}$/);
+    return envMatch?.[1] ?? null;
+  }
+
+  private extractBearerTokenEnvVar(value: string): string | null {
+    const bearerMatch =
+      value.match(/^Bearer\s+\$\{env:([A-Z0-9_]+)\}$/) ||
+      value.match(/^Bearer\s+\$\{([A-Z0-9_]+)\}$/);
+    return bearerMatch?.[1] ?? null;
   }
 }
