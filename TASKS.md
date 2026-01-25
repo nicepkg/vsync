@@ -658,7 +658,16 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Handle Windows vs Unix symlinks (junction on Windows, dir on Unix)
   - [x] Added 17 comprehensive tests
   - [x] All tests passing (424 total)
-- [ ] Update sync workflow
+- [x] Implement `cli/src/core/symlink-sync.ts` (sync workflow helper)
+  - [x] `shouldUseSymlinks(config)` - Check if symlinks should be used
+  - [x] `validateSymlinkSetup(source, target)` - Validate symlink setup
+  - [x] `setupSymlinkForSkills(source, target)` - Create/update symlink
+  - [x] Detects circular symlinks
+  - [x] Removes existing directories before creating symlink
+  - [x] Skips if target already points to source
+  - [x] Added 11 comprehensive tests
+  - [x] All tests passing (435 total)
+- [ ] Integrate symlink logic into sync workflow
   - [ ] If `use_symlinks_for_skills: true`:
     - [ ] Delete target skills directory (with confirmation)
     - [ ] Create symlink pointing to source tool's skills directory

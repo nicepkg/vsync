@@ -65,9 +65,10 @@ export async function createSymlink(
     throw new Error(`Source path does not exist: ${source}`);
   }
 
-  // Check if target already exists
+  // Check if target already exists (unless it's going to be overwritten)
   try {
     await lstat(target);
+    // Target exists - this will be handled by the caller who should remove it first
     throw new Error(`Target path already exists: ${target}`);
   } catch (error) {
     // ENOENT is expected - target shouldn't exist
