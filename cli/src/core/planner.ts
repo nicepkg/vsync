@@ -146,8 +146,7 @@ export function formatPlan(plan: SyncPlan): string {
   }
 
   // Show summary first
-  lines.push(`Targets: ${targetTools.join(", ")}`);
-  lines.push(`Operations: ${totalCreate} CREATE, ${totalUpdate} UPDATE, ${totalDelete} DELETE`);
+  lines.push(`Targets: ${targetTools.join(", ")} (${targetTools.length} total)`);
   lines.push("");
 
   // Group operations by item (when same items go to multiple targets)
@@ -214,7 +213,7 @@ export function formatPlan(plan: SyncPlan): string {
   const deleteOps = Array.from(itemOperations.values()).filter(op => op.operation === 'DELETE');
 
   if (createOps.length > 0) {
-    lines.push(`✨ CREATE (${totalCreate} total):`);
+    lines.push(`✨ CREATE (${createOps.length} items):`);
     for (const op of createOps) {
       const targetStr = op.targets.length === targetTools.length
         ? "all targets"
@@ -225,7 +224,7 @@ export function formatPlan(plan: SyncPlan): string {
   }
 
   if (updateOps.length > 0) {
-    lines.push(`🔄 UPDATE (${totalUpdate} total):`);
+    lines.push(`🔄 UPDATE (${updateOps.length} items):`);
     for (const op of updateOps) {
       const targetStr = op.targets.length === targetTools.length
         ? "all targets"
@@ -236,7 +235,7 @@ export function formatPlan(plan: SyncPlan): string {
   }
 
   if (deleteOps.length > 0) {
-    lines.push(`🗑️  DELETE (${totalDelete} total):`);
+    lines.push(`🗑️  DELETE (${deleteOps.length} items):`);
     for (const op of deleteOps) {
       const targetStr = op.targets.length === targetTools.length
         ? "all targets"
@@ -246,18 +245,19 @@ export function formatPlan(plan: SyncPlan): string {
     lines.push("");
   }
 
+  // Show total operations summary
+  lines.push("=".repeat(60));
+  lines.push(`Total: ${totalCreate} CREATE, ${totalUpdate} UPDATE, ${totalDelete} DELETE across all targets`);
+
   // Old detailed format (commented out, can be enabled with --verbose flag)
   /*
-  // Operations for each target tool
   for (const [toolName, diff] of Object.entries(plan.diffs)) {
     if (!diff) continue;
-
     lines.push(`Target: ${toolName}`);
     lines.push("-".repeat(60));
-
+    // ... rest of old format
+  }
   */
-
-  lines.push("=".repeat(60));
 
   return lines.join("\n");
 }
