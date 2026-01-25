@@ -21,6 +21,15 @@ export class CodexAdapter extends BaseAdapter {
   override readonly toolName = "codex";
   override readonly displayName = "Codex";
 
+  override getCapabilities() {
+    return {
+      skills: true,
+      mcp: true,
+      agents: false, // Codex doesn't support agents
+      commands: false, // Codex doesn't support commands
+    };
+  }
+
   override getConfigDir(): string {
     return ".codex";
   }

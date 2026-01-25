@@ -37,6 +37,12 @@ describe("ParallelSyncOrchestrator", () => {
       getSkillsDir: vi.fn(() => `.${toolName}/skills`),
       getAgentsDir: vi.fn(() => `.${toolName}/agents`),
       getCommandsDir: vi.fn(() => `.${toolName}/commands`),
+      getCapabilities: vi.fn(() => ({
+        skills: true,
+        mcp: true,
+        agents: true,
+        commands: true,
+      })),
       readSkills: vi.fn(async () => []),
       readMCPServers: vi.fn(async () => []),
       readAgents: vi.fn(async () => []),

@@ -76,6 +76,21 @@ describe("Plan Generator", () => {
     opencode: [],
   };
 
+  const targetCapabilities = {
+    cursor: {
+      skills: true,
+      mcp: true,
+      agents: true,
+      commands: true,
+    },
+    opencode: {
+      skills: true,
+      mcp: true,
+      agents: true,
+      commands: true,
+    },
+  };
+
   const manifest: Manifest = {
     version: "1.0.0",
     last_synced: "2026-01-24T10:00:00Z",
@@ -138,6 +153,7 @@ describe("Plan Generator", () => {
         targetMCPServers,
         targetAgents,
         targetCommands,
+        targetCapabilities,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",
@@ -162,6 +178,7 @@ describe("Plan Generator", () => {
         targetAgents,
         sourceCommands: [],
         targetCommands,
+        targetCapabilities,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",
@@ -198,6 +215,7 @@ describe("Plan Generator", () => {
         targetAgents,
         sourceCommands: [],
         targetCommands,
+        targetCapabilities,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",
@@ -230,6 +248,7 @@ describe("Plan Generator", () => {
         targetAgents,
         sourceCommands: [],
         targetCommands,
+        targetCapabilities,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",
@@ -252,6 +271,7 @@ describe("Plan Generator", () => {
         targetAgents,
         sourceCommands: [],
         targetCommands,
+        targetCapabilities,
         manifest,
         mode: "prune",
         sourceTool: "claude-code",
@@ -274,6 +294,7 @@ describe("Plan Generator", () => {
         targetAgents,
         sourceCommands: [],
         targetCommands,
+        targetCapabilities,
         manifest,
         mode: "safe",
         sourceTool: "claude-code",

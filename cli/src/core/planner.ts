@@ -7,6 +7,7 @@ import type { SyncMode, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { SyncPlan, DiffResult } from "@src/types/plan.js";
+import type { AdapterCapabilities } from "@src/adapters/base.js";
 import { t } from "@src/utils/i18n.js";
 import { calculateDiff, type DiffInput } from "./diff.js";
 
@@ -30,6 +31,8 @@ export interface PlanInput {
   targetAgents: Partial<Record<ToolName, Agent[]>>;
   /** Commands from each target tool */
   targetCommands: Partial<Record<ToolName, Command[]>>;
+  /** Capabilities of each target tool */
+  targetCapabilities: Partial<Record<ToolName, AdapterCapabilities>>;
   /** Current manifest */
   manifest: Manifest;
   /** Sync mode */
@@ -68,6 +71,7 @@ export function generatePlan(input: PlanInput): SyncPlan {
     targetMCPServers,
     targetAgents,
     targetCommands,
+    targetCapabilities,
     manifest,
     mode,
     sourceTool,
@@ -78,14 +82,23 @@ export function generatePlan(input: PlanInput): SyncPlan {
 
   // Calculate diff for each target tool
   for (const targetTool of targetTools) {
+    const capabilities = targetCapabilities[targetTool] || {
+      skills: true,
+      mcp: true,
+      agents: true,
+      commands: true,
+    };
+
+    // Filter source data based on target capabilities
+    // Don't generate operations for unsupported features
     const diffInput: DiffInput = {
-      sourceSkills,
+      sourceSkills: capabilities.skills ? sourceSkills : [],
       targetSkills: targetSkills[targetTool] || [],
-      sourceMCPServers,
+      sourceMCPServers: capabilities.mcp ? sourceMCPServers : [],
       targetMCPServers: targetMCPServers[targetTool] || [],
-      sourceAgents,
+      sourceAgents: capabilities.agents ? sourceAgents : [],
       targetAgents: targetAgents[targetTool] || [],
-      sourceCommands,
+      sourceCommands: capabilities.commands ? sourceCommands : [],
       targetCommands: targetCommands[targetTool] || [],
       manifest,
       mode,
@@ -228,11 +241,13 @@ export function formatPlan(plan: SyncPlan): string {
   );
 
   if (createOps.length > 0) {
+    // Calculate actual operation count (items × targets for each item)
+    const createOpCount = createOps.reduce(
+      (sum, op) => sum + op.targets.length,
+      0,
+    );
     lines.push(
-      t("planner.createSection", {
-        count: createOps.length.toString(),
-        tools: targetTools.length.toString(),
-      }),
+      `✨ CREATE (${createOpCount} ${createOpCount === 1 ? "operation" : "operations"}):`,
     );
     for (const op of createOps) {
       const targetStr =
@@ -245,11 +260,13 @@ export function formatPlan(plan: SyncPlan): string {
   }
 
   if (updateOps.length > 0) {
+    // Calculate actual operation count (items × targets for each item)
+    const updateOpCount = updateOps.reduce(
+      (sum, op) => sum + op.targets.length,
+      0,
+    );
     lines.push(
-      t("planner.updateSection", {
-        count: updateOps.length.toString(),
-        tools: targetTools.length.toString(),
-      }),
+      `🔄 UPDATE (${updateOpCount} ${updateOpCount === 1 ? "operation" : "operations"}):`,
     );
     for (const op of updateOps) {
       const targetStr =
@@ -262,11 +279,13 @@ export function formatPlan(plan: SyncPlan): string {
   }
 
   if (deleteOps.length > 0) {
+    // Calculate actual operation count (items × targets for each item)
+    const deleteOpCount = deleteOps.reduce(
+      (sum, op) => sum + op.targets.length,
+      0,
+    );
     lines.push(
-      t("planner.deleteSection", {
-        count: deleteOps.length.toString(),
-        tools: targetTools.length.toString(),
-      }),
+      `🗑️  DELETE (${deleteOpCount} ${deleteOpCount === 1 ? "operation" : "operations"}):`,
     );
     for (const op of deleteOps) {
       const targetStr =

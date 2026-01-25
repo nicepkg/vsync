@@ -99,6 +99,12 @@ export interface ToolAdapter {
    */
   getCommandsDir(): string;
 
+  /**
+   * Get adapter capabilities
+   * Returns which features are supported by this adapter
+   */
+  getCapabilities(): AdapterCapabilities;
+
   // Read methods (for source tools)
   /**
    * Read all skills from the tool's configuration
@@ -179,6 +185,16 @@ export interface ToolAdapter {
   deleteCommand(name: string): Promise<void>;
 }
 
+/**
+ * Adapter capabilities
+ */
+export interface AdapterCapabilities {
+  skills: boolean;
+  mcp: boolean;
+  agents: boolean;
+  commands: boolean;
+}
+
 export abstract class BaseAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
 
@@ -194,6 +210,19 @@ export abstract class BaseAdapter implements ToolAdapter {
   abstract readMCPServers(): Promise<MCPServer[]>;
   abstract writeMCPServers(servers: MCPServer[]): Promise<WriteResult>;
   abstract deleteMCPServer(name: string): Promise<void>;
+
+  /**
+   * Get adapter capabilities
+   * Override in subclasses to declare unsupported features
+   */
+  getCapabilities(): AdapterCapabilities {
+    return {
+      skills: true,
+      mcp: true,
+      agents: true,
+      commands: true,
+    };
+  }
 
   getSkillsDir(): string {
     return join(this.getConfigDir(), "skills");

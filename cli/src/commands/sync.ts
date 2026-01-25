@@ -188,37 +188,30 @@ export function shouldPromptForSymlinks(
 }
 
 /**
+ * Target configuration with capabilities
+ */
+interface TargetConfig {
+  skills: Skill[];
+  mcpServers: MCPServer[];
+  agents: Agent[];
+  commands: VibeCommand[];
+  capabilities: import("@src/adapters/base.js").AdapterCapabilities;
+}
+
+/**
  * Read target tool configurations
  *
  * @param targetTools - Target tool names
  * @param projectDir - Project directory
  * @param level - Config level
- * @returns Map of target data
+ * @returns Map of target data with capabilities
  */
 async function readTargetConfigs(
   targetTools: ToolName[],
   projectDir: string,
   level: ConfigLevel,
-): Promise<
-  Record<
-    ToolName,
-    {
-      skills: Skill[];
-      mcpServers: MCPServer[];
-      agents: Agent[];
-      commands: VibeCommand[];
-    }
-  >
-> {
-  const targetData = {} as Record<
-    ToolName,
-    {
-      skills: Skill[];
-      mcpServers: MCPServer[];
-      agents: Agent[];
-      commands: VibeCommand[];
-    }
-  >;
+): Promise<Record<ToolName, TargetConfig>> {
+  const targetData = {} as Record<ToolName, TargetConfig>;
 
   // Read actual configuration from target tools
   // This allows us to detect manually deleted files
@@ -230,35 +223,46 @@ async function readTargetConfigs(
         level,
       });
 
+      // Get adapter capabilities
+      const capabilities = adapter.getCapabilities();
+
       // Try to read each type, use empty array if unsupported
       let skills: Skill[] = [];
       let mcpServers: MCPServer[] = [];
       let agents: Agent[] = [];
       let commands: VibeCommand[] = [];
 
-      try {
-        skills = await adapter.readSkills();
-      } catch {
-        // If read fails (e.g., write-only adapter), use empty array
-        skills = [];
+      // Only read if supported
+      if (capabilities.skills) {
+        try {
+          skills = await adapter.readSkills();
+        } catch {
+          skills = [];
+        }
       }
 
-      try {
-        mcpServers = await adapter.readMCPServers();
-      } catch {
-        mcpServers = [];
+      if (capabilities.mcp) {
+        try {
+          mcpServers = await adapter.readMCPServers();
+        } catch {
+          mcpServers = [];
+        }
       }
 
-      try {
-        agents = await adapter.readAgents();
-      } catch {
-        agents = [];
+      if (capabilities.agents) {
+        try {
+          agents = await adapter.readAgents();
+        } catch {
+          agents = [];
+        }
       }
 
-      try {
-        commands = await adapter.readCommands();
-      } catch {
-        commands = [];
+      if (capabilities.commands) {
+        try {
+          commands = await adapter.readCommands();
+        } catch {
+          commands = [];
+        }
       }
 
       targetData[tool] = {
@@ -266,6 +270,7 @@ async function readTargetConfigs(
         mcpServers,
         agents,
         commands,
+        capabilities,
       };
     } catch (error) {
       // If adapter creation fails, use empty data
@@ -275,6 +280,12 @@ async function readTargetConfigs(
         mcpServers: [],
         agents: [],
         commands: [],
+        capabilities: {
+          skills: false,
+          mcp: false,
+          agents: false,
+          commands: false,
+        },
       };
     }
   }
@@ -323,6 +334,12 @@ export async function calculateSyncDiff(
     ),
     targetCommands: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.commands]),
+    ),
+    targetCapabilities: Object.fromEntries(
+      Object.entries(targetData).map(([tool, data]) => [
+        tool,
+        data.capabilities,
+      ]),
     ),
     manifest,
     mode,
@@ -663,7 +680,16 @@ export async function updateManifestAfterSync(
 
   // Update for UPDATE operations
   for (const item of operations.updated) {
-    updateAfterUpdate(manifest, item.type, item.name, item.hash, targetTool);
+    const key = `${item.type}/${item.name}`;
+    const manifestItem = manifest.items[key];
+
+    // If item doesn't exist in manifest yet (first time syncing to this target),
+    // treat it as CREATE instead of UPDATE
+    if (!manifestItem || !manifestItem.targets[targetTool]) {
+      updateAfterCreate(manifest, item.type, item.name, item.hash, targetTool);
+    } else {
+      updateAfterUpdate(manifest, item.type, item.name, item.hash, targetTool);
+    }
   }
 
   // Update for DELETE operations

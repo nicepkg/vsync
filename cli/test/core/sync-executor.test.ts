@@ -24,6 +24,12 @@ describe("SyncExecutor", () => {
       getSkillsDir: vi.fn(() => ".test/skills"),
       getAgentsDir: vi.fn(() => ".test/agents"),
       getCommandsDir: vi.fn(() => ".test/commands"),
+      getCapabilities: vi.fn(() => ({
+        skills: true,
+        mcp: true,
+        agents: true,
+        commands: true,
+      })),
       readSkills: vi.fn(async () => []),
       readMCPServers: vi.fn(async () => []),
       readAgents: vi.fn(async () => []),
