@@ -70,6 +70,44 @@ class E2ETestHelper {
     const configDir = toolConfigDirs[tool];
     return path.join(projectDir, configDir, "skills", skillName, "SKILL.md");
   }
+
+  /**
+   * Get skills directory path for a given tool
+   */
+  static getSkillsDir(projectDir: string, tool: ToolName): string {
+    const toolConfigDirs: Record<ToolName, string> = {
+      "claude-code": ".claude",
+      cursor: ".cursor",
+      opencode: ".opencode",
+      codex: ".codex",
+    };
+
+    const configDir = toolConfigDirs[tool];
+    return path.join(projectDir, configDir, "skills");
+  }
+
+  /**
+   * Check if a path is a symlink
+   */
+  static async isSymlink(filePath: string): Promise<boolean> {
+    try {
+      const stats = await fs.lstat(filePath);
+      return stats.isSymbolicLink();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get the target of a symlink
+   */
+  static async getSymlinkTarget(filePath: string): Promise<string | null> {
+    try {
+      return await fs.readlink(filePath);
+    } catch {
+      return null;
+    }
+  }
 }
 
 /**
@@ -85,7 +123,11 @@ class E2ETestFixture {
   /**
    * Initialize vibe-sync configuration
    */
-  async initVibeSync(source: ToolName, targets: ToolName[]): Promise<void> {
+  async initVibeSync(
+    source: ToolName,
+    targets: ToolName[],
+    options?: { useSymlinks?: boolean },
+  ): Promise<void> {
     const config = await generateConfig({
       tools: [source, ...targets],
       source,
@@ -93,8 +135,8 @@ class E2ETestFixture {
       isUserLevel: false,
     });
 
-    // Disable symlinks for E2E tests to avoid prompts
-    config.use_symlinks_for_skills = false;
+    // Configure symlinks (default: disabled for E2E tests to avoid prompts)
+    config.use_symlinks_for_skills = options?.useSymlinks ?? false;
 
     await saveInitConfig(config, this.projectDir);
     await createCacheDirectory(this.projectDir);
@@ -196,6 +238,137 @@ describe("Basic E2E Workflows", () => {
 
       // Assert
       expect(await E2ETestHelper.fileExists(skillPath)).toBe(false);
+    });
+  });
+
+  describe("Symlink Mode", () => {
+    it("should create symlinks when enabled", async () => {
+      // Arrange
+      await fixture.createSkill("demo");
+      await fixture.initVibeSync("claude-code", ["cursor"], {
+        useSymlinks: true,
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert - skills directory should be a symlink
+      const cursorSkillsDir = E2ETestHelper.getSkillsDir(testDir, "cursor");
+      const isSymlink = await E2ETestHelper.isSymlink(cursorSkillsDir);
+      expect(isSymlink).toBe(true);
+    });
+
+    it("should point to source skills directory", async () => {
+      // Arrange
+      await fixture.createSkill("demo");
+      await fixture.initVibeSync("claude-code", ["cursor"], {
+        useSymlinks: true,
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert - symlink target should be source skills directory
+      const cursorSkillsDir = E2ETestHelper.getSkillsDir(testDir, "cursor");
+      const symlinkTarget =
+        await E2ETestHelper.getSymlinkTarget(cursorSkillsDir);
+      const sourceSkillsDir = E2ETestHelper.getSkillsDir(
+        testDir,
+        "claude-code",
+      );
+
+      // Resolve real paths for comparison (handles /var vs /private/var on macOS)
+      const realSymlinkTarget = symlinkTarget
+        ? await fs.realpath(symlinkTarget)
+        : null;
+      const realSourceDir = await fs.realpath(sourceSkillsDir);
+
+      expect(realSymlinkTarget).toBe(realSourceDir);
+    });
+
+    it("should allow accessing files through symlink", async () => {
+      // Arrange
+      await fixture.createSkill("demo", "---\nname: demo\n---\n# Symlinked!");
+      await fixture.initVibeSync("claude-code", ["cursor"], {
+        useSymlinks: true,
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert - can read file through symlink
+      const cursorSkillPath = E2ETestHelper.getSkillPath(
+        testDir,
+        "cursor",
+        "demo",
+      );
+      const content = await fs.readFile(cursorSkillPath, "utf-8");
+      expect(content).toContain("Symlinked!");
+    });
+
+    it("should reflect source changes immediately", async () => {
+      // Arrange - setup symlink
+      await fixture.createSkill("demo", "---\nname: demo\n---\n# Original");
+      await fixture.initVibeSync("claude-code", ["cursor"], {
+        useSymlinks: true,
+      });
+      await syncCommand({ yes: true });
+
+      const cursorSkillPath = E2ETestHelper.getSkillPath(
+        testDir,
+        "cursor",
+        "demo",
+      );
+
+      // Verify initial content
+      let content = await fs.readFile(cursorSkillPath, "utf-8");
+      expect(content).toContain("Original");
+
+      // Act - modify source directly (no sync needed!)
+      const sourceSkillPath = E2ETestHelper.getSkillPath(
+        testDir,
+        "claude-code",
+        "demo",
+      );
+      await fs.writeFile(sourceSkillPath, "---\nname: demo\n---\n# Modified!");
+
+      // Assert - change visible immediately through symlink
+      content = await fs.readFile(cursorSkillPath, "utf-8");
+      expect(content).toContain("Modified!");
+    });
+
+    it("should work with multiple targets", async () => {
+      // Arrange
+      await fixture.createSkill("demo");
+      await fixture.initVibeSync("claude-code", ["cursor", "opencode"], {
+        useSymlinks: true,
+      });
+
+      // Act
+      await syncCommand({ yes: true });
+
+      // Assert - both targets should have symlinks
+      const targets: ToolName[] = ["cursor", "opencode"];
+      const sourceSkillsDir = E2ETestHelper.getSkillsDir(
+        testDir,
+        "claude-code",
+      );
+      const realSourceDir = await fs.realpath(sourceSkillsDir);
+
+      for (const target of targets) {
+        const targetSkillsDir = E2ETestHelper.getSkillsDir(testDir, target);
+        const isSymlink = await E2ETestHelper.isSymlink(targetSkillsDir);
+        const symlinkTarget =
+          await E2ETestHelper.getSymlinkTarget(targetSkillsDir);
+
+        // Resolve real path for comparison
+        const realSymlinkTarget = symlinkTarget
+          ? await fs.realpath(symlinkTarget)
+          : null;
+
+        expect(isSymlink).toBe(true);
+        expect(realSymlinkTarget).toBe(realSourceDir);
+      }
     });
   });
 });
