@@ -229,7 +229,10 @@ export function formatPlan(plan: SyncPlan): string {
 
   if (createOps.length > 0) {
     lines.push(
-      t("planner.createSection", { count: createOps.length.toString() }),
+      t("planner.createSection", {
+        count: createOps.length.toString(),
+        tools: targetTools.length.toString(),
+      }),
     );
     for (const op of createOps) {
       const targetStr =
@@ -243,7 +246,10 @@ export function formatPlan(plan: SyncPlan): string {
 
   if (updateOps.length > 0) {
     lines.push(
-      t("planner.updateSection", { count: updateOps.length.toString() }),
+      t("planner.updateSection", {
+        count: updateOps.length.toString(),
+        tools: targetTools.length.toString(),
+      }),
     );
     for (const op of updateOps) {
       const targetStr =
@@ -257,7 +263,10 @@ export function formatPlan(plan: SyncPlan): string {
 
   if (deleteOps.length > 0) {
     lines.push(
-      t("planner.deleteSection", { count: deleteOps.length.toString() }),
+      t("planner.deleteSection", {
+        count: deleteOps.length.toString(),
+        tools: targetTools.length.toString(),
+      }),
     );
     for (const op of deleteOps) {
       const targetStr =

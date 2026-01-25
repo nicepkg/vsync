@@ -270,9 +270,9 @@
     "separator": "=",
     "noChanges": "✅ No changes needed - everything is up to date!",
     "targetsInfo": "Targets: {tools} ({count} total)",
-    "createSection": "✨ CREATE ({count} items):",
-    "updateSection": "🔄 UPDATE ({count} items):",
-    "deleteSection": "🗑️  DELETE ({count} items):",
+    "createSection": "✨ CREATE ({count} items × {tools} tools):",
+    "updateSection": "🔄 UPDATE ({count} items × {tools} tools):",
+    "deleteSection": "🗑️  DELETE ({count} items × {tools} tools):",
     "allTargets": "all targets",
     "totalSummary": "Total: {create} CREATE, {update} UPDATE, {delete} DELETE across all targets",
     "validation": {

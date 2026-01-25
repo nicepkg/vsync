@@ -270,9 +270,9 @@
     "separator": "=",
     "noChanges": "✅ 无需更改 - 所有内容都是最新的!",
     "targetsInfo": "目标: {tools} ({count} 个)",
-    "createSection": "✨ 创建 ({count} 个项目):",
-    "updateSection": "🔄 更新 ({count} 个项目):",
-    "deleteSection": "🗑️  删除 ({count} 个项目):",
+    "createSection": "✨ 创建 ({count} 个项目 × {tools} 个工具):",
+    "updateSection": "🔄 更新 ({count} 个项目 × {tools} 个工具):",
+    "deleteSection": "🗑️  删除 ({count} 个项目 × {tools} 个工具):",
     "allTargets": "所有目标",
     "totalSummary": "总计: 创建 {create}、更新 {update}、删除 {delete} 个操作（跨所有目标）",
     "validation": {
