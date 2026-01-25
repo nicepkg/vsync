@@ -1,17 +1,45 @@
-<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#818cf8" />
-      <stop offset="100%" stop-color="#c084fc" />
+    <linearGradient id="vibeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1" /> <!-- Indigo 500 -->
+      <stop offset="50%" stop-color="#a855f7" /> <!-- Purple 500 -->
+      <stop offset="100%" stop-color="#ec4899" /> <!-- Pink 500 -->
     </linearGradient>
   </defs>
 
-  <!-- Simple "V" for Vibe - clean, modern -->
+  <!-- Left Arm: Solid Source -->
   <path
-    d="M40 56 L128 200 L216 56"
-    fill="none"
-    stroke="url(#g)"
-    stroke-width="40"
+    d="M 56 56 L 128 216"
+    stroke="url(#vibeGradient)"
+    stroke-width="32"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Right Arm: Segmented Targets (Sync Pulse) -->
+  <!-- Segment 1: Base -->
+  <path
+    d="M 128 216 L 146 176"
+    stroke="url(#vibeGradient)"
+    stroke-width="32"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  
+  <!-- Segment 2: Mid -->
+  <path
+    d="M 155 156 L 173 116"
+    stroke="url(#vibeGradient)"
+    stroke-width="32"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Segment 3: Tip -->
+  <path
+    d="M 182 96 L 200 56"
+    stroke="url(#vibeGradient)"
+    stroke-width="32"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
