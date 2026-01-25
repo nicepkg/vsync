@@ -31,6 +31,13 @@ vi.mock("node:os", () => ({
   homedir: () => TEST_HOME,
 }));
 
+// Mock inquirer to avoid prompts during tests
+vi.mock("inquirer", () => ({
+  default: {
+    prompt: vi.fn().mockResolvedValue({ shouldInit: false }),
+  },
+}));
+
 describe("Sync Command", () => {
   const sampleConfig: VibeConfig = {
     version: "1.0.0",
