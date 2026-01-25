@@ -275,13 +275,14 @@ export class OpenCodeAdapter extends BaseAdapter {
   }
 
   private toOpenCodeEnvString(value: string): string {
-    // OpenCode uses ${VAR} format (same as source, just remove env: prefix)
-    return value.replace(/\$\{env:([^}]+)\}/g, "${$1}");
+    // OpenCode uses {env:VAR} format (no $ prefix)
+    const withEnvPrefix = value.replace(/\$\{env:([^}]+)\}/g, "{env:$1}");
+    return withEnvPrefix.replace(/\$\{([A-Z0-9_]+)\}/g, "{env:$1}");
   }
 
   private fromOpenCodeEnvString(value: string): string {
-    // Convert ${VAR} back to ${env:VAR} for internal representation
-    return value.replace(/\$\{([^}]+)\}/g, "${env:$1}");
+    // Convert {env:VAR} back to ${VAR} for internal representation
+    return value.replace(/\{env:([^}]+)\}/g, "${$1}");
   }
 
   private fromOpenCodeEnvVars(

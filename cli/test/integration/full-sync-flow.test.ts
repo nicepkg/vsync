@@ -366,12 +366,12 @@ This is a test command.`;
       expect(opencodeMcp.mcp["test-server"]).toBeDefined();
       // OpenCode requires "type" field (stdio -> local, http/oauth -> remote)
       expect(opencodeMcp.mcp["test-server"].type).toBe("local");
-      // OpenCode uses "environment" not "env", and ${VAR} not ${env:VAR}
+      // OpenCode uses "environment" not "env", and {env:VAR} format (no $ prefix)
       expect(opencodeMcp.mcp["test-server"].environment.API_KEY).toBe(
-        "${API_KEY}",
+        "{env:API_KEY}",
       );
       expect(opencodeMcp.mcp["test-server"].environment.TOKEN).toBe(
-        "${GITHUB_TOKEN}",
+        "{env:GITHUB_TOKEN}",
       );
     });
   });
