@@ -27,8 +27,10 @@ import {
 import type { BackupInfo } from "@src/core/rollback.js";
 import {
   shouldUseSymlinks,
-  setupSymlinkForSkills,
+  setupSymlinkWithBackup,
+  cleanupDirectoryBackup,
 } from "@src/core/symlink-sync.js";
+import type { DirectoryBackupInfo } from "@src/core/symlink-sync.js";
 import type {
   ConfigLevel,
   SyncMode,
@@ -592,19 +594,40 @@ export async function syncWithSymlinks(
 
   const sourceSkillsDir = join(projectDir, sourceAdapter.getSkillsDir());
 
-  // Setup symlinks for each target tool
-  for (const targetTool of Object.keys(plan.diffs)) {
-    const tool = targetTool as ToolName;
-    const targetAdapter = getAdapter({
-      tool,
-      baseDir: projectDir,
-      level: config.level,
-    });
+  // Track backups for cleanup after successful sync
+  const backups: DirectoryBackupInfo[] = [];
 
-    const targetSkillsDir = join(projectDir, targetAdapter.getSkillsDir());
+  try {
+    // Setup symlinks for each target tool
+    for (const targetTool of Object.keys(plan.diffs)) {
+      const tool = targetTool as ToolName;
+      const targetAdapter = getAdapter({
+        tool,
+        baseDir: projectDir,
+        level: config.level,
+      });
 
-    // Setup symlink from target to source
-    await setupSymlinkForSkills(sourceSkillsDir, targetSkillsDir);
+      const targetSkillsDir = join(projectDir, targetAdapter.getSkillsDir());
+
+      // Setup symlink from target to source with automatic rollback on error
+      const backup = await setupSymlinkWithBackup(
+        sourceSkillsDir,
+        targetSkillsDir,
+      );
+      backups.push(backup);
+    }
+
+    // All symlinks created successfully - cleanup backups
+    for (const backup of backups) {
+      await cleanupDirectoryBackup(backup);
+    }
+  } catch (error) {
+    // Error occurred - rollback already happened in setupSymlinkWithBackup
+    // Just cleanup any successful backups and re-throw
+    for (const backup of backups) {
+      await cleanupDirectoryBackup(backup);
+    }
+    throw error;
   }
 }
 
