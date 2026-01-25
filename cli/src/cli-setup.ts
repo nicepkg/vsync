@@ -12,6 +12,7 @@ import { createListCommand } from "./commands/list.js";
 import { createPlanCommand } from "./commands/plan.js";
 import { createStatusCommand } from "./commands/status.js";
 import { createSyncCommand } from "./commands/sync.js";
+import { initializeLanguage } from "./utils/language-prompt.js";
 /**
  * Get package.json version
  *
@@ -73,6 +74,10 @@ export function createCLI(): Command {
  */
 export async function runCLI(): Promise<void> {
   try {
+    // Initialize i18n BEFORE creating CLI
+    // This detects language from user config or system, prompts if needed
+    await initializeLanguage();
+
     const program = createCLI();
 
     // Set version asynchronously
