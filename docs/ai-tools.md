@@ -66,6 +66,7 @@
 │   ├── commands/                 # 全局命令
 │   │   └── quick-review.md
 │   └── AGENTS.md                 # 全局编码偏好
+│   └── .claude.json             # claude code 全局 mcp
 │
 └── .config/
     └── (其他应用配置...)
