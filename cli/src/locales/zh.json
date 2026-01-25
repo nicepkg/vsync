@@ -21,6 +21,8 @@
       "selectSyncItemsValidation": "请至少选择一个同步项",
       "skillsChoice": "技能",
       "mcpChoice": "MCP 服务器",
+      "agentsChoiceInit": "代理",
+      "commandsChoiceInit": "命令",
       "creatingConfig": "正在创建配置...",
       "configCreated": "已创建 .vibe-sync.json",
       "creatingCache": "正在创建缓存目录...",

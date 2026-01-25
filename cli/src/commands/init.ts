@@ -86,6 +86,8 @@ export async function generateConfig(
     sync_config: {
       skills: options.syncItems.includes("skills"),
       mcp: options.syncItems.includes("mcp"),
+      agents: options.syncItems.includes("agents"),
+      commands: options.syncItems.includes("commands"),
     },
   };
 
@@ -198,6 +200,16 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
             checked: true,
           },
           { name: t("commands.init.mcpChoice"), value: "mcp", checked: true },
+          {
+            name: t("commands.init.agentsChoiceInit"),
+            value: "agents",
+            checked: true,
+          },
+          {
+            name: t("commands.init.commandsChoiceInit"),
+            value: "commands",
+            checked: true,
+          },
         ],
         validate: (input: string[]) => {
           if (input.length === 0) {

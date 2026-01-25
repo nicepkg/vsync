@@ -21,6 +21,8 @@
       "selectSyncItemsValidation": "Please select at least one item to sync",
       "skillsChoice": "Skills",
       "mcpChoice": "MCP Servers",
+      "agentsChoiceInit": "Agents",
+      "commandsChoiceInit": "Commands",
       "creatingConfig": "Creating configuration...",
       "configCreated": "Created .vibe-sync.json",
       "creatingCache": "Creating cache directory...",
