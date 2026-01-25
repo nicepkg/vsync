@@ -75,19 +75,19 @@ ${"Lorem ipsum ".repeat(100 + i * 10)}
 
   // Initialize adapters
   const sourceAdapter = new ClaudeCodeAdapter({
-    toolName: "claude-code",
+    tool: "claude-code",
     baseDir: tempDir,
     level: "project",
   });
 
   const cursorAdapter = new CursorAdapter({
-    toolName: "cursor",
+    tool: "cursor",
     baseDir: tempDir,
     level: "project",
   });
 
   const opencodeAdapter = new OpenCodeAdapter({
-    toolName: "opencode",
+    tool: "opencode",
     baseDir: tempDir,
     level: "project",
   });
