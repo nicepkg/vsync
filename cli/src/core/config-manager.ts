@@ -217,6 +217,13 @@ export async function loadMergedConfig(
 export function validateConfig(config: VibeConfig): ValidationResult {
   const errors: string[] = [];
 
+  // Detect minimal user config (for language preference only)
+  // This is a special case for first-run language selection
+  const isMinimalUserConfig =
+    config.level === "user" &&
+    config.target_tools?.length === 0 &&
+    config.language !== undefined;
+
   // Check required fields
   if (!config.version) {
     errors.push("Missing required field: version");
@@ -228,13 +235,18 @@ export function validateConfig(config: VibeConfig): ValidationResult {
     errors.push(`Invalid level: ${config.level}`);
   }
 
+  // For minimal user config, source_tool can be a placeholder
   if (!config.source_tool) {
-    errors.push("Missing required field: source_tool");
+    if (!isMinimalUserConfig) {
+      errors.push("Missing required field: source_tool");
+    }
   } else {
     // Get valid tools from registry (no hardcoding!)
     const validTools = getAvailableTools();
     if (!validTools.includes(config.source_tool)) {
-      errors.push(`Invalid source_tool: ${config.source_tool}`);
+      if (!isMinimalUserConfig) {
+        errors.push(`Invalid source_tool: ${config.source_tool}`);
+      }
     }
   }
 
@@ -244,7 +256,10 @@ export function validateConfig(config: VibeConfig): ValidationResult {
     if (!Array.isArray(config.target_tools)) {
       errors.push("target_tools must be an array");
     } else if (config.target_tools.length === 0) {
-      errors.push("target_tools cannot be empty");
+      // Allow empty target_tools for minimal user config (language preference only)
+      if (!isMinimalUserConfig) {
+        errors.push("target_tools cannot be empty");
+      }
     } else {
       // Get valid tools from registry (no hardcoding!)
       const validTools = getAvailableTools();
@@ -266,8 +281,11 @@ export function validateConfig(config: VibeConfig): ValidationResult {
     }
   }
 
+  // For minimal user config, sync_config can have placeholder values
   if (!config.sync_config) {
-    errors.push("Missing required field: sync_config");
+    if (!isMinimalUserConfig) {
+      errors.push("Missing required field: sync_config");
+    }
   } else {
     if (typeof config.sync_config.skills !== "boolean") {
       errors.push("sync_config.skills must be a boolean");
@@ -276,8 +294,12 @@ export function validateConfig(config: VibeConfig): ValidationResult {
       errors.push("sync_config.mcp must be a boolean");
     }
 
-    // At least one sync type must be enabled
-    if (!config.sync_config.skills && !config.sync_config.mcp) {
+    // At least one sync type must be enabled (skip for minimal user config)
+    if (
+      !isMinimalUserConfig &&
+      !config.sync_config.skills &&
+      !config.sync_config.mcp
+    ) {
       errors.push("At least one sync type must be enabled (skills or mcp)");
     }
   }

@@ -19,12 +19,8 @@ import { setDebugMode } from "./utils/logger.js";
  *
  * @returns Version string from package.json
  */
-async function getVersion(): Promise<string> {
-  try {
-    return packageJson.version || "1.0.0";
-  } catch {
-    return "1.0.0";
-  }
+function getVersion(): string {
+  return packageJson.version || "1.0.0";
 }
 
 /**
@@ -41,7 +37,7 @@ export function createCLI(): Command {
       "AI Coding Tool Config Synchronizer\n" +
         "Single source of truth → Compile to multiple formats → Diff-based sync",
     )
-    .version("1.0.0", "-v, --version", "Display version number")
+    .version(getVersion(), "-v, --version", "Display version number")
     .option("--debug", "Enable debug logging with stack traces");
 
   // Register all commands
@@ -81,10 +77,6 @@ export async function runCLI(): Promise<void> {
     await initializeLanguage();
 
     const program = createCLI();
-
-    // Set version asynchronously
-    const version = await getVersion();
-    program.version(version, "-v, --version", "Display version number");
 
     // Show help if no arguments
     if (process.argv.length === 2) {
