@@ -25,10 +25,6 @@
       "commandsChoiceInit": "Commands",
       "creatingConfig": "Creating configuration...",
       "configCreated": "Created .vibe-sync.json",
-      "creatingCache": "Creating cache directory...",
-      "cacheCreated": "Created .vibe-sync-cache/",
-      "initializingManifest": "Initializing manifest...",
-      "manifestCreated": "Created manifest.json",
       "complete": "Initialization complete! Run {command} to start syncing.",
       "userLevelOption": "Create user-level config instead of project-level"
     },

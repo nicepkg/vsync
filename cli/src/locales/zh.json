@@ -25,10 +25,6 @@
       "commandsChoiceInit": "命令",
       "creatingConfig": "正在创建配置...",
       "configCreated": "已创建 .vibe-sync.json",
-      "creatingCache": "正在创建缓存目录...",
-      "cacheCreated": "已创建 .vibe-sync-cache/",
-      "initializingManifest": "正在初始化清单...",
-      "manifestCreated": "已创建 manifest.json",
       "complete": "初始化完成! 运行 {command} 开始同步。",
       "userLevelOption": "创建用户级配置而不是项目级配置"
     },

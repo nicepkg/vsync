@@ -10,7 +10,6 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   generateConfig,
   saveConfig as saveInitConfig,
-  createCacheDirectory,
 } from "@src/commands/init.js";
 import { syncCommand } from "@src/commands/sync.js";
 import type { ToolName } from "@src/types/config.js";
@@ -194,7 +193,7 @@ class E2ETestFixture {
     config.use_symlinks_for_skills = options?.useSymlinks ?? false;
 
     await saveInitConfig(config, this.projectDir);
-    await createCacheDirectory(this.projectDir);
+    // Cache directory will be created automatically on first sync
   }
 
   /**

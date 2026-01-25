@@ -1,4 +1,4 @@
-import { readFile, access } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
@@ -145,29 +145,6 @@ describe("Init Command", () => {
 
       expect(parsed.source_tool).toBe("claude-code");
       expect(parsed.target_tools).toEqual(["cursor"]);
-    });
-
-    it("should create .vibe-sync-cache directory", async () => {
-      await import("@src/commands/init.js").then((m) =>
-        m.createCacheDirectory("/project"),
-      );
-
-      await expect(access("/project/.vibe-sync-cache")).resolves.not.toThrow();
-    });
-
-    it("should create empty manifest.json in cache", async () => {
-      await import("@src/commands/init.js").then((m) =>
-        m.initializeManifest("/project"),
-      );
-
-      const content = await readFile(
-        "/project/.vibe-sync-cache/manifest.json",
-        "utf-8",
-      );
-      const parsed = JSON.parse(content);
-
-      expect(parsed.version).toBe("1.0.0");
-      expect(parsed.items).toEqual({});
     });
 
     it("should format JSON with indentation", async () => {
