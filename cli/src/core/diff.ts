@@ -77,13 +77,6 @@ export function compareHashes(
 
   // Case 2: Item not in target
   if (targetHash === null) {
-    // For write-only targets, check manifest to see if item is already synced
-    if (manifestHash !== null && manifestHash === sourceHash) {
-      return {
-        operation: "skip" as OperationType,
-        reason: "Item already synced (verified via manifest)",
-      };
-    }
     return {
       operation: "create" as OperationType,
       reason: "Item not in target",

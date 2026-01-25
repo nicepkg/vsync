@@ -192,9 +192,14 @@ export function shouldPromptForSymlinks(
  *
  * @param targetTools - Target tool names
  * @param projectDir - Project directory
+ * @param level - Config level
  * @returns Map of target data
  */
-async function readTargetConfigs(targetTools: ToolName[]): Promise<
+async function readTargetConfigs(
+  targetTools: ToolName[],
+  projectDir: string,
+  level: ConfigLevel,
+): Promise<
   Record<
     ToolName,
     {
@@ -215,17 +220,63 @@ async function readTargetConfigs(targetTools: ToolName[]): Promise<
     }
   >;
 
-  // For vibe-sync, target tools are write-only.
-  // We rely on the manifest to track what was previously written,
-  // rather than reading from target tools.
-  // This allows us to support write-only adapters like Cursor.
+  // Read actual configuration from target tools
+  // This allows us to detect manually deleted files
   for (const tool of targetTools) {
-    targetData[tool] = {
-      skills: [],
-      mcpServers: [],
-      agents: [],
-      commands: [],
-    };
+    try {
+      const adapter = getAdapter({
+        tool,
+        baseDir: projectDir,
+        level,
+      });
+
+      // Try to read each type, use empty array if unsupported
+      let skills: Skill[] = [];
+      let mcpServers: MCPServer[] = [];
+      let agents: Agent[] = [];
+      let commands: VibeCommand[] = [];
+
+      try {
+        skills = await adapter.readSkills();
+      } catch {
+        // If read fails (e.g., write-only adapter), use empty array
+        skills = [];
+      }
+
+      try {
+        mcpServers = await adapter.readMCPServers();
+      } catch {
+        mcpServers = [];
+      }
+
+      try {
+        agents = await adapter.readAgents();
+      } catch {
+        agents = [];
+      }
+
+      try {
+        commands = await adapter.readCommands();
+      } catch {
+        commands = [];
+      }
+
+      targetData[tool] = {
+        skills,
+        mcpServers,
+        agents,
+        commands,
+      };
+    } catch (error) {
+      // If adapter creation fails, use empty data
+      debug(`Failed to read target config for ${tool}: ${error}`);
+      targetData[tool] = {
+        skills: [],
+        mcpServers: [],
+        agents: [],
+        commands: [],
+      };
+    }
   }
 
   return targetData;
@@ -240,6 +291,7 @@ async function readTargetConfigs(targetTools: ToolName[]): Promise<
  * @param mode - Sync mode
  * @param syncConfig - Sync configuration (what to sync)
  * @param projectDir - Project directory
+ * @param level - Config level
  * @returns Sync plan
  */
 export async function calculateSyncDiff(
@@ -248,8 +300,10 @@ export async function calculateSyncDiff(
   manifest: Manifest,
   mode: SyncMode,
   syncConfig: VibeConfig["sync_config"],
+  projectDir: string,
+  level: ConfigLevel,
 ): Promise<SyncPlan> {
-  const targetData = await readTargetConfigs(targetTools);
+  const targetData = await readTargetConfigs(targetTools, projectDir, level);
 
   // Filter source data based on sync_config
   // Only include items that are enabled in configuration
@@ -814,6 +868,8 @@ export async function syncCommand(options: {
       manifest,
       mode,
       config.sync_config,
+      projectDir,
+      config.level,
     );
     planSpinner.succeed(t("commands.sync.planGenerated"));
 

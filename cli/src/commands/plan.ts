@@ -160,6 +160,8 @@ async function planCommand(options: {
       manifest,
       mode,
       config.sync_config,
+      projectDir,
+      config.level,
     );
     planSpinner.succeed(t("commands.plan.planGenerated"));
 
