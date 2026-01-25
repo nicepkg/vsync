@@ -611,32 +611,9 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] All tests passing (33 new tests, 400 total)
 - [ ] Benchmark and measure improvements
 
-### 8.2 Watch Mode
-
-- [ ] Implement `cli/src/commands/watch.ts`
-  - [ ] Use `chokidar` for file watching
-  - [ ] Watch source tool directories
-  - [ ] Debounce file change events
-  - [ ] Auto-sync on changes
-  - [ ] Display live sync status
-- [ ] Add `sync --watch` flag
-- [ ] Handle errors gracefully in watch mode
-- [ ] Write unit tests
-
-### 8.3 GitHub Action Integration
-
-- [ ] Create `.github/workflows/vibe-sync.yml` template
-  - [ ] Auto-sync on push
-  - [ ] Create PR with sync changes
-  - [ ] Configurable triggers
-- [ ] Document GitHub Action usage
-- [ ] Provide example workflows
-
 **Phase 8 Deliverables**:
 
-- [ ] Parallel sync working
-- [ ] Watch mode functional
-- [ ] GitHub Action template ready
+- [x] Parallel sync working
 
 ---
 
@@ -886,18 +863,18 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Overall Progress**: 6/10 phases complete (MVP v1.0 ✅ + v1.1 ✅, planning v1.2)
 
-| Phase    | Status         | Start Date | End Date   | Notes                        |
-| -------- | -------------- | ---------- | ---------- | ---------------------------- |
-| Phase 1  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Foundation                   |
-| Phase 2  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Adapters                     |
-| Phase 3  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Diff & Plan                  |
-| Phase 4  | 🟢 Complete    | 2026-01-24 | 2026-01-25 | CLI Commands                 |
-| Phase 5  | 🟢 Complete    | 2026-01-25 | 2026-01-25 | Safety & Reliability         |
-| Phase 6  | 🟡 Partial     | 2026-01-25 | -          | Unit tests ✅, docs/E2E ❌   |
-| Phase 7  | 🟢 Complete    | 2026-01-25 | 2026-01-25 | v1.1 Extensions              |
-| Phase 8  | 🔴 Not Started | -          | -          | Performance & Advanced       |
-| Phase 9  | 🔴 Not Started | -          | -          | Skills Symlink Support       |
-| Phase 10 | 🔴 Not Started | -          | -          | Multi-language (i18n)        |
+| Phase    | Status         | Start Date | End Date   | Notes                      |
+| -------- | -------------- | ---------- | ---------- | -------------------------- |
+| Phase 1  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Foundation                 |
+| Phase 2  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Adapters                   |
+| Phase 3  | 🟢 Complete    | 2026-01-24 | 2026-01-24 | Diff & Plan                |
+| Phase 4  | 🟢 Complete    | 2026-01-24 | 2026-01-25 | CLI Commands               |
+| Phase 5  | 🟢 Complete    | 2026-01-25 | 2026-01-25 | Safety & Reliability       |
+| Phase 6  | 🟡 Partial     | 2026-01-25 | -          | Unit tests ✅, docs/E2E ❌ |
+| Phase 7  | 🟢 Complete    | 2026-01-25 | 2026-01-25 | v1.1 Extensions            |
+| Phase 8  | 🔴 Not Started | -          | -          | Performance & Advanced     |
+| Phase 9  | 🔴 Not Started | -          | -          | Skills Symlink Support     |
+| Phase 10 | 🔴 Not Started | -          | -          | Multi-language (i18n)      |
 
 **Legend**:
 
