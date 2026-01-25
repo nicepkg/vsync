@@ -11,6 +11,10 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  issues: write
+
+env:
+  PREVIEW_COMMENT_MARKER: '<!-- PKG_PR_NEW_PREVIEW_COMMENT -->'
 
 jobs:
   preview:
@@ -19,11 +23,13 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          # when you add a new package, add a new line here
+          # When you add a new package, add a new line here
           - name: "vibe-sync"
             dir: "cli"
-          # - name: "package2"
-          #   dir: "package2"
+            display: "vibe-sync (CLI)"
+          # - name: "core"
+          #   dir: "core"
+          #   display: "vibe-sync (core)"
 
     steps:
       - name: Checkout
@@ -31,9 +37,104 @@ jobs:
 
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
+        with:
+          install-dependencies: 'true'
+          setup-cache: 'true'
 
       - name: Build package
         run: pnpm --filter "${{ matrix.package.name }}" build
 
-      - name: Publish preview to pkg.pr.new
-        run: npx pkg-pr-new publish "./${{ matrix.package.dir }}"
+      - name: Publish preview to pkg.pr.new (capture output)
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$(npx pkg-pr-new publish "./${{ matrix.package.dir }}" 2>&1 | tee /dev/stderr)"
+          {
+            echo "output<<'EOF'"
+            echo "$OUT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upsert PR comment (no spam)
+        uses: actions/github-script@v8
+        env:
+          MARKER: ${{ env.PREVIEW_COMMENT_MARKER }}
+          PKG_DIR: ${{ matrix.package.dir }}
+          PKG_DISPLAY: ${{ matrix.package.display }}
+          PUBLISH_OUTPUT: ${{ steps.publish.outputs.output }}
+        with:
+          script: |
+            const marker = process.env.MARKER;
+            const dir = process.env.PKG_DIR;
+            const display = process.env.PKG_DISPLAY;
+            const out = process.env.PUBLISH_OUTPUT || '';
+
+            // Try to extract a one-line install command from pkg.pr.new output
+            const lines = out.split('\n').map(s => s.trim()).filter(Boolean);
+            const installLine =
+              lines.find(l => /^pnpm add\s+/i.test(l)) ||
+              lines.find(l => /^npm i\s+/i.test(l) || /^npm install\s+/i.test(l)) ||
+              lines.find(l => /^yarn add\s+/i.test(l)) ||
+              '';
+
+            const fallback = 'Could not auto-detect a one-line install command — see raw output below.';
+
+            const baseBody = `
+            ## 📦 Package Preview Published
+
+            **${display}** has been published to **pkg.pr.new** for this PR, so reviewers can test changes without waiting for an official npm release.
+
+            ### ✅ Install
+            ${installLine ? `\`\`\`bash\n${installLine}\n\`\`\`` : fallback}
+
+            ### ✅ Quick verification (CLI)
+            \`\`\`bash
+            vibe-sync --version
+            vibe-sync --help
+            \`\`\`
+
+            ### 🔎 Raw publish output (for troubleshooting)
+            <details>
+            <summary>Show output</summary>
+
+            \`\`\`
+            ${out.slice(0, 12000)}
+            \`\`\`
+
+            </details>
+
+            (This comment will be updated on new pushes.)
+            `.trim();
+
+            // Since this job is matrix, keep ONE comment per package by adding a package-specific marker.
+            const pkgMarker = `${marker}<!-- ${dir} -->`;
+            const body = `${pkgMarker}\n${baseBody}`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find(c => (c.body || '').includes(pkgMarker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            };
