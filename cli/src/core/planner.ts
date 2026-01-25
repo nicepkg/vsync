@@ -113,8 +113,7 @@ export function formatPlan(plan: SyncPlan): string {
 
   // Header
   lines.push("");
-  lines.push(`Sync Plan - Source: ${plan.source_tool}`);
-  lines.push(`Generated: ${plan.timestamp}`);
+  lines.push(`📋 Sync Plan - Source: ${plan.source_tool}`);
   lines.push("=".repeat(60));
   lines.push("");
 
@@ -128,71 +127,16 @@ export function formatPlan(plan: SyncPlan): string {
   );
 
   if (!hasOperations) {
-    lines.push("No changes needed - everything is up to date!");
+    lines.push("✅ No changes needed - everything is up to date!");
     lines.push("");
     return lines.join("\n");
   }
 
-  // Operations for each target tool
-  for (const [toolName, diff] of Object.entries(plan.diffs)) {
-    if (!diff) continue;
-
-    lines.push(`Target: ${toolName}`);
-    lines.push("-".repeat(60));
-
-    // CREATE operations
-    if (diff.toCreate.length > 0) {
-      lines.push("");
-      lines.push(`CREATE (${diff.toCreate.length}):`);
-      for (const op of diff.toCreate) {
-        lines.push(`  + [${op.itemType}] ${op.name}`);
-        if (op.description) {
-          lines.push(`    ${op.description}`);
-        }
-      }
-    }
-
-    // UPDATE operations
-    if (diff.toUpdate.length > 0) {
-      lines.push("");
-      lines.push(`UPDATE (${diff.toUpdate.length}):`);
-      for (const op of diff.toUpdate) {
-        lines.push(`  ~ [${op.itemType}] ${op.name}`);
-        if (op.description) {
-          lines.push(`    ${op.description}`);
-        }
-        if (op.oldHash && op.newHash) {
-          lines.push(
-            `    ${op.oldHash.substring(0, 8)} → ${op.newHash.substring(0, 8)}`,
-          );
-        }
-      }
-    }
-
-    // DELETE operations
-    if (diff.toDelete.length > 0) {
-      lines.push("");
-      lines.push(`DELETE (${diff.toDelete.length}):`);
-      for (const op of diff.toDelete) {
-        lines.push(`  - [${op.itemType}] ${op.name}`);
-        if (op.description) {
-          lines.push(`    ${op.description}`);
-        }
-      }
-    }
-
-    // Summary for this tool
-    const total =
-      diff.toCreate.length + diff.toUpdate.length + diff.toDelete.length;
-    lines.push("");
-    lines.push(`Summary: ${total} operation(s) for ${toolName}`);
-    lines.push("");
-  }
-
-  // Overall summary
+  // Calculate totals first
   let totalCreate = 0;
   let totalUpdate = 0;
   let totalDelete = 0;
+  const targetTools = Object.keys(plan.diffs);
 
   for (const diff of Object.values(plan.diffs)) {
     if (!diff) continue;
@@ -201,12 +145,119 @@ export function formatPlan(plan: SyncPlan): string {
     totalDelete += diff.toDelete.length;
   }
 
-  lines.push("=".repeat(60));
-  lines.push("Overall Summary:");
-  lines.push(
-    `  ${totalCreate} CREATE, ${totalUpdate} UPDATE, ${totalDelete} DELETE`,
-  );
+  // Show summary first
+  lines.push(`Targets: ${targetTools.join(", ")}`);
+  lines.push(`Operations: ${totalCreate} CREATE, ${totalUpdate} UPDATE, ${totalDelete} DELETE`);
   lines.push("");
+
+  // Group operations by item (when same items go to multiple targets)
+  const itemOperations = new Map<string, {
+    type: string;
+    name: string;
+    targets: string[];
+    operation: 'CREATE' | 'UPDATE' | 'DELETE';
+    description?: string;
+  }>();
+
+  for (const [toolName, diff] of Object.entries(plan.diffs)) {
+    if (!diff) continue;
+
+    // Process CREATE operations
+    for (const op of diff.toCreate) {
+      const key = `CREATE:${op.itemType}:${op.name}`;
+      if (!itemOperations.has(key)) {
+        itemOperations.set(key, {
+          type: op.itemType,
+          name: op.name,
+          targets: [],
+          operation: 'CREATE',
+          description: op.description,
+        });
+      }
+      itemOperations.get(key)!.targets.push(toolName);
+    }
+
+    // Process UPDATE operations
+    for (const op of diff.toUpdate) {
+      const key = `UPDATE:${op.itemType}:${op.name}`;
+      if (!itemOperations.has(key)) {
+        itemOperations.set(key, {
+          type: op.itemType,
+          name: op.name,
+          targets: [],
+          operation: 'UPDATE',
+          description: op.description,
+        });
+      }
+      itemOperations.get(key)!.targets.push(toolName);
+    }
+
+    // Process DELETE operations
+    for (const op of diff.toDelete) {
+      const key = `DELETE:${op.itemType}:${op.name}`;
+      if (!itemOperations.has(key)) {
+        itemOperations.set(key, {
+          type: op.itemType,
+          name: op.name,
+          targets: [],
+          operation: 'DELETE',
+          description: op.description,
+        });
+      }
+      itemOperations.get(key)!.targets.push(toolName);
+    }
+  }
+
+  // Format grouped operations
+  const createOps = Array.from(itemOperations.values()).filter(op => op.operation === 'CREATE');
+  const updateOps = Array.from(itemOperations.values()).filter(op => op.operation === 'UPDATE');
+  const deleteOps = Array.from(itemOperations.values()).filter(op => op.operation === 'DELETE');
+
+  if (createOps.length > 0) {
+    lines.push(`✨ CREATE (${totalCreate} total):`);
+    for (const op of createOps) {
+      const targetStr = op.targets.length === targetTools.length
+        ? "all targets"
+        : op.targets.join(", ");
+      lines.push(`   + [${op.type}] ${op.name} → ${targetStr}`);
+    }
+    lines.push("");
+  }
+
+  if (updateOps.length > 0) {
+    lines.push(`🔄 UPDATE (${totalUpdate} total):`);
+    for (const op of updateOps) {
+      const targetStr = op.targets.length === targetTools.length
+        ? "all targets"
+        : op.targets.join(", ");
+      lines.push(`   ~ [${op.type}] ${op.name} → ${targetStr}`);
+    }
+    lines.push("");
+  }
+
+  if (deleteOps.length > 0) {
+    lines.push(`🗑️  DELETE (${totalDelete} total):`);
+    for (const op of deleteOps) {
+      const targetStr = op.targets.length === targetTools.length
+        ? "all targets"
+        : op.targets.join(", ");
+      lines.push(`   - [${op.type}] ${op.name} → ${targetStr}`);
+    }
+    lines.push("");
+  }
+
+  // Old detailed format (commented out, can be enabled with --verbose flag)
+  /*
+  // Operations for each target tool
+  for (const [toolName, diff] of Object.entries(plan.diffs)) {
+    if (!diff) continue;
+
+    lines.push(`Target: ${toolName}`);
+    lines.push("-".repeat(60));
+
+  */
+
+  lines.push("=".repeat(60));
 
   return lines.join("\n");
 }

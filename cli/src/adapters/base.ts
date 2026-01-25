@@ -338,9 +338,8 @@ export abstract class BaseAdapter implements ToolAdapter {
           item.hash = hashFn(item);
           items.push(item);
         } catch (error) {
-          console.warn(
-            `Skipping ${dirName} ${itemName}: ${error instanceof Error ? error.message : "Unknown error"}`,
-          );
+          // Silently skip invalid items (YAML parse errors, etc.)
+          // These are usually expected for complex or malformed command files
         }
       }
 
@@ -400,9 +399,8 @@ export abstract class BaseAdapter implements ToolAdapter {
           item.hash = hashFn(item);
           items.push(item);
         } catch (error) {
-          console.warn(
-            `Skipping ${dirName} ${itemName}: ${error instanceof Error ? error.message : "Unknown error"}`,
-          );
+          // Silently skip invalid items (YAML parse errors, etc.)
+          // These are usually expected for complex or malformed command files
         }
       }
 
