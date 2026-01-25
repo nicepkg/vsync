@@ -1,0 +1,452 @@
+---
+title: 高级功能
+description: 掌握 vibe-sync 高级功能 - Skills 的 symlink 支持、性能优化（基于哈希的检测、并行操作）、多语言 CLI（en/zh）、回滚安全和 CI/CD 集成。
+---
+
+# 高级功能
+
+探索 vibe-sync 中的高级功能和优化技术。
+
+## Symlink 支持 (v1.2+)
+
+vibe-sync 可以为 Skills 目录使用符号链接而不是复制文件，提供即时更新和显著的磁盘空间节省。
+
+### Symlinks 如何工作
+
+启用 symlinks 时：
+
+1. 源工具 Skills 目录保持不变
+2. 目标工具获得指向源的符号链接
+3. 源中的更改立即在所有目标中可见
+4. 无文件复制 = 节省磁盘空间
+
+```
+~/.claude/skills/my-skill/  (源 - 实际文件)
+       ↑
+       ├── 来自 ~/.cursor/skills/my-skill/ 的符号链接
+       ├── 来自 ~/.opencode/skills/my-skill/ 的符号链接
+       └── 来自 ~/.codex/skills/my-skill/ 的符号链接
+```
+
+### 启用 Symlinks
+
+#### 在首次同步期间
+
+在首次 `vibe-sync sync` 时，您会收到提示：
+
+```
+? 您想如何同步 Skills？
+  ❯ 使用符号链接（推荐 - 即时更新，节省空间）
+    复制文件（传统 - 独立副本）
+```
+
+您的选择将保存在 `.vibe-sync.json` 中。
+
+#### 手动配置
+
+编辑 `.vibe-sync.json`：
+
+```json
+{
+  "use_symlinks_for_skills": true
+}
+```
+
+### 优势
+
+✅ **即时更新**：在源中编辑一次，更改随处可见
+✅ **磁盘空间**：一个副本而不是 N+1 个副本
+✅ **性能**：更快的同步操作（无文件复制）
+✅ **简洁性**：单一配置源变成实际意义上的
+
+### 限制
+
+⚠️ **平台支持**：需要操作系统支持符号链接（适用于 macOS、Linux、Windows 10+）
+⚠️ **仅 Skills**：目前仅 Skills 支持符号链接（MCP、Agents、Commands 仍然复制）
+⚠️ **权限问题**：在某些系统上可能需要管理员权限
+
+### 在模式之间切换
+
+您可以随时更改设置：
+
+```bash
+# 1. 编辑配置
+vim .vibe-sync.json
+# 将 "use_symlinks_for_skills" 更改为 true/false
+
+# 2. 重新同步以应用
+vibe-sync sync
+```
+
+vibe-sync 将自动处理转换，将符号链接替换为副本或反之亦然。
+
+---
+
+## 性能优化
+
+vibe-sync 针对速度和效率进行了优化。
+
+### 基于哈希的变更检测
+
+使用 SHA256 哈希值检测更改：
+
+- **快速**：无需比较文件内容
+- **准确**：即使是微小的更改也能被检测到
+- **高效**：自动跳过未更改的配置
+
+```json
+// Manifest 跟踪哈希值
+{
+  "items": {
+    "skill/my-skill": {
+      "hash": "abc123...",
+      "targets": {
+        "cursor": "abc123..."
+      }
+    }
+  }
+}
+```
+
+### 并行操作
+
+多个目标并行同步：
+
+```
+源读取 (1s)
+    ↓
+差异计算 (0.2s)
+    ↓
+写入到 cursor (0.5s)  ─┐
+写入到 opencode (0.5s) ├─ 并行 (总共 0.5s)
+写入到 codex (0.5s)   ─┘
+    ↓
+总计: ~1.7s 而不是 2.7s
+```
+
+### 智能缓存
+
+manifest 充当缓存：
+
+- 跳过具有匹配哈希值的文件
+- 避免冗余的 I/O 操作
+- 增量同步几乎是即时的
+
+### 原子写入
+
+所有写入都使用原子操作：
+
+1. 写入临时文件
+2. fsync 到磁盘
+3. 原子重命名
+
+**结果**：防崩溃，无部分写入
+
+---
+
+## 多语言 CLI (v1.2+)
+
+vibe-sync 支持英文和中文界面。
+
+### 设置语言
+
+#### User 层级（全局）
+
+编辑 `~/.vibe-sync.json`：
+
+```json
+{
+  "language": "en"  // 或 "zh"
+}
+```
+
+#### 环境变量
+
+```bash
+export VIBE_SYNC_LANG=zh
+vibe-sync sync
+```
+
+### 支持的语言
+
+- `en` - English（默认）
+- `zh` - 简体中文
+
+### 输出示例
+
+**English**：
+```
+📖 Reading source (claude-code)...
+  ✓ Found 3 skills
+  ✓ Found 2 MCP servers
+```
+
+**中文**：
+```
+📖 正在读取源配置 (claude-code)...
+  ✓ 找到 3 个技能
+  ✓ 找到 2 个 MCP 服务器
+```
+
+---
+
+## 高级同步模式
+
+### 选择性同步
+
+仅同步特定配置类型：
+
+```json
+{
+  "sync_config": {
+    "skills": true,
+    "mcp": false,      // 不同步 MCP
+    "agents": true,
+    "commands": false  // 不同步 Commands
+  }
+}
+```
+
+### 多源策略
+
+对于复杂设置，使用多个配置：
+
+```bash
+# 项目有自己的配置
+cd ~/my-project
+vibe-sync sync
+
+# 用户有全局配置
+vibe-sync sync --user
+```
+
+两个层级可以共存——项目配置不会覆盖用户配置。
+
+### 临时源切换
+
+需要临时从不同工具导入？
+
+```bash
+# 1. 从 Cursor 导入到当前源
+vibe-sync import /path/to/cursor/project
+
+# 2. 同步到目标
+vibe-sync sync
+```
+
+您的源工具保持不变；您只是导入新项目。
+
+---
+
+## 环境变量管理
+
+### 最佳实践
+
+1. **从不硬编码密钥**：
+   ```json
+   // ✅ 好的
+   { "API_KEY": "${API_KEY}" }
+
+   // ❌ 不好
+   { "API_KEY": "sk-abc123" }
+   ```
+
+2. **为本地开发使用默认值**：
+   ```json
+   {
+     "DATABASE_URL": "${DATABASE_URL:-postgresql://localhost/dev}"
+   }
+   ```
+
+3. **记录所需变量**：
+   ```json
+   // 在您的 README.md 中
+   // 所需的环境变量:
+   // - API_KEY: 您的 API 密钥
+   // - DATABASE_URL: 数据库连接字符串
+   ```
+
+### 跨工具变量语法
+
+vibe-sync 自动在工具之间转换：
+
+| 源 (Claude Code) | 目标 (Cursor) | 目标 (OpenCode) |
+|:--------------------|:----------------|:------------------|
+| `${VAR}` | `${env:VAR}` | `{env:VAR}` |
+| `${VAR:-default}` | `${env:VAR}` (默认值丢失) | `{env:VAR}` (默认值丢失) |
+
+**注意**：默认值仅在 Claude Code 格式中保留。
+
+---
+
+## 回滚和安全
+
+### 自动回滚
+
+如果同步期间发生任何错误：
+
+1. 所有更改都会自动回滚
+2. 从备份恢复原始配置
+3. 无部分同步状态
+
+```
+✓ 已创建备份: cursor/mcp.json
+✓ 已创建备份: opencode/opencode.json
+❌ 写入 opencode 时出错
+⚠️  回滚所有更改...
+✅ 回滚完成 - 所有文件已恢复
+```
+
+### 手动回滚
+
+如果您需要撤销同步：
+
+1. 使用版本控制（如果配置已提交）
+2. 使用系统备份（Time Machine 等）
+3. 使用以前的源状态重新运行 `sync`
+
+---
+
+## CI/CD 集成
+
+### GitHub Actions
+
+```yaml
+name: Sync AI Tool Configs
+
+on:
+  push:
+    paths:
+      - '.claude/**'
+      - '.vibe-sync.json'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Sync configs
+        run: npx vibe-sync sync --yes
+        env:
+          # 添加任何所需的环境变量
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Pre-commit Hook
+
+提交前自动同步：
+
+```bash
+#!/bin/bash
+# .git/hooks/pre-commit
+
+# 检查 .vibe-sync.json 是否存在
+if [ -f .vibe-sync.json ]; then
+  echo "Running vibe-sync..."
+  npx vibe-sync sync --yes
+
+  # 将同步的文件添加到提交
+  git add .cursor/ .opencode/ .codex/
+fi
+```
+
+---
+
+## Watch 模式（v1.3 计划中）
+
+计划中的文件更改自动同步功能：
+
+```bash
+# 当源配置更改时自动同步
+vibe-sync watch
+```
+
+这将监控源目录并自动触发同步。
+
+---
+
+## 调试
+
+### 启用调试日志
+
+设置环境变量：
+
+```bash
+export VIBE_SYNC_DEBUG=1
+vibe-sync sync
+```
+
+### 详细输出
+
+```bash
+vibe-sync sync --verbose
+```
+
+### 检查 Manifest
+
+检查 manifest 以查看同步状态：
+
+```bash
+cat .vibe-sync-cache/manifest.json | jq
+```
+
+---
+
+## 性能提示
+
+1. **使用 Symlinks**：对 Skills 显著更快
+2. **提交 Manifest**：有助于增量同步
+3. **选择性同步**：仅同步您需要的
+4. **后台运行**：使用 `--yes` 标志进行自动化
+
+---
+
+## 高级配置示例
+
+### 混合同步策略
+
+```json
+{
+  "sync_config": {
+    "skills": true,      // 完全同步
+    "mcp": true,         // 完全同步
+    "agents": false,     // 跳过（手动管理）
+    "commands": false    // 跳过（手动管理）
+  },
+  "use_symlinks_for_skills": true
+}
+```
+
+### 多工具开发
+
+```bash
+# 项目使用 Claude Code + Cursor
+cd ~/project-a
+cat .vibe-sync.json
+{
+  "source_tool": "claude-code",
+  "target_tools": ["cursor"]
+}
+
+# 另一个项目使用 Cursor + OpenCode
+cd ~/project-b
+cat .vibe-sync.json
+{
+  "source_tool": "cursor",
+  "target_tools": ["opencode"]
+}
+```
+
+---
+
+## 下一步
+
+- 查看 [FAQ](../faq) 了解常见问题
+- 阅读关于[贡献](../../contributing)到 vibe-sync
+- 探索[配置](../configuration)详情

@@ -1,0 +1,373 @@
+---
+title: 快速参考
+description: vibe-sync 命令、选项和常用模式的快速参考指南和速查表。可复制粘贴的日常工作流示例。
+---
+
+# 快速参考
+
+vibe-sync 命令和常用模式的快速参考指南和速查表。
+
+## 命令概览
+
+| 命令 | 说明 | 常用选项 |
+|:--------|:------------|:---------------|
+| `init` | 初始化配置 | `--user` |
+| `sync` | 同步配置 | `--dry-run`, `--prune`, `--user`, `-y` |
+| `plan` | 预览同步计划 | `--user` |
+| `status` | 检查同步状态 | `--user` |
+| `list` | 列出配置 | `skills`, `mcp`, `--user` |
+| `clean` | 从目标移除 | `--from-source`, `--user`, `-y` |
+| `import` | 从项目导入 | `--user` |
+
+## 常见工作流
+
+### 首次设置
+
+```bash
+# Project 层级设置
+vibe-sync init
+vibe-sync sync
+
+# User 层级设置
+vibe-sync init --user
+vibe-sync sync --user
+```
+
+**[了解更多 →](../getting-started)**
+
+### 日常同步
+
+```bash
+# 1. 在源工具中编辑配置
+vim ~/.claude/skills/my-skill/SKILL.md
+
+# 2. 同步到目标
+vibe-sync sync
+```
+
+### 同步前预览
+
+```bash
+# 检查将要更改什么
+vibe-sync plan
+
+# 或使用 dry-run
+vibe-sync sync --dry-run
+
+# 如果满意，应用
+vibe-sync sync
+```
+
+### 清理旧配置
+
+```bash
+# 安全: 仅从目标移除
+vibe-sync clean skill/old-skill
+
+# 严格镜像（删除额外项）
+vibe-sync sync --prune
+```
+
+**[了解更多 →](../cli-commands#clean)**
+
+## 同步模式
+
+### Safe 模式（默认）
+
+```bash
+vibe-sync sync
+```
+
+- ✅ 创建新项
+- ✅ 更新现有项
+- ❌ 从不删除
+
+**[了解更多 →](../core-concepts#safe-mode-default)**
+
+### Prune 模式
+
+```bash
+vibe-sync sync --prune
+```
+
+- ✅ 创建新项
+- ✅ 更新现有项
+- ⚠️ 删除源中不存在的项
+
+**[了解更多 →](../core-concepts#prune-mode)**
+
+## 配置层级
+
+### Project 层级
+
+```bash
+# 默认行为
+vibe-sync init       # 创建 .vibe-sync.json
+vibe-sync sync       # 同步项目配置
+```
+
+**用于**: 团队配置、项目特定集成
+
+### User 层级
+
+```bash
+# 添加 --user 标志
+vibe-sync init --user    # 创建 ~/.vibe-sync.json
+vibe-sync sync --user    # 同步全局配置
+```
+
+**用于**: 个人偏好、全局技能
+
+**[了解更多 →](../core-concepts#configuration-layers)**
+
+## 命令示例
+
+### init
+
+```bash
+# 项目配置
+vibe-sync init
+
+# 用户配置
+vibe-sync init --user
+```
+
+### sync
+
+```bash
+# Safe 同步
+vibe-sync sync
+
+# Prune 模式
+vibe-sync sync --prune
+
+# Dry run
+vibe-sync sync --dry-run
+
+# 用户级
+vibe-sync sync --user
+
+# 跳过确认
+vibe-sync sync -y
+```
+
+### plan
+
+```bash
+# 预览更改
+vibe-sync plan
+
+# 用户级计划
+vibe-sync plan --user
+```
+
+### status
+
+```bash
+# 检查同步状态
+vibe-sync status
+
+# 用户级状态
+vibe-sync status --user
+```
+
+### list
+
+```bash
+# 列出所有
+vibe-sync list
+
+# 列出 skills
+vibe-sync list skills
+
+# 列出 MCP 服务器
+vibe-sync list mcp
+
+# 用户级
+vibe-sync list --user
+```
+
+### clean
+
+```bash
+# 从目标移除单个项
+vibe-sync clean skill/old-skill
+
+# 交互式选择
+vibe-sync clean
+
+# 也从源删除（危险！）
+vibe-sync clean skill/old-skill --from-source
+
+# 用户级
+vibe-sync clean --user
+
+# 跳过确认
+vibe-sync clean skill/old-skill -y
+```
+
+**[了解更多 →](../cli-commands#clean)**
+
+### import
+
+```bash
+# 从另一个项目导入
+vibe-sync import ../other-project
+
+# 导入到用户级
+vibe-sync import ../other-project --user
+```
+
+## 配置文件快速参考
+
+### .vibe-sync.json
+
+```json
+{
+  "version": "1.0.0",
+  "level": "project",
+  "source_tool": "claude-code",
+  "target_tools": ["cursor", "opencode", "codex"],
+  "sync_config": {
+    "skills": true,
+    "mcp": true
+  },
+  "use_symlinks_for_skills": false,
+  "language": "en"
+}
+```
+
+**[了解更多 →](../configuration)**
+
+### 关键设置
+
+| 设置 | 值 | 说明 |
+|:--------|:-------|:------------|
+| `source_tool` | `claude-code`, `cursor`, `opencode`, `codex` | 您的配置源 |
+| `target_tools` | 工具数组 | 同步目标 |
+| `sync_config.skills` | `true`/`false` | 启用 Skills 同步 |
+| `sync_config.mcp` | `true`/`false` | 启用 MCP 同步 |
+| `use_symlinks_for_skills` | `true`/`false` | 使用符号链接 (v1.2+) |
+| `language` | `en`/`zh` | CLI 语言（仅用户级） |
+
+## 工具特定格式
+
+### MCP 环境变量
+
+| 工具 | 语法 | 示例 |
+|:-----|:-------|:--------|
+| Claude Code | `${VAR}` | `${API_KEY}` |
+| Cursor | `${env:VAR}` | `${env:API_KEY}` |
+| OpenCode | `{env:VAR}` | `{env:API_KEY}` |
+| Codex | 无插值 | 直接值 |
+
+**[了解更多 →](../configuration#mcp-configuration-differences)**
+
+### 配置文件位置
+
+| 工具 | Project | User |
+|:-----|:--------|:-----|
+| Claude Code | `.mcp.json` | `~/.claude.json` |
+| Cursor | `mcp.json` | `~/.cursor/mcp.json` |
+| OpenCode | `opencode.json(c)` | `~/.opencode/opencode.json` |
+| Codex | `config.toml` | `~/.codex/config.toml` |
+
+**[了解更多 →](../configuration#supported-tools)**
+
+## 常用模式
+
+### 团队协作
+
+```bash
+# 1. 提交配置到 git
+git add .vibe-sync.json
+git commit -m "feat: add vibe-sync config"
+
+# 2. 团队成员克隆并同步
+git clone <repo>
+cd <repo>
+vibe-sync sync
+```
+
+### CI/CD 集成
+
+```bash
+# GitHub Actions
+- name: Sync configs
+  run: npx vibe-sync sync --yes
+```
+
+**[了解更多 →](../advanced-features#cicd-integration)**
+
+### 迁移工作流
+
+```bash
+# 1. 从旧项目导入
+vibe-sync import ../old-project
+
+# 2. 查看计划
+vibe-sync plan
+
+# 3. 同步到目标
+vibe-sync sync
+```
+
+**[了解更多 →](../faq#migration-questions)**
+
+## 退出代码
+
+| 代码 | 含义 |
+|:-----|:--------|
+| `0` | 成功 |
+| `1` | 发生错误 |
+
+## 获取帮助
+
+```bash
+# 一般帮助
+vibe-sync --help
+
+# 命令帮助
+vibe-sync sync --help
+
+# 版本
+vibe-sync --version
+```
+
+## 常见问题
+
+### 权限被拒绝
+
+```bash
+# 检查目录权限
+ls -la ~/.cursor/
+
+# 在 Windows 上: 以管理员身份运行以使用符号链接
+```
+
+### 找不到配置
+
+```bash
+# 解决方案: 先初始化
+vibe-sync init
+```
+
+### 未检测到工具
+
+```bash
+# 解决方案: 创建工具目录
+mkdir -p ~/.cursor
+vibe-sync init
+```
+
+**[更多故障排除 →](../faq#troubleshooting)**
+
+## 相关资源
+
+- **[快速开始](../getting-started)** - 详细安装指南
+- **[核心概念](../core-concepts)** - 理解 vibe-sync
+- **[CLI 命令](../cli-commands)** - 完整命令参考
+- **[配置指南](../configuration)** - 配置文件详情
+- **[高级功能](../advanced-features)** - Symlinks、性能
+- **[常见问题](../faq)** - 常见问题
+- **[贡献指南](../../contributing)** - 开发指南

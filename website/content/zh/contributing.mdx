@@ -1,0 +1,607 @@
+---
+title: 贡献指南
+description: 为 vibe-sync 开发做贡献。学习设置、TDD 工作流、代码标准、添加工具适配器、PR 流程和开发指南。TypeScript、pnpm monorepo、612 个测试。
+---
+
+# 贡献指南
+
+感谢您对贡献 vibe-sync 的兴趣！本指南将帮助您开始。
+
+## 贡献方式
+
+### ⭐ Star 仓库
+
+支持项目的最简单方式是在 [GitHub 上 star 它](https://github.com/nicepkg/vibe-sync)。这有助于其他人发现这个工具。
+
+### 🐛 报告 Bug
+
+发现了 bug？[提交 issue](https://github.com/nicepkg/vibe-sync/issues/new)，包含：
+- 问题的清晰描述
+- 重现步骤
+- 期望 vs 实际行为
+- 环境详情（OS、Node 版本等）
+
+### 💡 建议功能
+
+有想法？[提交功能请求](https://github.com/nicepkg/vibe-sync/issues/new)，描述：
+- 您试图解决的问题
+- 您提议的解决方案
+- 用例和好处
+- 考虑的任何替代方法
+
+### 🔧 提交 Pull Request
+
+欢迎代码贡献！参见下面的[开发设置](#development-setup)部分。
+
+### 📖 改进文档
+
+文档改进很有价值：
+- 修复拼写错误或不清楚的解释
+- 添加示例或用例
+- 翻译成其他语言
+- 改进代码注释
+
+---
+
+## 开发设置
+
+### 前提条件
+
+- **Node.js**：>= 24.0.0（用于开发）
+- **pnpm**：包管理器
+- **Git**：版本控制
+
+### 克隆仓库
+
+```bash
+git clone https://github.com/nicepkg/vibe-sync.git
+cd vibe-sync
+```
+
+### 安装依赖
+
+```bash
+# 如果需要，安装 pnpm
+npm install -g pnpm
+
+# 安装项目依赖
+cd cli
+pnpm install
+```
+
+### 项目结构
+
+vibe-sync 使用 pnpm monorepo：
+
+```
+vibe-sync/
+├── pnpm-workspace.yaml     # Workspace 配置
+├── cli/                    # CLI workspace 包
+│   ├── package.json        # CLI 依赖
+│   ├── tsconfig.json       # TypeScript 配置
+│   ├── src/                # 源代码
+│   │   ├── cli/            # CLI 入口点
+│   │   ├── commands/       # 命令实现
+│   │   ├── adapters/       # 工具适配器
+│   │   ├── core/           # 核心逻辑
+│   │   ├── types/          # TypeScript 类型
+│   │   └── utils/          # 工具函数
+│   └── test/               # 测试（镜像 src/）
+└── website/                # 文档网站
+```
+
+### 构建 CLI
+
+```bash
+cd cli
+pnpm build
+```
+
+### 运行测试
+
+```bash
+# 运行所有测试
+pnpm test
+
+# 监视模式运行测试
+pnpm test:watch
+
+# 运行覆盖率测试
+pnpm test:coverage
+
+# 类型检查
+pnpm typecheck
+
+# Lint
+pnpm lint
+```
+
+### 本地测试 CLI
+
+```bash
+# 链接以进行本地测试
+cd cli
+npm link
+
+# 现在您可以全局运行 vibe-sync
+vibe-sync --version
+```
+
+---
+
+## 开发工作流
+
+vibe-sync 遵循**测试驱动开发（TDD）**方法：
+
+### 1. 读取当前任务
+
+检查 `TASKS.md` 了解当前阶段和任务：
+
+```bash
+cat TASKS.md
+```
+
+### 2. 先写测试
+
+在实现之前，编写测试：
+
+```typescript
+// cli/test/commands/my-feature.test.ts
+import { describe, it, expect } from 'vitest';
+
+describe('My Feature', () => {
+  it('should do something', () => {
+    // 测试实现
+  });
+});
+```
+
+### 3. 实现功能
+
+编写代码使测试通过：
+
+```typescript
+// cli/src/commands/my-feature.ts
+export function myFeature() {
+  // 实现
+}
+```
+
+### 4. 验证
+
+```bash
+# 运行测试
+pnpm test
+
+# 类型检查
+pnpm typecheck
+
+# Lint
+pnpm lint
+```
+
+### 5. 标记任务完成
+
+更新 `TASKS.md`：
+
+```markdown
+- [x] 实现我的功能
+```
+
+### 6. 提交更改
+
+遵循 Angular 提交约定：
+
+```bash
+git add .
+git commit -m "feat: add my awesome feature
+
+实现任务 X 中描述的功能。
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+```
+
+---
+
+## 代码风格和标准
+
+### TypeScript
+
+- **严格模式**：所有代码必须通过 `strict: true`
+- **禁用 any**：使用正确的类型
+- **显式类型**：用于公共 API
+
+```typescript
+// ✅ 好的
+export function calculateHash(content: string): string {
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+// ❌ 不好
+export function calculateHash(content: any): any {
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+```
+
+### 测试
+
+- **测试覆盖率**：目标 >80%
+- **单元测试**：用于单个函数
+- **集成测试**：用于命令工作流
+- **模拟文件系统**：使用 `mock-fs` 进行文件操作
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import mock from 'mock-fs';
+
+describe('My Feature', () => {
+  beforeEach(() => {
+    mock({
+      '/fake/path': {
+        'file.txt': 'content'
+      }
+    });
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('should work', async () => {
+    // 使用模拟文件系统测试
+  });
+});
+```
+
+### 提交约定
+
+遵循 [Angular 提交约定](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-format)：
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**类型**：
+- `feat` - 新功能
+- `fix` - Bug 修复
+- `docs` - 文档更改
+- `refactor` - 代码重构
+- `test` - 测试更改
+- `chore` - 构建/工具更改
+
+**示例**：
+```bash
+git commit -m "feat(adapters): add codex TOML support"
+git commit -m "fix(sync): preserve JSONC comments in OpenCode"
+git commit -m "docs(readme): update installation instructions"
+```
+
+---
+
+## 架构指南
+
+### 添加新工具适配器
+
+1. **创建适配器文件**：`cli/src/adapters/my-tool-adapter.ts`
+
+```typescript
+import { BaseAdapter } from './base-adapter';
+import type { ToolAdapter } from '@src/types/adapter';
+
+export class MyToolAdapter extends BaseAdapter implements ToolAdapter {
+  readonly name = 'my-tool';
+
+  async readSkills(): Promise<Skill[]> {
+    // 实现
+  }
+
+  async writeSkills(skills: Skill[]): Promise<WriteResult> {
+    // 实现
+  }
+
+  // ... 其他方法
+}
+```
+
+2. **注册适配器**：`cli/src/adapters/registry.ts`
+
+```typescript
+export function getAdapter(options: AdapterOptions): ToolAdapter {
+  switch (options.tool) {
+    case 'my-tool':
+      return new MyToolAdapter(options);
+    // ... 其他情况
+  }
+}
+```
+
+3. **编写测试**：`cli/test/adapters/my-tool-adapter.test.ts`
+
+4. **更新类型**：`cli/src/types/config.ts`
+
+```typescript
+export type ToolName =
+  | 'claude-code'
+  | 'cursor'
+  | 'opencode'
+  | 'codex'
+  | 'my-tool';  // 在这里添加
+```
+
+### 添加新命令
+
+1. **创建命令文件**：`cli/src/commands/my-command.ts`
+
+```typescript
+import { Command } from 'commander';
+
+export function createMyCommand(): Command {
+  const command = new Command('my-command');
+
+  command
+    .description('Description of my command')
+    .option('--option', 'Option description')
+    .action(async (options) => {
+      // 命令实现
+    });
+
+  return command;
+}
+```
+
+2. **注册命令**：`cli/src/cli/index.ts`
+
+```typescript
+import { createMyCommand } from '@src/commands/my-command';
+
+program.addCommand(createMyCommand());
+```
+
+3. **编写测试**：`cli/test/commands/my-command.test.ts`
+
+4. **添加 i18n 字符串**：`cli/src/utils/i18n.ts`
+
+---
+
+## 关键规则
+
+### 1. 从不展开环境变量
+
+```typescript
+// ❌ 错误 - 展开变量
+const config = {
+  env: {
+    TOKEN: process.env.GITHUB_TOKEN  // 实际值！
+  }
+};
+
+// ✅ 正确 - 保留语法
+const config = {
+  env: {
+    TOKEN: "${env:GITHUB_TOKEN}"  // 引用已保留
+  }
+};
+```
+
+### 2. 始终使用原子写入
+
+```typescript
+import { atomicWrite } from '@src/utils/atomic-write';
+
+// ❌ 错误 - 不防崩溃
+await fs.writeFile(path, content);
+
+// ✅ 正确 - 原子操作
+await atomicWrite(path, content);
+```
+
+### 3. 遵循 TDD 工作流
+
+```bash
+# 1. 先写测试
+vim test/my-feature.test.ts
+
+# 2. 运行测试（应该失败）
+pnpm test
+
+# 3. 实现功能
+vim src/my-feature.ts
+
+# 4. 运行测试（应该通过）
+pnpm test
+
+# 5. 提交
+git commit -m "feat: add my feature"
+```
+
+### 4. 尊重配置格式精度
+
+每个工具都有**不同**的 MCP 格式：
+
+```typescript
+// OpenCode - 独特格式！
+{
+  "mcp": {  // 不是 "mcpServers"！
+    "server": {
+      "type": "local",  // 必需！
+      "environment": {  // 不是 "env"！
+        "VAR": "{env:VAR}"  // 花括号！
+      }
+    }
+  }
+}
+```
+
+查看 `docs/prd.md` 第 2.2 节了解完整格式规范。
+
+---
+
+## Pull Request 流程
+
+1. **Fork 仓库**
+
+2. **创建功能分支**：
+   ```bash
+   git checkout -b feat/my-feature
+   ```
+
+3. **按照上述指南进行更改**
+
+4. **运行测试和检查**：
+   ```bash
+   pnpm test
+   pnpm typecheck
+   pnpm lint
+   ```
+
+5. **使用常规提交进行提交**：
+   ```bash
+   git commit -m "feat: add my feature"
+   ```
+
+6. **推送到您的 fork**：
+   ```bash
+   git push origin feat/my-feature
+   ```
+
+7. **在 GitHub 上创建 Pull Request**，包含：
+   - 清晰的标题和描述
+   - 链接到相关 issues
+   - 截图（如果有 UI 更改）
+   - 测试结果
+
+### PR 检查清单
+
+- [ ] 测试通过（`pnpm test`）
+- [ ] 类型检查通过（`pnpm typecheck`）
+- [ ] Lint 通过（`pnpm lint`）
+- [ ] 遵循 TDD 工作流
+- [ ] 配置格式完全匹配 PRD
+- [ ] 环境变量未展开
+- [ ] 使用原子写入
+- [ ] 常规提交消息
+- [ ] 文档已更新（如果需要）
+
+---
+
+## 测试指南
+
+### 测试什么
+
+1. **正常路径**：正常使用场景
+2. **边缘情况**：空配置、缺失文件等
+3. **错误处理**：无效输入、权限错误
+4. **格式转换**：正确的语法转换
+5. **原子操作**：错误时回滚
+
+### 测试结构
+
+```typescript
+describe('Feature Name', () => {
+  describe('when condition A', () => {
+    it('should do X', () => {
+      // Arrange
+      const input = setupInput();
+
+      // Act
+      const result = performAction(input);
+
+      // Assert
+      expect(result).toBe(expected);
+    });
+  });
+
+  describe('when condition B', () => {
+    it('should do Y', () => {
+      // ...
+    });
+  });
+});
+```
+
+---
+
+## 代码审查
+
+所有 PR 都会审查：
+- **正确性**：是否按预期工作？
+- **测试**：是否有足够的测试？
+- **类型**：类型是否正确和精确？
+- **风格**：是否遵循项目约定？
+- **文档**：如果需要，文档是否已更新？
+- **性能**：是否有任何低效之处？
+
+---
+
+## 文档标准
+
+### README 更新
+
+保持 README.md 与以下内容同步：
+- 功能添加
+- 命令更改
+- 配置更新
+
+### 代码文档
+
+```typescript
+/**
+ * 函数的简要描述
+ *
+ * 如果需要，更长的解释。
+ *
+ * @param paramName - 参数描述
+ * @returns 返回值描述
+ * @throws {ErrorType} 发生此错误时
+ *
+ * @example
+ * ```typescript
+ * const result = myFunction('input');
+ * console.log(result); // 'output'
+ * ```
+ */
+export function myFunction(paramName: string): string {
+  // 实现
+}
+```
+
+---
+
+## 获取帮助
+
+需要贡献帮助？
+
+- **讨论**：[GitHub Discussions](https://github.com/nicepkg/vibe-sync/discussions)
+- **Issues**：[在 GitHub 上提问](https://github.com/nicepkg/vibe-sync/issues)
+- **Email**：2214962083@qq.com
+
+---
+
+## 行为准则
+
+尊重和建设性：
+- 欢迎新人
+- 对问题保持耐心
+- 提供建设性反馈
+- 关注代码，而不是个人
+
+---
+
+## 许可证
+
+通过贡献，您同意您的贡献将根据 MIT 许可证获得许可。
+
+---
+
+## 认可
+
+贡献者将在以下位置获得认可：
+- README.md 贡献者部分
+- 发布说明
+- GitHub 贡献者图表
+
+感谢您让 vibe-sync 变得更好！🎉

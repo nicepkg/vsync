@@ -1,0 +1,96 @@
+---
+title: 文档
+description: vibe-sync 完整指南 - 一条命令同步 AI 氛围编程工具 (Claude Code、Cursor、OpenCode、Codex) 配置。学习安装、配置、CLI 命令和高级功能。
+---
+
+# 文档
+
+欢迎来到 vibe-sync 文档！在这里您可以找到轻松同步 AI 氛围编程工具配置所需的一切信息。
+
+## 什么是 vibe-sync？
+
+**vibe-sync** 是一个强大的 CLI 工具，用于在多个 AI 氛围编程工具（Claude Code、Cursor、OpenCode 和 Codex）之间同步配置文件。它提供：
+
+- **单一配置源**：选择一个工具作为参考标准，其他工具自动保持同步
+- **智能格式转换**：处理 JSON ↔ TOML ↔ JSONC 转换
+- **环境变量安全**：保留变量语法，从不展开
+- **智能差异计划**：在应用前精确显示将要更改的内容
+- **Safe 与 Prune 模式**：在保守更新或严格镜像之间选择
+
+## 快速导航
+
+### 入门
+
+- **[快速开始](../getting-started)** - 安装、初始化和首次同步
+- **[核心概念](../core-concepts)** - 理解同步模式、层级和工作流
+
+### 参考
+
+- **[配置指南](../configuration)** - 配置文件结构和工具特定格式
+- **[CLI 命令](../cli-commands)** - 完整命令参考和示例
+- **[快速参考](../quick-reference)** - 命令速查表和常用模式
+
+### 进阶
+
+- **[高级功能](../advanced-features)** - Symlinks、性能优化等
+- **[常见问题](../faq)** - 常见问题和故障排除
+
+## 支持的 AI 工具
+
+vibe-sync 支持以下 AI 氛围编程工具的同步：
+
+| 工具 | 支持级别 | 配置格式 | 特殊功能 |
+|:-----|:-------------|:--------------|:----------------|
+| **Claude Code** | ✅ 完整支持 (Source/Target) | JSON | 功能最完整 |
+| **Cursor** | ✅ 完整支持 (Source/Target) | JSON | 高级变量插值 |
+| **OpenCode** | ✅ 完整支持 (Source/Target) | JSONC | 注释保留 |
+| **Codex** | ✅ 完整支持 (Source/Target) | TOML | TOML 格式支持 |
+
+## 同步什么配置？
+
+vibe-sync 管理以下配置类型：
+
+- **Skills**：可复用的 Agent 技能模板
+- **MCP Servers**：Model Context Protocol 集成
+- **Agents**：自定义 AI 代理定义 (v1.1+)
+- **Commands**：快捷命令 (v1.1+)
+
+## 核心功能
+
+### 🎯 智能差异计划
+在应用之前精确预览将要更改的内容，包括每个操作的详细原因。
+
+### 🛡️ Safe 模式（默认）
+只创建和更新配置——除非明确请求，否则从不删除。
+
+### ⚡ 性能优化
+- 多目标并行操作
+- 基于 hash 的变更检测
+- 使用 manifest 追踪的智能缓存
+
+### 🔗 Symlink 支持 (v1.2+)
+可选地为 Skills 使用符号链接，节省磁盘空间并实现即时更新。
+
+### 🌐 多语言 CLI (v1.2+)
+原生支持英文和中文。
+
+## 快速开始
+
+```bash
+# 安装
+npm install -g vibe-sync
+
+# 初始化
+vibe-sync init
+
+# 同步
+vibe-sync sync
+```
+
+## 获取帮助
+
+- **GitHub Issues**：[报告 bug 或请求功能](https://github.com/nicepkg/vibe-sync/issues)
+- **CLI 帮助**：运行 `vibe-sync --help` 或 `vibe-sync <command> --help`
+- **贡献**：查看[贡献指南](../../contributing)
+
+准备好开始了吗？前往[快速开始](../getting-started)！
