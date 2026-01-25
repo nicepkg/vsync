@@ -18,8 +18,12 @@ import { BaseAdapter } from "./base.js";
  * Writes to .opencode/skills/ and opencode.jsonc
  */
 export class OpenCodeAdapter extends BaseAdapter {
-  override readonly toolName = "opencode";
-  override readonly displayName = "OpenCode";
+  // Static metadata (for registry without instantiation)
+  static readonly TOOL_NAME = "opencode";
+  static readonly DISPLAY_NAME = "OpenCode";
+
+  override readonly toolName = OpenCodeAdapter.TOOL_NAME;
+  override readonly displayName = OpenCodeAdapter.DISPLAY_NAME;
 
   override getConfigDir(): string {
     return ".opencode";

@@ -130,7 +130,7 @@ describe("Symlink Sync", () => {
       );
 
       // Check if symlink was created
-      const { isSymlink } = await import("@src/utils/symlink.js");
+      const { isSymlink } = await import("@src/utils/file-ops.js");
       const isLink = await isSymlink("/empty/target-skills");
       expect(isLink).toBe(true);
     });
@@ -147,7 +147,7 @@ describe("Symlink Sync", () => {
       );
 
       // Should still be a symlink
-      const { isSymlink } = await import("@src/utils/symlink.js");
+      const { isSymlink } = await import("@src/utils/file-ops.js");
       const isLink = await isSymlink("/project/.opencode/skills");
       expect(isLink).toBe(true);
     });
@@ -164,7 +164,7 @@ describe("Symlink Sync", () => {
         "/empty/nested/deep/skills",
       );
 
-      const { isSymlink } = await import("@src/utils/symlink.js");
+      const { isSymlink } = await import("@src/utils/file-ops.js");
       const isLink = await isSymlink("/empty/nested/deep/skills");
       expect(isLink).toBe(true);
     });

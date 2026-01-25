@@ -12,7 +12,12 @@ import {
   readdir as fsReaddir,
   stat as fsStat,
   copyFile as fsCopyFile,
+  lstat,
+  readlink,
+  symlink,
+  unlink,
 } from "node:fs/promises";
+import { dirname } from "node:path";
 import * as toml from "@iarna/toml";
 import * as jsonc from "jsonc-parser";
 import { atomicWrite } from "./atomic-write.js";
@@ -188,4 +193,84 @@ export async function findFirstExistingPath(
     }
   }
   return null;
+}
+
+// ============================================================
+// Symlink operations
+// ============================================================
+
+/**
+ * Check if a path is a symlink
+ */
+export async function isSymlink(path: string): Promise<boolean> {
+  try {
+    const stats = await lstat(path);
+    return stats.isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolve symlink to its real path
+ * Returns real path if symlink, original path otherwise
+ */
+export async function resolveSymlink(path: string): Promise<string> {
+  const isLink = await isSymlink(path);
+  if (!isLink) {
+    await lstat(path);
+    return path;
+  }
+
+  let target = await readlink(path);
+  // On Windows, remove \\?\ prefix (UNC paths)
+  if (process.platform === "win32" && target.startsWith("\\\\?\\")) {
+    target = target.slice(4);
+  }
+  return target;
+}
+
+/**
+ * Create a symlink from target to source
+ * @param target - Path where symlink will be created
+ * @param source - Path that symlink points to (must exist)
+ */
+export async function createSymlink(
+  target: string,
+  source: string,
+): Promise<void> {
+  // Verify source exists
+  const sourceStats = await stat(source);
+  if (!sourceStats) {
+    throw new Error(`Source path does not exist: ${source}`);
+  }
+
+  // Check if target already exists
+  try {
+    await lstat(target);
+    throw new Error(`Target path already exists: ${target}`);
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  // Create parent directories if needed
+  const parentDir = dirname(target);
+  await ensureDir(parentDir);
+
+  // Create symlink (use 'junction' on Windows for no admin requirement)
+  const type = process.platform === "win32" ? "junction" : "dir";
+  await symlink(source, target, type);
+}
+
+/**
+ * Remove a symlink (only removes the link, not the source)
+ */
+export async function removeSymlink(path: string): Promise<void> {
+  const isLink = await isSymlink(path);
+  if (!isLink) {
+    throw new Error(`Path is not a symlink: ${path}`);
+  }
+  await unlink(path);
 }

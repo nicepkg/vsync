@@ -60,7 +60,7 @@ describe("Sync Command - Symlink Support", () => {
       await syncWithSymlinks(config, plan, "/project");
 
       // Verify symlink was created
-      const { isSymlink } = await import("@src/utils/symlink.js");
+      const { isSymlink } = await import("@src/utils/file-ops.js");
       const isLink = await isSymlink("/project/.cursor/skills");
       expect(isLink).toBe(true);
     });
@@ -92,7 +92,7 @@ describe("Sync Command - Symlink Support", () => {
       await syncWithSymlinks(config, plan, "/project");
 
       // Verify symlink was NOT created
-      const { isSymlink } = await import("@src/utils/symlink.js");
+      const { isSymlink } = await import("@src/utils/file-ops.js");
       const isLink = await isSymlink("/project/.cursor/skills");
       expect(isLink).toBe(false);
     });
@@ -123,7 +123,7 @@ describe("Sync Command - Symlink Support", () => {
       await syncWithSymlinks(config, plan, "/project");
 
       // Verify symlink was NOT created
-      const { isSymlink } = await import("@src/utils/symlink.js");
+      const { isSymlink } = await import("@src/utils/file-ops.js");
       const isLink = await isSymlink("/project/.cursor/skills");
       expect(isLink).toBe(false);
     });
@@ -170,7 +170,7 @@ describe("Sync Command - Symlink Support", () => {
       await syncWithSymlinks(config, plan, "/project");
 
       // Verify both symlinks were created
-      const { isSymlink } = await import("@src/utils/symlink.js");
+      const { isSymlink } = await import("@src/utils/file-ops.js");
       const cursorIsLink = await isSymlink("/project/.cursor/skills");
       const opencodeIsLink = await isSymlink("/project/.opencode/skills");
 

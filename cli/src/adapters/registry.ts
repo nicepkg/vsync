@@ -12,6 +12,13 @@ import { OpenCodeAdapter } from "./opencode.js";
 
 type AdapterConstructor = new (config: AdapterConfig) => ToolAdapter;
 
+// Static metadata interface for adapters
+interface AdapterStatic {
+  readonly TOOL_NAME: string;
+  readonly DISPLAY_NAME: string;
+  new (config: AdapterConfig): ToolAdapter;
+}
+
 type AdapterEntry = {
   toolName: string;
   displayName: string;
@@ -25,16 +32,14 @@ export const ADAPTERS = [
   CodexAdapter,
 ] as const;
 
-function makeEntry(AdapterClass: AdapterConstructor): AdapterEntry {
-  const instance = new AdapterClass({
-    baseDir: "",
-    tool: "" as ToolName,
-    level: "project",
-  });
-
+/**
+ * Create registry entry without instantiating adapter
+ * Uses static metadata instead of creating temporary instances
+ */
+function makeEntry(AdapterClass: AdapterStatic): AdapterEntry {
   return {
-    toolName: instance.toolName,
-    displayName: instance.displayName,
+    toolName: AdapterClass.TOOL_NAME,
+    displayName: AdapterClass.DISPLAY_NAME,
     AdapterClass,
   };
 }

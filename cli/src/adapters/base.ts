@@ -10,12 +10,12 @@ import type { ConfigLevel, ToolName } from "@src/types/config.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 import * as fileOps from "@src/utils/file-ops.js";
+import { isSymlink } from "@src/utils/file-ops.js";
 import { hashAgent, hashCommand, hashSkill } from "@src/utils/hash.js";
 import {
   readSupportFiles,
   writeSupportFiles,
 } from "@src/utils/support-files.js";
-import { isSymlink } from "@src/utils/symlink.js";
 
 /**
  * Adapter configuration
@@ -315,9 +315,18 @@ export abstract class BaseAdapter implements ToolAdapter {
     await this.deleteFlatItem(this.getCommandsDir(), name);
   }
 
-  protected async readDirectoryItems<T extends Skill>(
+  /**
+   * Generic item reader - DRY principle (eliminates 120+ lines of duplication)
+   * Abstracts common read logic for both directory-based and flat file items
+   */
+  private async readItems<T extends Skill | Agent | Command>(
     dirName: string,
-    fileName: string,
+    config: {
+      isDirectory?: boolean;
+      fileName?: string;
+      fileExtension?: string;
+      includeSupportFiles?: boolean;
+    },
     hashFn: (item: T) => string,
   ): Promise<T[]> {
     const itemsDir = this.resolvePath(dirName);
@@ -327,20 +336,25 @@ export abstract class BaseAdapter implements ToolAdapter {
       const items: T[] = [];
 
       for (const entry of entries) {
-        if (!entry.isDirectory()) {
+        // Filter entries based on type
+        if (config.isDirectory && !entry.isDirectory()) continue;
+        if (
+          !config.isDirectory &&
+          (!entry.isFile() || !entry.name.endsWith(config.fileExtension || ""))
+        )
           continue;
-        }
 
-        const itemName = entry.name;
-        const itemDir = join(itemsDir, itemName);
-        const itemPath = join(itemDir, fileName);
+        // Determine item name and path
+        const itemName = config.isDirectory
+          ? entry.name
+          : entry.name.slice(0, -(config.fileExtension?.length || 0));
+        const itemPath = config.isDirectory
+          ? join(itemsDir, entry.name, config.fileName || "")
+          : join(itemsDir, entry.name);
 
         try {
           const content = await readFile(itemPath, "utf-8");
           const parsed = matter(content);
-          const supportFiles = await readSupportFiles(itemDir, {
-            exclude: (relativePath) => relativePath === fileName,
-          });
 
           const item = {
             name: itemName,
@@ -360,15 +374,22 @@ export abstract class BaseAdapter implements ToolAdapter {
           if (Object.keys(parsed.data).length > 0) {
             itemMeta.metadata = parsed.data;
           }
-          if (Object.keys(supportFiles).length > 0) {
-            itemMeta.supportFiles = supportFiles;
+
+          // Add support files if requested (directory items only)
+          if (config.includeSupportFiles && config.isDirectory) {
+            const itemDir = join(itemsDir, entry.name);
+            const supportFiles = await readSupportFiles(itemDir, {
+              exclude: (relativePath) => relativePath === config.fileName,
+            });
+            if (Object.keys(supportFiles).length > 0) {
+              itemMeta.supportFiles = supportFiles;
+            }
           }
 
           item.hash = hashFn(item);
           items.push(item);
         } catch {
-          // Silently skip invalid items (YAML parse errors, etc.)
-          // These are usually expected for complex or malformed command files
+          // Silently skip invalid items
         }
       }
 
@@ -385,64 +406,112 @@ export abstract class BaseAdapter implements ToolAdapter {
     }
   }
 
+  protected async readDirectoryItems<T extends Skill>(
+    dirName: string,
+    fileName: string,
+    hashFn: (item: T) => string,
+  ): Promise<T[]> {
+    // DRY: Use generic readItems with directory config
+    return this.readItems<T>(
+      dirName,
+      {
+        isDirectory: true,
+        fileName,
+        includeSupportFiles: true,
+      },
+      hashFn,
+    );
+  }
+
   protected async readFlatItems<T extends Agent | Command>(
     dirName: string,
     hashFn: (item: T) => string,
   ): Promise<T[]> {
+    // DRY: Use generic readItems with flat file config
+    return this.readItems<T>(
+      dirName,
+      {
+        isDirectory: false,
+        fileExtension: ".md",
+      },
+      hashFn,
+    );
+  }
+
+  /**
+   * Generic item writer - DRY principle (eliminates 95+ lines of duplication)
+   * Abstracts common write logic for both directory-based and flat file items
+   */
+  private async writeItems<T extends Skill | Agent | Command>(
+    dirName: string,
+    config: {
+      isDirectory?: boolean;
+      fileName?: string;
+      fileExtension?: string;
+      includeSupportFiles?: boolean;
+    },
+    items: T[],
+  ): Promise<WriteResult> {
     const itemsDir = this.resolvePath(dirName);
 
     try {
-      const entries = await fileOps.readdir(itemsDir, { withFileTypes: true });
-      const items: T[] = [];
+      await fileOps.ensureDir(itemsDir);
 
-      for (const entry of entries) {
-        if (!entry.isFile() || !entry.name.endsWith(".md")) {
-          continue;
+      for (const item of items) {
+        // Determine item path based on type
+        const itemPath = config.isDirectory
+          ? (() => {
+              const itemDir = join(itemsDir, item.name);
+              return join(itemDir, config.fileName || "");
+            })()
+          : join(itemsDir, `${item.name}${config.fileExtension || ""}`);
+
+        // Create directory for directory items
+        if (config.isDirectory) {
+          const itemDir = join(itemsDir, item.name);
+          await fileOps.ensureDir(itemDir);
         }
 
-        const itemName = entry.name.slice(0, -3);
-        const itemPath = join(itemsDir, entry.name);
+        // Process frontmatter (common to both types)
+        const hasFrontmatter =
+          Boolean(item.metadata) || Boolean(item.description);
+        let itemContent = item.content;
 
-        try {
-          const content = await readFile(itemPath, "utf-8");
-          const parsed = matter(content);
-
-          const item = {
-            name: itemName,
-            content: parsed.content,
-            hash: "",
-          } as T;
-
-          const itemMeta = item as T & {
-            description?: string;
-            metadata?: Record<string, unknown>;
+        if (hasFrontmatter) {
+          const frontmatter: Record<string, unknown> = {
+            ...(item.metadata || {}),
           };
-
-          if (parsed.data.description) {
-            itemMeta.description = parsed.data.description;
+          if (item.description) {
+            frontmatter.description = item.description;
           }
-          if (Object.keys(parsed.data).length > 0) {
-            itemMeta.metadata = parsed.data;
-          }
+          // Don't add 'name' field - it's redundant with directory/filename
+          // and would cause hash mismatch on read if not in original
+          itemContent = matter.stringify(item.content, frontmatter);
+        }
 
-          item.hash = hashFn(item);
-          items.push(item);
-        } catch {
-          // Silently skip invalid items (YAML parse errors, etc.)
-          // These are usually expected for complex or malformed command files
+        // Write the item
+        await atomicWrite(itemPath, itemContent);
+
+        // Write support files if needed (directory items only)
+        if (config.includeSupportFiles && config.isDirectory) {
+          const itemDir = join(itemsDir, item.name);
+          await writeSupportFiles(itemDir, item.supportFiles);
         }
       }
 
-      return items;
+      return {
+        success: true,
+        count: items.length,
+      };
     } catch (error) {
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        error.code === "ENOENT"
-      ) {
-        return [];
-      }
-      throw error;
+      return {
+        success: false,
+        count: 0,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error writing items",
+      };
     }
   }
 
@@ -451,96 +520,31 @@ export abstract class BaseAdapter implements ToolAdapter {
     fileName: string,
     items: T[],
   ): Promise<WriteResult> {
-    const itemsDir = this.resolvePath(dirName);
-
-    try {
-      await fileOps.ensureDir(itemsDir);
-
-      for (const item of items) {
-        const itemDir = join(itemsDir, item.name);
-        await fileOps.ensureDir(itemDir);
-
-        const hasFrontmatter =
-          Boolean(item.metadata) || Boolean(item.description);
-        let itemContent = item.content;
-
-        if (hasFrontmatter) {
-          const frontmatter: Record<string, unknown> = {
-            ...(item.metadata || {}),
-          };
-          if (item.description) {
-            frontmatter.description = item.description;
-          }
-          // Don't add 'name' field - it's redundant with directory name
-          // and would cause hash mismatch on read if not in original
-          itemContent = matter.stringify(item.content, frontmatter);
-        }
-
-        const itemPath = join(itemDir, fileName);
-        await atomicWrite(itemPath, itemContent);
-        await writeSupportFiles(itemDir, item.supportFiles);
-      }
-
-      return {
-        success: true,
-        count: items.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing items",
-      };
-    }
+    // DRY: Use generic writeItems with directory config
+    return this.writeItems<T>(
+      dirName,
+      {
+        isDirectory: true,
+        fileName,
+        includeSupportFiles: true,
+      },
+      items,
+    );
   }
 
   protected async writeFlatItems<T extends Agent | Command>(
     dirName: string,
     items: T[],
   ): Promise<WriteResult> {
-    const itemsDir = this.resolvePath(dirName);
-
-    try {
-      await fileOps.ensureDir(itemsDir);
-
-      for (const item of items) {
-        const hasFrontmatter =
-          Boolean(item.metadata) || Boolean(item.description);
-        let itemContent = item.content;
-
-        if (hasFrontmatter) {
-          const frontmatter: Record<string, unknown> = {
-            ...(item.metadata || {}),
-          };
-          if (item.description) {
-            frontmatter.description = item.description;
-          }
-          // Don't add 'name' field - it's redundant with filename
-          // and would cause hash mismatch on read if not in original
-          itemContent = matter.stringify(item.content, frontmatter);
-        }
-
-        const itemPath = join(itemsDir, `${item.name}.md`);
-        await atomicWrite(itemPath, itemContent);
-      }
-
-      return {
-        success: true,
-        count: items.length,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        count: 0,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error writing items",
-      };
-    }
+    // DRY: Use generic writeItems with flat file config
+    return this.writeItems<T>(
+      dirName,
+      {
+        isDirectory: false,
+        fileExtension: ".md",
+      },
+      items,
+    );
   }
 
   protected async deleteDirectoryItem(

@@ -30,6 +30,10 @@ import {
   cleanupDirectoryBackup,
 } from "@src/core/symlink-sync.js";
 import type { DirectoryBackupInfo } from "@src/core/symlink-sync.js";
+import {
+  SyncExecutor,
+  SourceData as SourceDataClass,
+} from "@src/core/sync-executor.js";
 import type {
   ConfigLevel,
   SyncMode,
@@ -44,8 +48,7 @@ import type {
   Command as VibeCommand,
 } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
-import { isUnsupportedFeature } from "@src/utils/errors.js";
+import { ensureConfig } from "@src/utils/config-initializer.js";
 import { t } from "@src/utils/i18n.js";
 import {
   debug,
@@ -378,7 +381,15 @@ export async function executeSyncPlan(
       }
     }
 
-    // Phase 2: Execute sync operations for each target
+    // Phase 2: Execute sync operations for each target (using SyncExecutor - DRY principle)
+    // Convert source data to SourceDataClass for proper abstraction
+    const sourceDataObj = new SourceDataClass(
+      sourceData.skills,
+      sourceData.mcpServers,
+      sourceData.agents,
+      sourceData.commands,
+    );
+
     for (const [toolName, diff] of Object.entries(plan.diffs)) {
       if (!diff) continue;
 
@@ -389,225 +400,20 @@ export async function executeSyncPlan(
         level,
       });
 
-      const result: TargetSyncResult = {
-        success: true,
-        created: 0,
-        updated: 0,
-        deleted: 0,
-        errors: [],
-      };
-
       try {
-        // Collect skills and MCP servers to CREATE
-        const skillsToCreate = diff.toCreate
-          .filter((op) => op.itemType === "skill")
-          .map((op) => sourceData.skills.find((s) => s.name === op.name))
-          .filter((s): s is NonNullable<typeof s> => s !== undefined);
+        // Use SyncExecutor to handle all sync logic (eliminates 200+ lines of duplication)
+        const executor = new SyncExecutor(adapter, sourceDataObj);
+        const result = await executor.execute(diff);
 
-        const mcpToCreate = diff.toCreate
-          .filter((op) => op.itemType === "mcp")
-          .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
-          .filter((m): m is NonNullable<typeof m> => m !== undefined);
-
-        // Collect skills and MCP servers to UPDATE
-        const skillsToUpdate = diff.toUpdate
-          .filter((op) => op.itemType === "skill")
-          .map((op) => sourceData.skills.find((s) => s.name === op.name))
-          .filter((s): s is NonNullable<typeof s> => s !== undefined);
-
-        const mcpToUpdate = diff.toUpdate
-          .filter((op) => op.itemType === "mcp")
-          .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
-          .filter((m): m is NonNullable<typeof m> => m !== undefined);
-
-        // Collect agents to CREATE
-        const agentsToCreate = diff.toCreate
-          .filter((op) => op.itemType === "agent")
-          .map((op) => sourceData.agents.find((a) => a.name === op.name))
-          .filter((a): a is NonNullable<typeof a> => a !== undefined);
-
-        // Collect agents to UPDATE
-        const agentsToUpdate = diff.toUpdate
-          .filter((op) => op.itemType === "agent")
-          .map((op) => sourceData.agents.find((a) => a.name === op.name))
-          .filter((a): a is NonNullable<typeof a> => a !== undefined);
-
-        // Collect commands to CREATE
-        const commandsToCreate = diff.toCreate
-          .filter((op) => op.itemType === "command")
-          .map((op) => sourceData.commands.find((c) => c.name === op.name))
-          .filter((c): c is NonNullable<typeof c> => c !== undefined);
-
-        // Collect commands to UPDATE
-        const commandsToUpdate = diff.toUpdate
-          .filter((op) => op.itemType === "command")
-          .map((op) => sourceData.commands.find((c) => c.name === op.name))
-          .filter((c): c is NonNullable<typeof c> => c !== undefined);
-
-        // Write skills (CREATE + UPDATE combined)
-        const allSkills = [...skillsToCreate, ...skillsToUpdate];
-        if (allSkills.length > 0) {
-          try {
-            debug(
-              `${tool}: Writing ${allSkills.length} skills (${skillsToCreate.length} create, ${skillsToUpdate.length} update)`,
-            );
-            const writeResult = await adapter.writeSkills(allSkills);
-            if (writeResult.success) {
-              // Use actual write count (may be 0 for symlinked directories)
-              if (writeResult.count > 0) {
-                result.created += skillsToCreate.length;
-                result.updated += skillsToUpdate.length;
-              }
-            } else {
-              // Skip gracefully if tool doesn't support this feature
-              if (isUnsupportedFeature(writeResult)) {
-                debug(`${tool}: Skills not supported, skipping`);
-              } else {
-                result.errors.push(
-                  writeResult.error || "Failed to write skills",
-                );
-                result.success = false;
-                throw new Error("Skill write failed - initiating rollback");
-              }
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to write skills: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
-
-        // Write MCP servers (CREATE + UPDATE combined)
-        const allMCP = [...mcpToCreate, ...mcpToUpdate];
-        if (allMCP.length > 0) {
-          try {
-            debug(
-              `${tool}: Writing ${allMCP.length} MCP servers (${mcpToCreate.length} create, ${mcpToUpdate.length} update)`,
-            );
-            const writeResult = await adapter.writeMCPServers(allMCP);
-            if (writeResult.success) {
-              result.created += mcpToCreate.length;
-              result.updated += mcpToUpdate.length;
-            } else {
-              // Skip gracefully if tool doesn't support this feature
-              if (isUnsupportedFeature(writeResult)) {
-                debug(`${tool}: MCP servers not supported, skipping`);
-              } else {
-                result.errors.push(
-                  writeResult.error || "Failed to write MCP servers",
-                );
-                result.success = false;
-                throw new Error("MCP write failed - initiating rollback");
-              }
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to write MCP servers: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
-
-        // Write agents (CREATE + UPDATE combined)
-        const allAgents = [...agentsToCreate, ...agentsToUpdate];
-        if (allAgents.length > 0) {
-          try {
-            debug(
-              `${tool}: Writing ${allAgents.length} agents (${agentsToCreate.length} create, ${agentsToUpdate.length} update)`,
-            );
-            const writeResult = await adapter.writeAgents(allAgents);
-            if (writeResult.success) {
-              result.created += agentsToCreate.length;
-              result.updated += agentsToUpdate.length;
-            } else {
-              // Skip gracefully if tool doesn't support this feature
-              if (isUnsupportedFeature(writeResult)) {
-                debug(`${tool}: Agents not supported, skipping`);
-              } else {
-                result.errors.push(
-                  writeResult.error || "Failed to write agents",
-                );
-                result.success = false;
-                throw new Error("Agent write failed - initiating rollback");
-              }
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to write agents: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
-
-        // Write commands (CREATE + UPDATE combined)
-        const allCommands = [...commandsToCreate, ...commandsToUpdate];
-        if (allCommands.length > 0) {
-          try {
-            debug(
-              `${tool}: Writing ${allCommands.length} commands (${commandsToCreate.length} create, ${commandsToUpdate.length} update)`,
-            );
-            const writeResult = await adapter.writeCommands(allCommands);
-            if (writeResult.success) {
-              result.created += commandsToCreate.length;
-              result.updated += commandsToUpdate.length;
-            } else {
-              // Skip gracefully if tool doesn't support this feature
-              if (isUnsupportedFeature(writeResult)) {
-                debug(`${tool}: Commands not supported, skipping`);
-              } else {
-                result.errors.push(
-                  writeResult.error || "Failed to write commands",
-                );
-                result.success = false;
-                throw new Error("Command write failed - initiating rollback");
-              }
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to write commands: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
-
-        // Execute DELETE operations (one at a time)
-        for (const op of diff.toDelete) {
-          try {
-            if (op.itemType === "skill") {
-              await adapter.deleteSkill(op.name);
-              result.deleted++;
-            } else if (op.itemType === "mcp") {
-              await adapter.deleteMCPServer(op.name);
-              result.deleted++;
-            } else if (op.itemType === "agent") {
-              await adapter.deleteAgent(op.name);
-              result.deleted++;
-            } else if (op.itemType === "command") {
-              await adapter.deleteCommand(op.name);
-              result.deleted++;
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to delete ${op.itemType} ${op.name}: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
+        results[tool] = {
+          success: result.success,
+          created: result.created,
+          updated: result.updated,
+          deleted: result.deleted,
+          errors: result.errors,
+        };
       } catch (error) {
-        result.success = false;
-        if (!result.errors.some((e) => e.includes("Fatal error"))) {
-          result.errors.push(
-            `Fatal error syncing to ${tool}: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
-
-        // Print detailed error in debug mode
+        // Error already handled by SyncExecutor
         if (error instanceof Error) {
           debugError(`Error syncing to ${tool}:`, error);
         }
@@ -626,8 +432,6 @@ export async function executeSyncPlan(
 
         throw error; // Re-throw to exit sync
       }
-
-      results[tool] = result;
     }
 
     // Phase 3: Success - cleanup all backups
@@ -981,30 +785,24 @@ export async function syncCommand(options: {
       const diff = plan.diffs[tool];
       if (!diff) continue;
 
-      // Helper function to get hash from source data
-      const getHash = (itemType: ItemType, name: string): string => {
-        if (itemType === "skill") {
-          return sourceData.skills.find((s) => s.name === name)?.hash || "";
-        } else if (itemType === "mcp") {
-          return sourceData.mcpServers.find((m) => m.name === name)?.hash || "";
-        } else if (itemType === "agent") {
-          return sourceData.agents.find((a) => a.name === name)?.hash || "";
-        } else if (itemType === "command") {
-          return sourceData.commands.find((c) => c.name === name)?.hash || "";
-        }
-        return "";
-      };
+      // Use SourceData class method instead of inline if-else chain (DRY principle)
+      const sourceDataObj = new SourceDataClass(
+        sourceData.skills,
+        sourceData.mcpServers,
+        sourceData.agents,
+        sourceData.commands,
+      );
 
       const operations: SyncOperations = {
         created: diff.toCreate.map((op) => ({
           type: op.itemType,
           name: op.name,
-          hash: getHash(op.itemType, op.name),
+          hash: sourceDataObj.getHash(op.itemType, op.name),
         })),
         updated: diff.toUpdate.map((op) => ({
           type: op.itemType,
           name: op.name,
-          hash: getHash(op.itemType, op.name),
+          hash: sourceDataObj.getHash(op.itemType, op.name),
         })),
         deleted: diff.toDelete.map((op) => ({
           type: op.itemType,

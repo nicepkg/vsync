@@ -180,53 +180,48 @@ export function formatPlan(plan: SyncPlan): string {
     }
   >();
 
+  // DRY: Generic operation processor (eliminates 3x duplication)
+  const processOperations = (
+    operations: Array<{
+      itemType: string;
+      name: string;
+      description?: string;
+    }>,
+    operationType: "CREATE" | "UPDATE" | "DELETE",
+    toolName: string,
+  ) => {
+    for (const op of operations) {
+      const key = `${operationType}:${op.itemType}:${op.name}`;
+      if (!itemOperations.has(key)) {
+        const item: {
+          type: string;
+          name: string;
+          targets: string[];
+          operation: "CREATE" | "UPDATE" | "DELETE";
+          description?: string;
+        } = {
+          type: op.itemType,
+          name: op.name,
+          targets: [],
+          operation: operationType,
+        };
+        // Only set description if it exists (exactOptionalPropertyTypes compliance)
+        if (op.description !== undefined) {
+          item.description = op.description;
+        }
+        itemOperations.set(key, item);
+      }
+      itemOperations.get(key)!.targets.push(toolName);
+    }
+  };
+
   for (const [toolName, diff] of Object.entries(plan.diffs)) {
     if (!diff) continue;
 
-    // Process CREATE operations
-    for (const op of diff.toCreate) {
-      const key = `CREATE:${op.itemType}:${op.name}`;
-      if (!itemOperations.has(key)) {
-        itemOperations.set(key, {
-          type: op.itemType,
-          name: op.name,
-          targets: [],
-          operation: "CREATE",
-          description: op.description,
-        });
-      }
-      itemOperations.get(key)!.targets.push(toolName);
-    }
-
-    // Process UPDATE operations
-    for (const op of diff.toUpdate) {
-      const key = `UPDATE:${op.itemType}:${op.name}`;
-      if (!itemOperations.has(key)) {
-        itemOperations.set(key, {
-          type: op.itemType,
-          name: op.name,
-          targets: [],
-          operation: "UPDATE",
-          description: op.description,
-        });
-      }
-      itemOperations.get(key)!.targets.push(toolName);
-    }
-
-    // Process DELETE operations
-    for (const op of diff.toDelete) {
-      const key = `DELETE:${op.itemType}:${op.name}`;
-      if (!itemOperations.has(key)) {
-        itemOperations.set(key, {
-          type: op.itemType,
-          name: op.name,
-          targets: [],
-          operation: "DELETE",
-          description: op.description,
-        });
-      }
-      itemOperations.get(key)!.targets.push(toolName);
-    }
+    // Process all operation types using unified logic
+    processOperations(diff.toCreate, "CREATE", toolName);
+    processOperations(diff.toUpdate, "UPDATE", toolName);
+    processOperations(diff.toDelete, "DELETE", toolName);
   }
 
   // Format grouped operations

@@ -16,8 +16,12 @@ import { BaseAdapter } from "./base.js";
  * Reads from .claude/skills/ and .mcp.json
  */
 export class ClaudeCodeAdapter extends BaseAdapter {
-  override readonly toolName = "claude-code";
-  override readonly displayName = "Claude Code";
+  // Static metadata (for registry without instantiation)
+  static readonly TOOL_NAME = "claude-code";
+  static readonly DISPLAY_NAME = "Claude Code";
+
+  override readonly toolName = ClaudeCodeAdapter.TOOL_NAME;
+  override readonly displayName = ClaudeCodeAdapter.DISPLAY_NAME;
 
   /**
    * Get configuration directory name

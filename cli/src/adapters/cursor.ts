@@ -17,8 +17,12 @@ import { BaseAdapter } from "./base.js";
  * Writes to .cursor/skills/ and .cursor/mcp.json
  */
 export class CursorAdapter extends BaseAdapter {
-  override readonly toolName = "cursor";
-  override readonly displayName = "Cursor";
+  // Static metadata (for registry without instantiation)
+  static readonly TOOL_NAME = "cursor";
+  static readonly DISPLAY_NAME = "Cursor";
+
+  override readonly toolName = CursorAdapter.TOOL_NAME;
+  override readonly displayName = CursorAdapter.DISPLAY_NAME;
 
   override getConfigDir(): string {
     return ".cursor";

@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { ToolAdapter } from "@src/adapters/base.js";
-import { SyncExecutor, type SourceData } from "@src/core/sync-executor.js";
+import { SyncExecutor, SourceData } from "@src/core/sync-executor.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { DiffResult } from "@src/types/plan.js";
 
@@ -34,32 +34,40 @@ describe("SyncExecutor", () => {
       readMCPServers: vi.fn(async () => []),
       readAgents: vi.fn(async () => []),
       readCommands: vi.fn(async () => []),
-      writeSkills: vi.fn(async () => ({ success: true, count: 0 })),
-      writeMCPServers: vi.fn(async () => ({ success: true, count: 0 })),
-      writeAgents: vi.fn(async () => ({ success: true, count: 0 })),
-      writeCommands: vi.fn(async () => ({ success: true, count: 0 })),
+      writeSkills: vi.fn(async (items) => ({
+        success: true,
+        count: items.length,
+      })),
+      writeMCPServers: vi.fn(async (items) => ({
+        success: true,
+        count: items.length,
+      })),
+      writeAgents: vi.fn(async (items) => ({
+        success: true,
+        count: items.length,
+      })),
+      writeCommands: vi.fn(async (items) => ({
+        success: true,
+        count: items.length,
+      })),
       deleteSkill: vi.fn(async () => {}),
       deleteMCPServer: vi.fn(async () => {}),
       deleteAgent: vi.fn(async () => {}),
       deleteCommand: vi.fn(async () => {}),
     } as ToolAdapter;
 
-    // Source data
-    sourceData = {
-      skills: [
+    // Source data (now using class instead of plain object)
+    sourceData = new SourceData(
+      [
         { name: "skill1", content: "content1", hash: "hash1" },
         { name: "skill2", content: "content2", hash: "hash2" },
       ] as Skill[],
-      mcpServers: [
+      [
         { name: "mcp1", type: "stdio", command: "cmd1", hash: "hash3" },
       ] as MCPServer[],
-      agents: [
-        { name: "agent1", content: "content3", hash: "hash4" },
-      ] as Agent[],
-      commands: [
-        { name: "cmd1", content: "content4", hash: "hash5" },
-      ] as Command[],
-    };
+      [{ name: "agent1", content: "content3", hash: "hash4" }] as Agent[],
+      [{ name: "cmd1", content: "content4", hash: "hash5" }] as Command[],
+    );
   });
 
   describe("execute", () => {

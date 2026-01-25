@@ -6,7 +6,7 @@ import {
   isSymlink,
   resolveSymlink,
   removeSymlink,
-} from "@src/utils/symlink.js";
+} from "@src/utils/file-ops.js";
 
 describe("Symlink Utils", () => {
   beforeEach(() => {

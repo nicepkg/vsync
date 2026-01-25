@@ -11,7 +11,7 @@ import { loadManifest } from "@src/core/manifest-manager.js";
 import { validatePlan } from "@src/core/planner.js";
 import type { SyncMode } from "@src/types/config.js";
 import type { DiffResult, SyncPlan } from "@src/types/plan.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
+import { ensureConfig } from "@src/utils/config-initializer.js";
 import { t } from "@src/utils/i18n.js";
 import { calculateSyncDiff, readSourceConfig } from "./sync.js";
 

@@ -13,9 +13,14 @@ import { getProjectCacheDir } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
 
 // Mock language-config to skip language prompt
-vi.mock("@src/utils/language-config.js", () => ({
-  ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
-}));
+vi.mock("@src/utils/config-initializer.js", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@src/utils/config-initializer.js")>();
+  return {
+    ...actual,
+    ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+  };
+});
 
 describe("Full Sync Flow Integration", () => {
   let testDir: string;
@@ -52,6 +57,24 @@ describe("Full Sync Flow Integration", () => {
     await fs.mkdir(path.join(opencodeDir), { recursive: true });
     await fs.mkdir(cacheDir, { recursive: true });
 
+    // Create minimal user config to avoid language prompts
+    const userConfigPath = path.join(
+      process.env.HOME || "~",
+      ".vibe-sync.json",
+    );
+    try {
+      await fs.writeFile(
+        userConfigPath,
+        JSON.stringify({
+          version: "1.0.0",
+          level: "user",
+          language: "en",
+        }),
+      );
+    } catch {
+      // Ignore if we can't write to home directory
+    }
+
     // Change to test directory
     process.chdir(testDir);
   });
@@ -68,6 +91,17 @@ describe("Full Sync Flow Integration", () => {
       await fs.rm(cacheDir, { recursive: true, force: true });
     } catch {
       // Ignore errors if cache dir doesn't exist
+    }
+
+    // Cleanup user config file
+    const userConfigPath = path.join(
+      process.env.HOME || "~",
+      ".vibe-sync.json",
+    );
+    try {
+      await fs.unlink(userConfigPath);
+    } catch {
+      // Ignore if file doesn't exist
     }
   });
 

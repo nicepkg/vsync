@@ -12,7 +12,7 @@ import ora from "ora";
 import { loadManifest, getManifestPath } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
+import { ensureConfig } from "@src/utils/config-initializer.js";
 import { t } from "@src/utils/i18n.js";
 import { readSourceConfig, calculateSyncDiff } from "./sync.js";
 

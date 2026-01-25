@@ -15,9 +15,14 @@ import { syncCommand } from "@src/commands/sync.js";
 import type { ToolName } from "@src/types/config.js";
 
 // Mock language-config to skip language prompt
-vi.mock("@src/utils/language-config.js", () => ({
-  ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
-}));
+vi.mock("@src/utils/config-initializer.js", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@src/utils/config-initializer.js")>();
+  return {
+    ...actual,
+    ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+  };
+});
 
 /**
  * E2E test utilities - high cohesion, single responsibility
@@ -305,11 +310,40 @@ describe("Basic E2E Workflows", () => {
     testDir = await E2ETestHelper.createTempProject();
     fixture = new E2ETestFixture(testDir);
     process.chdir(testDir);
+
+    // Create minimal user config to avoid language prompts
+    const userConfigPath = path.join(
+      process.env.HOME || "~",
+      ".vibe-sync.json",
+    );
+    try {
+      await fs.writeFile(
+        userConfigPath,
+        JSON.stringify({
+          version: "1.0.0",
+          level: "user",
+          language: "en",
+        }),
+      );
+    } catch {
+      // Ignore if we can't write to home directory
+    }
   });
 
   afterEach(async () => {
     process.chdir(originalCwd);
     await E2ETestHelper.cleanupTempProject(testDir);
+
+    // Cleanup user config file
+    const userConfigPath = path.join(
+      process.env.HOME || "~",
+      ".vibe-sync.json",
+    );
+    try {
+      await fs.unlink(userConfigPath);
+    } catch {
+      // Ignore if file doesn't exist
+    }
   });
 
   describe("Basic Sync", () => {

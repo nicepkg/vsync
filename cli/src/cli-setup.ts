@@ -12,7 +12,7 @@ import { createListCommand } from "./commands/list.js";
 import { createPlanCommand } from "./commands/plan.js";
 import { createStatusCommand } from "./commands/status.js";
 import { createSyncCommand } from "./commands/sync.js";
-import { ensureLanguageConfig } from "./utils/language-config.js";
+import { ensureLanguageConfig } from "./utils/config-initializer.js";
 import { setDebugMode } from "./utils/logger.js";
 /**
  * Get package.json version

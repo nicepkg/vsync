@@ -18,8 +18,12 @@ import { BaseAdapter } from "./base.js";
  * MCP servers in config.toml, skills in directories
  */
 export class CodexAdapter extends BaseAdapter {
-  override readonly toolName = "codex";
-  override readonly displayName = "Codex";
+  // Static metadata (for registry without instantiation)
+  static readonly TOOL_NAME = "codex";
+  static readonly DISPLAY_NAME = "Codex";
+
+  override readonly toolName = CodexAdapter.TOOL_NAME;
+  override readonly displayName = CodexAdapter.DISPLAY_NAME;
 
   override getCapabilities() {
     return {

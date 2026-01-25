@@ -10,7 +10,7 @@ import ora from "ora";
 import { loadManifest } from "@src/core/manifest-manager.js";
 import type { Manifest } from "@src/types/manifest.js";
 import type { MCPServer, Skill } from "@src/types/models.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
+import { ensureConfig } from "@src/utils/config-initializer.js";
 import { t } from "@src/utils/i18n.js";
 import { readSourceConfig } from "./sync.js";
 

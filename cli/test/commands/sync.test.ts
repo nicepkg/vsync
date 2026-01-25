@@ -11,7 +11,7 @@ import {
   updateManifestAfterSync,
 } from "@src/commands/sync.js";
 import type { VibeConfig, ToolName } from "@src/types/config.js";
-import { ensureConfig } from "@src/utils/config-loader.js";
+import { ensureConfig } from "@src/utils/config-initializer.js";
 
 // Cross-platform test paths
 const TEST_HOME =
@@ -38,10 +38,16 @@ vi.mock("inquirer", () => ({
   },
 }));
 
-// Mock language-config to skip language prompt
-vi.mock("@src/utils/language-config.js", () => ({
-  ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
-}));
+// Mock ensureLanguageConfig to skip language prompt
+vi.mock("@src/utils/config-initializer.js", async () => {
+  const actual = await vi.importActual<
+    typeof import("@src/utils/config-initializer.js")
+  >("@src/utils/config-initializer.js");
+  return {
+    ...actual,
+    ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+  };
+});
 
 describe("Sync Command", () => {
   const sampleConfig: VibeConfig = {
@@ -58,6 +64,12 @@ describe("Sync Command", () => {
   beforeEach(() => {
     const mockFsConfig: any = {
       [TEST_HOME]: {
+        // Add user-level config with language to avoid prompts
+        ".vibe-sync.json": JSON.stringify({
+          version: "1.0.0",
+          level: "user",
+          language: "en",
+        }),
         ".vibe-sync": {
           cache: {
             [PROJECT_HASH]: {
@@ -329,6 +341,12 @@ describe("Sync Command", () => {
     it("should handle manifest load errors gracefully", async () => {
       const mockFsConfig: any = {
         [TEST_HOME]: {
+          // Add user-level config with language to avoid prompts
+          ".vibe-sync.json": JSON.stringify({
+            version: "1.0.0",
+            level: "user",
+            language: "en",
+          }),
           ".vibe-sync": {
             cache: {
               [PROJECT_HASH]: {
