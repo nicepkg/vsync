@@ -152,6 +152,13 @@ export function mergeConfigs(
     merged.last_sync = lastSync;
   }
 
+  // Add symlink configuration if either config has it (project takes precedence)
+  const useSymlinks =
+    projectConfig.use_symlinks_for_skills ?? userConfig.use_symlinks_for_skills;
+  if (useSymlinks !== undefined) {
+    merged.use_symlinks_for_skills = useSymlinks;
+  }
+
   return merged;
 }
 
@@ -267,6 +274,14 @@ export function validateConfig(config: VibeConfig): ValidationResult {
     if (!config.sync_config.skills && !config.sync_config.mcp) {
       errors.push("At least one sync type must be enabled (skills or mcp)");
     }
+  }
+
+  // Validate use_symlinks_for_skills (optional boolean)
+  if (
+    config.use_symlinks_for_skills !== undefined &&
+    typeof config.use_symlinks_for_skills !== "boolean"
+  ) {
+    errors.push("use_symlinks_for_skills must be a boolean");
   }
 
   return {

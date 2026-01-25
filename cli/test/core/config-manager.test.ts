@@ -235,6 +235,50 @@ describe("Config Manager", () => {
       const result = validateConfig(config);
       expect(result.valid).toBe(false);
     });
+
+    it("should accept valid symlink configuration", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor", "opencode"],
+        sync_config: { skills: true, mcp: true },
+        use_symlinks_for_skills: true,
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+    });
+
+    it("should accept config without symlink fields (backwards compatible)", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+      };
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(true);
+    });
+
+    it("should reject invalid use_symlinks_for_skills type", () => {
+      const config = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+        use_symlinks_for_skills: "yes", // Should be boolean
+      } as any;
+
+      const result = validateConfig(config);
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain(
+        "use_symlinks_for_skills must be a boolean",
+      );
+    });
   });
 
   describe("mergeConfigs", () => {
@@ -363,6 +407,55 @@ describe("Config Manager", () => {
       expect(() => mergeConfigs(undefined, undefined)).toThrow(
         "At least one config must be provided",
       );
+    });
+
+    it("should merge symlink configuration with project taking precedence", () => {
+      const userConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+        use_symlinks_for_skills: true,
+      };
+
+      const projectConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor", "opencode"],
+        sync_config: { skills: true, mcp: false },
+        use_symlinks_for_skills: false,
+      };
+
+      const merged = mergeConfigs(userConfig, projectConfig);
+
+      // Project config takes precedence
+      expect(merged.use_symlinks_for_skills).toBe(false);
+    });
+
+    it("should inherit symlink configuration from user config if project doesn't have it", () => {
+      const userConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: { skills: true, mcp: true },
+        use_symlinks_for_skills: true,
+      };
+
+      const projectConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor", "opencode"],
+        sync_config: { skills: true, mcp: false },
+      };
+
+      const merged = mergeConfigs(userConfig, projectConfig);
+
+      // Should inherit from user config
+      expect(merged.use_symlinks_for_skills).toBe(true);
     });
   });
 

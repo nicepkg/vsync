@@ -78,5 +78,36 @@ describe("Config Types", () => {
 
       expect(config.$schema).toBe("https://vibe-sync.dev/schema.json");
     });
+
+    it("should support symlink configuration for skills", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor", "opencode"],
+        sync_config: {
+          skills: true,
+          mcp: true,
+        },
+        use_symlinks_for_skills: true,
+      };
+
+      expect(config.use_symlinks_for_skills).toBe(true);
+    });
+
+    it("should allow config without symlink flag (backwards compatible)", () => {
+      const config: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: {
+          skills: true,
+          mcp: true,
+        },
+      };
+
+      expect(config.use_symlinks_for_skills).toBeUndefined();
+    });
   });
 });

@@ -63,4 +63,11 @@ export interface VibeConfig {
   sync_config: SyncConfig;
   /** Last successful sync timestamp (ISO 8601) */
   last_sync?: string;
+  /**
+   * Use symlinks for skills instead of copying files
+   * When enabled, target skills directories will be symlinked to source_tool's directory
+   * Saves disk space and keeps single source of truth
+   * @since v1.2
+   */
+  use_symlinks_for_skills?: boolean;
 }
