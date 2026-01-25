@@ -244,9 +244,19 @@ vibe-sync import ../other-project
     "require_confirmation": true,
     "allowed_commands": ["npx @modelcontextprotocol/*"],
     "allowed_domains": ["https://api.linear.app"]
-  }
+  },
+  "language": "zh"
 }
 ```
+
+**语言配置** (仅用户级配置):
+```json
+{
+  "language": "zh"  // 选项: "en" (英文) 或 "zh" (中文)
+}
+```
+
+首次运行时，vibe-sync 会提示您选择首选语言。此偏好设置将保存到 `~/.vibe-sync.json` 并应用于所有 CLI 输出。
 
 ### 支持的工具和路径
 

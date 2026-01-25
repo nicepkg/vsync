@@ -244,9 +244,19 @@ vibe-sync import ../other-project
     "require_confirmation": true,
     "allowed_commands": ["npx @modelcontextprotocol/*"],
     "allowed_domains": ["https://api.linear.app"]
-  }
+  },
+  "language": "en"
 }
 ```
+
+**Language Configuration** (User-level only):
+```json
+{
+  "language": "en"  // Options: "en" (English) or "zh" (Chinese)
+}
+```
+
+On first run, vibe-sync will prompt you to choose your preferred language. This preference is saved to `~/.vibe-sync.json` and applies to all CLI output.
 
 ### Supported Tools & Paths
 
