@@ -15,7 +15,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 **Next Phase**: All core phases complete! 🎉
 
 **Progress**: 8/10 phases complete (MVP v1.0 ✅ + v1.1 ✅) + Phase 8 ✅ + Phase 9 ✅ + Phase 10 ✅
-**Test Count**: 544 tests passing (+19 new for debug logger)
+**Test Count**: 565 tests passing (+21 new for error formatter)
 **Roadmap**: v1.2 COMPLETE! Includes Phase 8 (Performance) ✅ + Phase 9 (Symlinks) ✅ + Phase 10 (i18n) ✅
 
 ---
@@ -443,10 +443,14 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ### 6.4 Error Handling
 
-- [ ] Improve error messages
-  - [ ] Clear, actionable messages
-  - [ ] Suggest fixes
-  - [ ] Show file paths and line numbers
+- [x] Improve error messages ✅
+  - [x] Clear, actionable messages
+  - [x] Suggest fixes
+  - [x] Show file paths and line numbers
+  - [x] Categorized errors (config, file, sync, adapter, validation, network)
+  - [x] Formatted error display with colors
+  - [x] Context-aware suggestions for common problems
+  - [x] 21 comprehensive tests (all passing)
 - [x] Add debug mode ✅
   - [x] `--debug` flag for verbose logging
   - [x] Stack traces on error
