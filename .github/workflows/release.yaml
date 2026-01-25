@@ -3,6 +3,13 @@ name: Release
 on:
   push:
     branches: [main]
+    paths:
+      - '.changeset/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      # optional: include package manifests if you want release to run when versions are bumped
+      - 'cli/package.json'
+  workflow_dispatch:
 
 concurrency:
   group: release-${{ github.ref }}
