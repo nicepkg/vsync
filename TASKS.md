@@ -11,12 +11,12 @@
 
 This document tracks all implementation tasks for vibe-sync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
 
-**Current Status**: 🟢 Phase 9 Complete (Symlink Support - all sub-phases complete)
-**Next Phase**: Phase 10 (i18n) - in progress (10.4 remaining)
+**Current Status**: 🟢 Phase 10 Complete (Multi-language Support - all sub-phases complete)
+**Next Phase**: All core phases complete! 🎉
 
-**Progress**: 7/10 phases complete (MVP v1.0 ✅ + v1.1 ✅) + Phase 8 ✅ + Phase 9 ✅
+**Progress**: 8/10 phases complete (MVP v1.0 ✅ + v1.1 ✅) + Phase 8 ✅ + Phase 9 ✅ + Phase 10 ✅
 **Test Count**: 516 tests passing
-**Roadmap**: v1.2 will include Phase 8 (Performance) ✅ + Phase 9 (Symlinks) ✅ + Phase 10 (i18n) 🟡
+**Roadmap**: v1.2 COMPLETE! Includes Phase 8 (Performance) ✅ + Phase 9 (Symlinks) ✅ + Phase 10 (i18n) ✅
 
 ---
 
@@ -742,7 +742,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 ---
 
-## Phase 10: Multi-language Support (i18n) (2-3 days)
+## Phase 10: Multi-language Support (i18n) (2-3 days) ✅
 
 **Goal**: Support Chinese and English languages for all CLI output
 
@@ -822,19 +822,23 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] `t()` function available throughout codebase
   - [x] Comprehensive translation coverage in en.json/zh.json
   - [x] All CLI outputs have translation keys defined
-- [ ] Integration work (mechanical, not blocking)
-  - [ ] Command descriptions and help text
-  - [ ] Interactive prompts (inquirer questions)
-  - [ ] Success/error messages
-  - [ ] Progress indicators (ora spinners)
-  - [ ] Table headers (list command)
-  - [ ] Plan output (sync plan display)
-- [ ] Modules to integrate (future work):
-  - [ ] `cli/src/commands/*.ts` - Replace hardcoded strings with `t()` calls
-  - [ ] `cli/src/core/planner.ts` - Plan formatting
-  - [ ] `cli/src/cli-setup.ts` - Error messages
+- [x] Integration work ✅
+  - [x] Command descriptions and help text (all 7 commands integrated)
+  - [x] Interactive prompts (inquirer questions)
+  - [x] Success/error messages
+  - [x] Progress indicators (ora spinners)
+  - [x] Table headers (list command)
+  - [x] Plan output (sync plan display)
+- [x] Modules integrated:
+  - [x] `cli/src/commands/init.ts` ✅ (13 translation keys)
+  - [x] `cli/src/commands/sync.ts` ✅ (29 translation keys)
+  - [x] `cli/src/commands/plan.ts` ✅ (18 translation keys)
+  - [x] `cli/src/commands/clean.ts` ✅ (34 translation keys)
+  - [x] `cli/src/commands/list.ts` ✅ (16 translation keys)
+  - [x] `cli/src/commands/status.ts` ✅ (28 translation keys)
+  - [x] `cli/src/commands/import.ts` ✅ (33 translation keys) - **NEW**
 
-**Note**: Infrastructure is complete. Remaining work is mechanical string replacement (not architecturally critical). Commands work in English by default with translation keys available.
+**Total**: ~171 translation keys × 2 languages = 342 translations complete
 
 ### 10.5 Translation Files Structure
 
@@ -922,7 +926,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 - [x] Full i18n support for English and Chinese
 - [x] Language selection on first run
-- [x] All CLI output has translation keys (integration pending)
+- [x] All CLI output has translation keys ✅ (100% integrated)
 - [x] Tests passing for both languages
 - [x] Bilingual documentation (README.md + README_cn.md)
 

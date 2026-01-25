@@ -11,6 +11,7 @@ import inquirer from "inquirer";
 import ora from "ora";
 import { getAdapter, getAllConfigDirs } from "@src/adapters/registry.js";
 import type { ToolName } from "@src/types/config.js";
+import { t } from "@src/utils/i18n.js";
 
 /**
  * Import options
@@ -307,36 +308,47 @@ export function createImportCommand(): Command {
   const cmd = new Command("import");
 
   cmd
-    .description("Import configurations from another project")
-    .argument("<path>", "Path to source project")
-    .option("--user", "Import to user-level configuration", false)
+    .description(t("commands.import.description"))
+    .argument("<path>", t("commands.import.pathArgument"))
+    .option("--user", t("commands.import.userLevelOption"), false)
     .action(async (sourcePath: string) => {
       try {
         const targetPath = process.cwd();
 
         // Detect available tools in source
-        const spinner = ora("Scanning source project...").start();
+        const spinner = ora(t("commands.import.scanningSource")).start();
         const availableTools = await detectSourceTool(sourcePath);
 
         if (availableTools.length === 0) {
-          spinner.fail("No AI coding tool configurations found in source");
+          spinner.fail(t("commands.import.noToolsFound"));
           // Generate directory list from registry
           const configDirs = Object.values(getAllConfigDirs())
             .map((dir) => `${dir}/`)
             .join(", ");
-          console.log(chalk.yellow(`\nLooked for: ${configDirs}`));
+          console.log(
+            chalk.yellow(
+              `\n${t("commands.import.lookedFor", { dirs: configDirs })}`,
+            ),
+          );
           process.exit(1);
         }
 
         spinner.succeed(
-          `Found ${availableTools.length} tool(s): ${availableTools.join(", ")}`,
+          t("commands.import.foundTools", {
+            count: availableTools.length,
+            tools: availableTools.join(", "),
+          }),
         );
 
         // Select source tool
         let sourceTool: ToolName;
         if (availableTools.length === 1) {
           sourceTool = availableTools[0]!;
-          console.log(chalk.blue(`\nImporting from: ${sourceTool}`));
+          console.log(
+            chalk.blue(
+              `\n${t("commands.import.importingFrom", { tool: sourceTool })}`,
+            ),
+          );
         } else {
           const { selectedTool } = await inquirer.prompt<{
             selectedTool: ToolName;
@@ -344,7 +356,7 @@ export function createImportCommand(): Command {
             {
               type: "list",
               name: "selectedTool",
-              message: "Import from which tool?",
+              message: t("commands.import.selectTool"),
               choices: availableTools,
             },
           ]);
@@ -353,7 +365,7 @@ export function createImportCommand(): Command {
 
         // Read source configuration
         const readSpinner = ora(
-          `Reading ${sourceTool} configuration...`,
+          t("commands.import.readingConfig", { tool: sourceTool }),
         ).start();
         const sourceAdapter = getAdapter({
           tool: sourceTool,
@@ -366,13 +378,21 @@ export function createImportCommand(): Command {
         const sourceAgents = await sourceAdapter.readAgents();
         const sourceCommands = await sourceAdapter.readCommands();
 
-        readSpinner.succeed("Configuration read successfully");
+        readSpinner.succeed(t("commands.import.configRead"));
 
-        console.log(chalk.blue("\nAvailable items:"));
-        console.log(`  ${chalk.green("✓")} Skills: ${sourceSkills.length}`);
-        console.log(`  ${chalk.green("✓")} MCP servers: ${sourceMcp.length}`);
-        console.log(`  ${chalk.green("✓")} Agents: ${sourceAgents.length}`);
-        console.log(`  ${chalk.green("✓")} Commands: ${sourceCommands.length}`);
+        console.log(chalk.blue(`\n${t("commands.import.availableItems")}`));
+        console.log(
+          `  ${chalk.green("✓")} ${t("commands.import.skillsLabel")}: ${sourceSkills.length}`,
+        );
+        console.log(
+          `  ${chalk.green("✓")} ${t("commands.import.mcpLabel")}: ${sourceMcp.length}`,
+        );
+        console.log(
+          `  ${chalk.green("✓")} ${t("commands.import.agentsLabel")}: ${sourceAgents.length}`,
+        );
+        console.log(
+          `  ${chalk.green("✓")} ${t("commands.import.commandsLabel")}: ${sourceCommands.length}`,
+        );
 
         // Select what to import
         const { itemsToImport } = await inquirer.prompt<{
@@ -381,25 +401,33 @@ export function createImportCommand(): Command {
           {
             type: "checkbox",
             name: "itemsToImport",
-            message: "What do you want to import?",
+            message: t("commands.import.selectItems"),
             choices: [
               {
-                name: `Skills (${sourceSkills.length} items)`,
+                name: t("commands.import.skillsChoice", {
+                  count: sourceSkills.length,
+                }),
                 value: "skills",
                 checked: sourceSkills.length > 0,
               },
               {
-                name: `MCP servers (${sourceMcp.length} items)`,
+                name: t("commands.import.mcpChoice", {
+                  count: sourceMcp.length,
+                }),
                 value: "mcp",
                 checked: sourceMcp.length > 0,
               },
               {
-                name: `Agents (${sourceAgents.length} items)`,
+                name: t("commands.import.agentsChoice", {
+                  count: sourceAgents.length,
+                }),
                 value: "agents",
                 checked: sourceAgents.length > 0,
               },
               {
-                name: `Commands (${sourceCommands.length} items)`,
+                name: t("commands.import.commandsChoice", {
+                  count: sourceCommands.length,
+                }),
                 value: "commands",
                 checked: sourceCommands.length > 0,
               },
@@ -408,7 +436,9 @@ export function createImportCommand(): Command {
         ]);
 
         if (itemsToImport.length === 0) {
-          console.log(chalk.yellow("\nNo items selected for import"));
+          console.log(
+            chalk.yellow(`\n${t("commands.import.noItemsSelected")}`),
+          );
           process.exit(0);
         }
 
@@ -417,18 +447,18 @@ export function createImportCommand(): Command {
           {
             type: "confirm",
             name: "confirm",
-            message: "Proceed with import?",
+            message: t("commands.import.confirmPrompt"),
             default: true,
           },
         ]);
 
         if (!confirm) {
-          console.log(chalk.yellow("\nImport cancelled"));
+          console.log(chalk.yellow(`\n${t("commands.import.cancelled")}`));
           process.exit(0);
         }
 
         // Execute import
-        const importSpinner = ora("Importing configurations...").start();
+        const importSpinner = ora(t("commands.import.importing")).start();
 
         const importOptions: ImportOptions = {
           sourcePath,
@@ -444,27 +474,39 @@ export function createImportCommand(): Command {
         const result = await importConfigs(importOptions);
 
         if (result.success) {
-          importSpinner.succeed("Import completed successfully");
+          importSpinner.succeed(t("commands.import.imported"));
 
-          console.log(chalk.blue("\nImport summary:"));
+          console.log(chalk.blue(`\n${t("commands.import.importSummary")}`));
           if (importOptions.importSkills) {
             console.log(
-              `  ${chalk.green("✓")} Skills: ${result.skills.imported} imported, ${result.skills.skipped} skipped`,
+              `  ${chalk.green("✓")} ${t("commands.import.skillsImported", {
+                imported: result.skills.imported,
+                skipped: result.skills.skipped,
+              })}`,
             );
           }
           if (importOptions.importMcp) {
             console.log(
-              `  ${chalk.green("✓")} MCP: ${result.mcp.imported} imported, ${result.mcp.skipped} skipped`,
+              `  ${chalk.green("✓")} ${t("commands.import.mcpImported", {
+                imported: result.mcp.imported,
+                skipped: result.mcp.skipped,
+              })}`,
             );
           }
           if (importOptions.importAgents) {
             console.log(
-              `  ${chalk.green("✓")} Agents: ${result.agents.imported} imported, ${result.agents.skipped} skipped`,
+              `  ${chalk.green("✓")} ${t("commands.import.agentsImported", {
+                imported: result.agents.imported,
+                skipped: result.agents.skipped,
+              })}`,
             );
           }
           if (importOptions.importCommands) {
             console.log(
-              `  ${chalk.green("✓")} Commands: ${result.commands.imported} imported, ${result.commands.skipped} skipped`,
+              `  ${chalk.green("✓")} ${t("commands.import.commandsImported", {
+                imported: result.commands.imported,
+                skipped: result.commands.skipped,
+              })}`,
             );
           }
 
@@ -473,28 +515,26 @@ export function createImportCommand(): Command {
             {
               type: "confirm",
               name: "syncNow",
-              message: "Sync to target tools now?",
+              message: t("commands.import.syncNowPrompt"),
               default: true,
             },
           ]);
 
           if (syncNow) {
-            console.log(
-              chalk.blue("\nRun 'vibe-sync sync' to sync configurations"),
-            );
+            console.log(chalk.blue(`\n${t("commands.import.syncHint")}`));
           }
         } else {
-          importSpinner.fail("Import failed");
-          console.error(chalk.red("\nErrors:"));
+          importSpinner.fail(t("commands.import.failed"));
+          console.error(chalk.red(`\n${t("commands.import.errors")}`));
           for (const error of result.errors) {
             console.error(`  ${chalk.red("✗")} ${error}`);
           }
           process.exit(1);
         }
       } catch (error) {
-        console.error(chalk.red("\nImport failed:"));
+        console.error(chalk.red(`\n${t("commands.import.failed")}:`));
         console.error(
-          chalk.red(error instanceof Error ? error.message : "Unknown error"),
+          chalk.red(error instanceof Error ? error.message : t("common.error")),
         );
         process.exit(1);
       }
