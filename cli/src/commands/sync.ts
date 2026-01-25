@@ -45,6 +45,7 @@ import type {
   Command as VibeCommand,
 } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
+import { isUnsupportedFeature } from "@src/utils/errors.js";
 import { t } from "@src/utils/i18n.js";
 import {
   debug,
@@ -393,6 +394,9 @@ export async function executeSyncPlan(
         const allSkills = [...skillsToCreate, ...skillsToUpdate];
         if (allSkills.length > 0) {
           try {
+            debug(
+              `${tool}: Writing ${allSkills.length} skills (${skillsToCreate.length} create, ${skillsToUpdate.length} update)`,
+            );
             const writeResult = await adapter.writeSkills(allSkills);
             if (writeResult.success) {
               // Use actual write count (may be 0 for symlinked directories)
@@ -401,9 +405,14 @@ export async function executeSyncPlan(
                 result.updated += skillsToUpdate.length;
               }
             } else {
-              result.errors.push(writeResult.error || "Failed to write skills");
-              result.success = false;
-              throw new Error("Skill write failed - initiating rollback");
+              // Skip gracefully if tool doesn't support this feature
+              if (isUnsupportedFeature(writeResult)) {
+                debug(`${tool}: Skills not supported, skipping`);
+              } else {
+                result.errors.push(writeResult.error || "Failed to write skills");
+                result.success = false;
+                throw new Error("Skill write failed - initiating rollback");
+              }
             }
           } catch (error) {
             result.errors.push(
@@ -418,16 +427,24 @@ export async function executeSyncPlan(
         const allMCP = [...mcpToCreate, ...mcpToUpdate];
         if (allMCP.length > 0) {
           try {
+            debug(
+              `${tool}: Writing ${allMCP.length} MCP servers (${mcpToCreate.length} create, ${mcpToUpdate.length} update)`,
+            );
             const writeResult = await adapter.writeMCPServers(allMCP);
             if (writeResult.success) {
               result.created += mcpToCreate.length;
               result.updated += mcpToUpdate.length;
             } else {
-              result.errors.push(
-                writeResult.error || "Failed to write MCP servers",
-              );
-              result.success = false;
-              throw new Error("MCP write failed - initiating rollback");
+              // Skip gracefully if tool doesn't support this feature
+              if (isUnsupportedFeature(writeResult)) {
+                debug(`${tool}: MCP servers not supported, skipping`);
+              } else {
+                result.errors.push(
+                  writeResult.error || "Failed to write MCP servers",
+                );
+                result.success = false;
+                throw new Error("MCP write failed - initiating rollback");
+              }
             }
           } catch (error) {
             result.errors.push(
@@ -442,14 +459,22 @@ export async function executeSyncPlan(
         const allAgents = [...agentsToCreate, ...agentsToUpdate];
         if (allAgents.length > 0) {
           try {
+            debug(
+              `${tool}: Writing ${allAgents.length} agents (${agentsToCreate.length} create, ${agentsToUpdate.length} update)`,
+            );
             const writeResult = await adapter.writeAgents(allAgents);
             if (writeResult.success) {
               result.created += agentsToCreate.length;
               result.updated += agentsToUpdate.length;
             } else {
-              result.errors.push(writeResult.error || "Failed to write agents");
-              result.success = false;
-              throw new Error("Agent write failed - initiating rollback");
+              // Skip gracefully if tool doesn't support this feature
+              if (isUnsupportedFeature(writeResult)) {
+                debug(`${tool}: Agents not supported, skipping`);
+              } else {
+                result.errors.push(writeResult.error || "Failed to write agents");
+                result.success = false;
+                throw new Error("Agent write failed - initiating rollback");
+              }
             }
           } catch (error) {
             result.errors.push(
@@ -464,16 +489,24 @@ export async function executeSyncPlan(
         const allCommands = [...commandsToCreate, ...commandsToUpdate];
         if (allCommands.length > 0) {
           try {
+            debug(
+              `${tool}: Writing ${allCommands.length} commands (${commandsToCreate.length} create, ${commandsToUpdate.length} update)`,
+            );
             const writeResult = await adapter.writeCommands(allCommands);
             if (writeResult.success) {
               result.created += commandsToCreate.length;
               result.updated += commandsToUpdate.length;
             } else {
-              result.errors.push(
-                writeResult.error || "Failed to write commands",
-              );
-              result.success = false;
-              throw new Error("Command write failed - initiating rollback");
+              // Skip gracefully if tool doesn't support this feature
+              if (isUnsupportedFeature(writeResult)) {
+                debug(`${tool}: Commands not supported, skipping`);
+              } else {
+                result.errors.push(
+                  writeResult.error || "Failed to write commands",
+                );
+                result.success = false;
+                throw new Error("Command write failed - initiating rollback");
+              }
             }
           } catch (error) {
             result.errors.push(
@@ -514,6 +547,11 @@ export async function executeSyncPlan(
           result.errors.push(
             `Fatal error syncing to ${tool}: ${error instanceof Error ? error.message : String(error)}`,
           );
+        }
+
+        // Print detailed error in debug mode
+        if (error instanceof Error) {
+          debugError(`Error syncing to ${tool}:`, error);
         }
 
         // Rollback all changes on error
