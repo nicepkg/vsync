@@ -4,6 +4,7 @@
  */
 
 import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
@@ -73,11 +74,14 @@ describe("Symlink Rollback Support", () => {
     });
 
     it("should create backup in parent directory", async () => {
-      const backup = await createDirectoryBackup("/target/skills");
+      const originalPath = "/target/skills";
+      const backup = await createDirectoryBackup(originalPath);
 
       // Backup should be in /target, not /target/skills
-      expect(backup.backupPath).toMatch(/^\/target\//);
-      expect(backup.backupPath).not.toMatch(/^\/target\/skills\//);
+      const backupParent = path.dirname(backup.backupPath);
+      const originalParent = path.dirname(originalPath);
+      expect(backupParent).toBe(originalParent);
+      expect(backup.backupPath).not.toBe(originalPath);
     });
   });
 

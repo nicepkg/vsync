@@ -43,7 +43,13 @@ export async function resolveSymlink(path: string): Promise<string> {
     return path;
   }
 
-  return await readlink(path);
+  let target = await readlink(path);
+  // On Windows, readlink may return paths with \\?\ prefix (UNC paths)
+  // Remove this prefix for consistency
+  if (process.platform === "win32" && target.startsWith("\\\\?\\")) {
+    target = target.slice(4);
+  }
+  return target;
 }
 
 /**

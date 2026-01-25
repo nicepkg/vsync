@@ -1,4 +1,5 @@
 import { readFile, readdir } from "node:fs/promises";
+import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
@@ -56,7 +57,8 @@ describe("Rollback Mechanism", () => {
 
       const backup = await createBackup(filePath);
 
-      expect(backup.backupPath).toContain("/project/.cursor");
+      // Backup should be in the same directory as the original file
+      expect(path.dirname(backup.backupPath)).toBe(path.dirname(filePath));
       expect(backup.backupPath).toContain(".vibe-sync-backup");
     });
 

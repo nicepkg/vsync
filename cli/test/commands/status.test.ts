@@ -182,8 +182,9 @@ describe("Status Command", () => {
       expect(output).toContain("Configuration:");
       expect(output).toContain(".vibe-sync.json");
       expect(output).toContain("Manifest:");
-      expect(output).toContain("~/.vibe-sync/cache/");
-      expect(output).toContain("/manifest.json");
+      expect(output).toContain(".vibe-sync");
+      expect(output).toContain("cache");
+      expect(output).toContain("manifest.json");
     });
 
     it("should indicate project vs user level", () => {

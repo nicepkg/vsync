@@ -52,8 +52,8 @@ describe("Config Manager", () => {
 
   describe("getConfigPath", () => {
     it("should return project config path", () => {
-      const path = getConfigPath("project", "/project");
-      expect(path).toBe("/project/.vibe-sync.json");
+      const configPath = getConfigPath("project", "/project");
+      expect(configPath).toBe(path.join("/project", ".vibe-sync.json"));
     });
 
     it("should return user config path", () => {
