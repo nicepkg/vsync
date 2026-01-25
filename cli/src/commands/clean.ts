@@ -70,7 +70,9 @@ export function formatCleanPlan(plan: CleanPlan): string {
     lines.push(chalk.red.bold(t("commands.clean.dangerZone")));
     lines.push("");
     lines.push(
-      chalk.red(t("commands.clean.deleteFromSource", { tool: plan.sourceTool })),
+      chalk.red(
+        t("commands.clean.deleteFromSource", { tool: plan.sourceTool }),
+      ),
     );
     lines.push(chalk.red(t("commands.clean.cannotUndo")));
   } else {
@@ -120,7 +122,9 @@ export function formatCleanPlan(plan: CleanPlan): string {
   if (!plan.fromSource) {
     lines.push("");
     lines.push(
-      chalk.gray(t("commands.clean.sourceNotAffected", { tool: plan.sourceTool })),
+      chalk.gray(
+        t("commands.clean.sourceNotAffected", { tool: plan.sourceTool }),
+      ),
     );
   }
 
@@ -440,7 +444,9 @@ async function cleanCommand(
       console.log("");
 
       // Show warning
-      console.log(chalk.yellow(`⚠️  ${t("commands.clean.removeTargetsOnly")}\n`));
+      console.log(
+        chalk.yellow(`⚠️  ${t("commands.clean.removeTargetsOnly")}\n`),
+      );
 
       // Confirm
       const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
@@ -490,9 +496,7 @@ async function cleanCommand(
     }
   } catch (error) {
     if (error instanceof Error) {
-      console.error(
-        chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`),
-      );
+      console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
       process.exit(1);
     }
   }

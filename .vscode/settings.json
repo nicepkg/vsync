@@ -99,5 +99,18 @@
   "[mdx]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["MCPO", "opencode"]
+  "cSpell.words": ["MCPO", "opencode"],
+
+  // i18n-ally Configuration for CLI workspace
+  "i18n-ally.localesPaths": ["cli/src/locales"],
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.sourceLanguage": "en",
+  "i18n-ally.displayLanguage": "en",
+  "i18n-ally.namespace": false,
+  "i18n-ally.pathMatcher": "{locale}.json",
+  "i18n-ally.enabledParsers": ["json"],
+  "i18n-ally.extract.keygenStyle": "nested",
+  "i18n-ally.extract.keyPrefix": "",
+  "i18n-ally.sortKeys": false,
+  "i18n-ally.editor.preferEditor": true
 }

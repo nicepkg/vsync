@@ -1,0 +1,17 @@
+# i18n-ally Custom Framework Configuration
+# For vibe-sync custom i18n implementation
+
+# Supported language file types
+languageIds:
+  - javascript
+  - typescript
+  - javascriptreact
+  - typescriptreact
+
+# Regular expressions to detect translation function usage
+# Matches: t("key"), t('key'), t(`key`)
+usageMatchRegex:
+  - "[^\\w\\d]t\\(['\"`]({key})['\"`]"
+
+# Disable built-in frameworks (use only this custom config)
+monopoly: true

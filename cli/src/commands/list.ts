@@ -103,7 +103,10 @@ export function formatSkillsTable(
   lines.push("");
   lines.push(
     chalk.bold(
-      t("commands.list.skillsTitle", { count: skills.length, source: sourceTool }),
+      t("commands.list.skillsTitle", {
+        count: skills.length,
+        source: sourceTool,
+      }),
     ),
   );
   lines.push("━".repeat(80));
@@ -305,9 +308,7 @@ async function listCommand(
     }
   } catch (error) {
     if (error instanceof Error) {
-      console.error(
-        chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`),
-      );
+      console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
       process.exit(1);
     }
   }

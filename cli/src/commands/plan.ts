@@ -41,7 +41,9 @@ export function formatDetailedPlan(plan: SyncPlan): string {
       lines.push(chalk.green(`  ${t("commands.plan.create")}:`));
       for (const op of d.toCreate) {
         lines.push(chalk.green(`    • ${op.itemType}/${op.name}`));
-        lines.push(chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`));
+        lines.push(
+          chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`),
+        );
         if (op.newHash) {
           lines.push(
             chalk.gray(
@@ -58,7 +60,9 @@ export function formatDetailedPlan(plan: SyncPlan): string {
       lines.push(chalk.yellow(`  ${t("commands.plan.update")}:`));
       for (const op of d.toUpdate) {
         lines.push(chalk.yellow(`    • ${op.itemType}/${op.name}`));
-        lines.push(chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`));
+        lines.push(
+          chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`),
+        );
         if (op.oldHash && op.newHash) {
           lines.push(
             chalk.gray(
@@ -80,7 +84,9 @@ export function formatDetailedPlan(plan: SyncPlan): string {
       lines.push(chalk.red(`  ${t("commands.plan.delete")}:`));
       for (const op of d.toDelete) {
         lines.push(chalk.red(`    • ${op.itemType}/${op.name}`));
-        lines.push(chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`));
+        lines.push(
+          chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`),
+        );
         if (op.oldHash) {
           lines.push(
             chalk.gray(
@@ -94,7 +100,9 @@ export function formatDetailedPlan(plan: SyncPlan): string {
 
     // SKIP operations (only show count)
     if (d.toSkip && d.toSkip.length > 0) {
-      lines.push(chalk.gray(`  ${t("commands.plan.skip", { count: d.toSkip.length })}`));
+      lines.push(
+        chalk.gray(`  ${t("commands.plan.skip", { count: d.toSkip.length })}`),
+      );
       lines.push("");
     }
   }
@@ -190,9 +198,7 @@ async function planCommand(options: {
     }
   } catch (error) {
     if (error instanceof Error) {
-      console.error(
-        chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`),
-      );
+      console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
       process.exit(1);
     }
   }

@@ -96,7 +96,9 @@ export function formatStatus(data: StatusData): string {
   const lastSync = data.manifest.last_synced
     ? formatRelativeTime(data.manifest.last_synced)
     : t("commands.status.neverSynced");
-  lines.push(chalk.cyan(`${t("commands.status.lastSync")}:         `) + lastSync);
+  lines.push(
+    chalk.cyan(`${t("commands.status.lastSync")}:         `) + lastSync,
+  );
 
   lines.push(
     chalk.cyan(`${t("commands.status.configuration")}:     `) +
@@ -128,9 +130,7 @@ export function formatStatus(data: StatusData): string {
 
   for (const tool of data.config.target_tools) {
     lines.push(
-      chalk.green(
-        `  ✓ ${tool}         ${t("commands.status.syncedUpToDate")}`,
-      ),
+      chalk.green(`  ✓ ${tool}         ${t("commands.status.syncedUpToDate")}`),
     );
   }
   lines.push("");
@@ -209,9 +209,7 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
     console.log(status);
   } catch (error) {
     if (error instanceof Error) {
-      console.error(
-        chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`),
-      );
+      console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
       process.exit(1);
     }
   }
