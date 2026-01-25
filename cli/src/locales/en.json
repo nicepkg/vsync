@@ -68,7 +68,27 @@
     },
     "plan": {
       "description": "Show sync plan without executing",
-      "noOperations": "No operations to perform"
+      "pruneOption": "Include delete operations in plan",
+      "userLevelOption": "Use user-level config instead of project-level",
+      "loadingConfig": "Loading configuration...",
+      "configLoaded": "Configuration loaded",
+      "reading": "Reading {tool} configuration...",
+      "readComplete": "Read {skills} skills, {mcp} MCP servers",
+      "calculating": "Calculating differences...",
+      "planGenerated": "Sync plan generated",
+      "planValidationFailed": "Plan validation failed:",
+      "warnings": "Warnings:",
+      "noChanges": "Everything is up to date!",
+      "title": "Sync Plan",
+      "create": "CREATE",
+      "update": "UPDATE",
+      "delete": "DELETE",
+      "skip": "SKIP: {count} items (unchanged)",
+      "reason": "Reason",
+      "hash": "Hash",
+      "oldHash": "Old",
+      "newHash": "New",
+      "applyHint": "Run `vibe-sync sync` to apply this plan"
     },
     "status": {
       "description": "Show current synchronization status",

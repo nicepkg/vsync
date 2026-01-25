@@ -68,7 +68,27 @@
     },
     "plan": {
       "description": "显示同步计划但不执行",
-      "noOperations": "没有需要执行的操作"
+      "pruneOption": "在计划中包含删除操作",
+      "userLevelOption": "使用用户级配置而不是项目级配置",
+      "loadingConfig": "正在加载配置...",
+      "configLoaded": "配置已加载",
+      "reading": "正在读取 {tool} 配置...",
+      "readComplete": "读取了 {skills} 个技能、{mcp} 个 MCP 服务器",
+      "calculating": "正在计算差异...",
+      "planGenerated": "同步计划已生成",
+      "planValidationFailed": "计划验证失败:",
+      "warnings": "警告:",
+      "noChanges": "所有内容都是最新的!",
+      "title": "同步计划",
+      "create": "创建",
+      "update": "更新",
+      "delete": "删除",
+      "skip": "跳过: {count} 个项目 (未更改)",
+      "reason": "原因",
+      "hash": "哈希",
+      "oldHash": "旧值",
+      "newHash": "新值",
+      "applyHint": "运行 `vibe-sync sync` 来应用此计划"
     },
     "status": {
       "description": "显示当前同步状态",

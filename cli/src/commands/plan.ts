@@ -11,6 +11,7 @@ import { loadManifest } from "@src/core/manifest-manager.js";
 import { validatePlan } from "@src/core/planner.js";
 import type { SyncMode } from "@src/types/config.js";
 import type { DiffResult, SyncPlan } from "@src/types/plan.js";
+import { t } from "@src/utils/i18n.js";
 import { calculateSyncDiff, loadSyncConfig, readSourceConfig } from "./sync.js";
 
 /**
@@ -23,7 +24,7 @@ export function formatDetailedPlan(plan: SyncPlan): string {
   const lines: string[] = [];
 
   lines.push("");
-  lines.push(chalk.bold("📋 Sync Plan"));
+  lines.push(chalk.bold(`📋 ${t("commands.plan.title")}`));
   lines.push("");
   lines.push("─".repeat(60));
   lines.push("");
@@ -37,13 +38,15 @@ export function formatDetailedPlan(plan: SyncPlan): string {
 
     // CREATE operations
     if (d.toCreate && d.toCreate.length > 0) {
-      lines.push(chalk.green("  CREATE:"));
+      lines.push(chalk.green(`  ${t("commands.plan.create")}:`));
       for (const op of d.toCreate) {
         lines.push(chalk.green(`    • ${op.itemType}/${op.name}`));
-        lines.push(chalk.gray(`      Reason: ${op.reason}`));
+        lines.push(chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`));
         if (op.newHash) {
           lines.push(
-            chalk.gray(`      Hash: ${op.newHash.substring(0, 16)}...`),
+            chalk.gray(
+              `      ${t("commands.plan.hash")}: ${op.newHash.substring(0, 16)}...`,
+            ),
           );
         }
       }
@@ -52,16 +55,20 @@ export function formatDetailedPlan(plan: SyncPlan): string {
 
     // UPDATE operations
     if (d.toUpdate && d.toUpdate.length > 0) {
-      lines.push(chalk.yellow("  UPDATE:"));
+      lines.push(chalk.yellow(`  ${t("commands.plan.update")}:`));
       for (const op of d.toUpdate) {
         lines.push(chalk.yellow(`    • ${op.itemType}/${op.name}`));
-        lines.push(chalk.gray(`      Reason: ${op.reason}`));
+        lines.push(chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`));
         if (op.oldHash && op.newHash) {
           lines.push(
-            chalk.gray(`      Old: ${op.oldHash.substring(0, 16)}...`),
+            chalk.gray(
+              `      ${t("commands.plan.oldHash")}: ${op.oldHash.substring(0, 16)}...`,
+            ),
           );
           lines.push(
-            chalk.gray(`      New: ${op.newHash.substring(0, 16)}...`),
+            chalk.gray(
+              `      ${t("commands.plan.newHash")}: ${op.newHash.substring(0, 16)}...`,
+            ),
           );
         }
       }
@@ -70,13 +77,15 @@ export function formatDetailedPlan(plan: SyncPlan): string {
 
     // DELETE operations
     if (d.toDelete && d.toDelete.length > 0) {
-      lines.push(chalk.red("  DELETE:"));
+      lines.push(chalk.red(`  ${t("commands.plan.delete")}:`));
       for (const op of d.toDelete) {
         lines.push(chalk.red(`    • ${op.itemType}/${op.name}`));
-        lines.push(chalk.gray(`      Reason: ${op.reason}`));
+        lines.push(chalk.gray(`      ${t("commands.plan.reason")}: ${op.reason}`));
         if (op.oldHash) {
           lines.push(
-            chalk.gray(`      Hash: ${op.oldHash.substring(0, 16)}...`),
+            chalk.gray(
+              `      ${t("commands.plan.hash")}: ${op.oldHash.substring(0, 16)}...`,
+            ),
           );
         }
       }
@@ -85,14 +94,14 @@ export function formatDetailedPlan(plan: SyncPlan): string {
 
     // SKIP operations (only show count)
     if (d.toSkip && d.toSkip.length > 0) {
-      lines.push(chalk.gray(`  SKIP: ${d.toSkip.length} items (unchanged)`));
+      lines.push(chalk.gray(`  ${t("commands.plan.skip", { count: d.toSkip.length })}`));
       lines.push("");
     }
   }
 
   lines.push("─".repeat(60));
   lines.push("");
-  lines.push(chalk.blue("💡 Run `vibe-sync sync` to apply this plan"));
+  lines.push(chalk.blue(`💡 ${t("commands.plan.applyHint")}`));
   lines.push("");
 
   return lines.join("\n");
@@ -112,13 +121,13 @@ async function planCommand(options: {
     const mode: SyncMode = options.prune ? "prune" : "safe";
 
     // Load configuration
-    const spinner = ora("Loading configuration...").start();
+    const spinner = ora(t("commands.plan.loadingConfig")).start();
     const config = await loadSyncConfig(projectDir, options.user || false);
-    spinner.succeed("Configuration loaded");
+    spinner.succeed(t("commands.plan.configLoaded"));
 
     // Read source configuration
     const readSpinner = ora(
-      `Reading ${config.source_tool} configuration...`,
+      t("commands.plan.reading", { tool: config.source_tool }),
     ).start();
     const sourceData = await readSourceConfig(
       config.source_tool,
@@ -126,21 +135,24 @@ async function planCommand(options: {
       config.level,
     );
     readSpinner.succeed(
-      `Read ${sourceData.skills.length} skills, ${sourceData.mcpServers.length} MCP servers`,
+      t("commands.plan.readComplete", {
+        skills: sourceData.skills.length,
+        mcp: sourceData.mcpServers.length,
+      }),
     );
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
 
     // Calculate diff and generate plan
-    const planSpinner = ora("Calculating differences...").start();
+    const planSpinner = ora(t("commands.plan.calculating")).start();
     const plan = await calculateSyncDiff(
       sourceData,
       config.target_tools,
       manifest,
       mode,
     );
-    planSpinner.succeed("Sync plan generated");
+    planSpinner.succeed(t("commands.plan.planGenerated"));
 
     // Display detailed plan
     console.log(formatDetailedPlan(plan));
@@ -148,7 +160,9 @@ async function planCommand(options: {
     // Validate plan
     const validation = validatePlan(plan);
     if (!validation.valid) {
-      console.error(chalk.red("\n❌ Plan validation failed:"));
+      console.error(
+        chalk.red(`\n❌ ${t("commands.plan.planValidationFailed")}`),
+      );
       validation.errors.forEach((err) =>
         console.error(chalk.red(`  - ${err}`)),
       );
@@ -156,7 +170,7 @@ async function planCommand(options: {
     }
 
     if (validation.warnings && validation.warnings.length > 0) {
-      console.log(chalk.yellow("\n⚠️  Warnings:"));
+      console.log(chalk.yellow(`\n⚠️  ${t("commands.plan.warnings")}`));
       validation.warnings.forEach((warn) =>
         console.log(chalk.yellow(`  - ${warn}`)),
       );
@@ -172,11 +186,13 @@ async function planCommand(options: {
     );
 
     if (!hasOperations) {
-      console.log(chalk.green("✅ Everything is up to date!\n"));
+      console.log(chalk.green(`\n✅ ${t("commands.plan.noChanges")}\n`));
     }
   } catch (error) {
     if (error instanceof Error) {
-      console.error(chalk.red(`\n❌ Error: ${error.message}\n`));
+      console.error(
+        chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`),
+      );
       process.exit(1);
     }
   }
@@ -186,9 +202,9 @@ export function createPlanCommand(): Command {
   const command = new Command("plan");
 
   command
-    .description("Show sync plan without executing")
-    .option("--prune", "Include delete operations in plan")
-    .option("--user", "Use user-level config instead of project-level")
+    .description(t("commands.plan.description"))
+    .option("--prune", t("commands.plan.pruneOption"))
+    .option("--user", t("commands.plan.userLevelOption"))
     .action(async (options) => {
       await planCommand(options);
     });
