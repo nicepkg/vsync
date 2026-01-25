@@ -7,6 +7,7 @@ import type { SyncMode, ToolName } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { SyncPlan, DiffResult } from "@src/types/plan.js";
+import { t } from "@src/utils/i18n.js";
 import { calculateDiff, type DiffInput } from "./diff.js";
 
 /**
@@ -113,8 +114,8 @@ export function formatPlan(plan: SyncPlan): string {
 
   // Header
   lines.push("");
-  lines.push(`📋 Sync Plan - Source: ${plan.source_tool}`);
-  lines.push("=".repeat(60));
+  lines.push(t("planner.header", { source: plan.source_tool }));
+  lines.push(t("planner.separator").repeat(60));
   lines.push("");
 
   // Check if plan is empty
@@ -127,7 +128,7 @@ export function formatPlan(plan: SyncPlan): string {
   );
 
   if (!hasOperations) {
-    lines.push("✅ No changes needed - everything is up to date!");
+    lines.push(t("planner.noChanges"));
     lines.push("");
     return lines.join("\n");
   }
@@ -146,17 +147,25 @@ export function formatPlan(plan: SyncPlan): string {
   }
 
   // Show summary first
-  lines.push(`Targets: ${targetTools.join(", ")} (${targetTools.length} total)`);
+  lines.push(
+    t("planner.targetsInfo", {
+      tools: targetTools.join(", "),
+      count: targetTools.length.toString(),
+    }),
+  );
   lines.push("");
 
   // Group operations by item (when same items go to multiple targets)
-  const itemOperations = new Map<string, {
-    type: string;
-    name: string;
-    targets: string[];
-    operation: 'CREATE' | 'UPDATE' | 'DELETE';
-    description?: string;
-  }>();
+  const itemOperations = new Map<
+    string,
+    {
+      type: string;
+      name: string;
+      targets: string[];
+      operation: "CREATE" | "UPDATE" | "DELETE";
+      description?: string;
+    }
+  >();
 
   for (const [toolName, diff] of Object.entries(plan.diffs)) {
     if (!diff) continue;
@@ -169,7 +178,7 @@ export function formatPlan(plan: SyncPlan): string {
           type: op.itemType,
           name: op.name,
           targets: [],
-          operation: 'CREATE',
+          operation: "CREATE",
           description: op.description,
         });
       }
@@ -184,7 +193,7 @@ export function formatPlan(plan: SyncPlan): string {
           type: op.itemType,
           name: op.name,
           targets: [],
-          operation: 'UPDATE',
+          operation: "UPDATE",
           description: op.description,
         });
       }
@@ -199,7 +208,7 @@ export function formatPlan(plan: SyncPlan): string {
           type: op.itemType,
           name: op.name,
           targets: [],
-          operation: 'DELETE',
+          operation: "DELETE",
           description: op.description,
         });
       }
@@ -208,46 +217,67 @@ export function formatPlan(plan: SyncPlan): string {
   }
 
   // Format grouped operations
-  const createOps = Array.from(itemOperations.values()).filter(op => op.operation === 'CREATE');
-  const updateOps = Array.from(itemOperations.values()).filter(op => op.operation === 'UPDATE');
-  const deleteOps = Array.from(itemOperations.values()).filter(op => op.operation === 'DELETE');
+  const createOps = Array.from(itemOperations.values()).filter(
+    (op) => op.operation === "CREATE",
+  );
+  const updateOps = Array.from(itemOperations.values()).filter(
+    (op) => op.operation === "UPDATE",
+  );
+  const deleteOps = Array.from(itemOperations.values()).filter(
+    (op) => op.operation === "DELETE",
+  );
 
   if (createOps.length > 0) {
-    lines.push(`✨ CREATE (${createOps.length} items):`);
+    lines.push(
+      t("planner.createSection", { count: createOps.length.toString() }),
+    );
     for (const op of createOps) {
-      const targetStr = op.targets.length === targetTools.length
-        ? "all targets"
-        : op.targets.join(", ");
+      const targetStr =
+        op.targets.length === targetTools.length
+          ? t("planner.allTargets")
+          : op.targets.join(", ");
       lines.push(`   + [${op.type}] ${op.name} → ${targetStr}`);
     }
     lines.push("");
   }
 
   if (updateOps.length > 0) {
-    lines.push(`🔄 UPDATE (${updateOps.length} items):`);
+    lines.push(
+      t("planner.updateSection", { count: updateOps.length.toString() }),
+    );
     for (const op of updateOps) {
-      const targetStr = op.targets.length === targetTools.length
-        ? "all targets"
-        : op.targets.join(", ");
+      const targetStr =
+        op.targets.length === targetTools.length
+          ? t("planner.allTargets")
+          : op.targets.join(", ");
       lines.push(`   ~ [${op.type}] ${op.name} → ${targetStr}`);
     }
     lines.push("");
   }
 
   if (deleteOps.length > 0) {
-    lines.push(`🗑️  DELETE (${deleteOps.length} items):`);
+    lines.push(
+      t("planner.deleteSection", { count: deleteOps.length.toString() }),
+    );
     for (const op of deleteOps) {
-      const targetStr = op.targets.length === targetTools.length
-        ? "all targets"
-        : op.targets.join(", ");
+      const targetStr =
+        op.targets.length === targetTools.length
+          ? t("planner.allTargets")
+          : op.targets.join(", ");
       lines.push(`   - [${op.type}] ${op.name} → ${targetStr}`);
     }
     lines.push("");
   }
 
   // Show total operations summary
-  lines.push("=".repeat(60));
-  lines.push(`Total: ${totalCreate} CREATE, ${totalUpdate} UPDATE, ${totalDelete} DELETE across all targets`);
+  lines.push(t("planner.separator").repeat(60));
+  lines.push(
+    t("planner.totalSummary", {
+      create: totalCreate.toString(),
+      update: totalUpdate.toString(),
+      delete: totalDelete.toString(),
+    }),
+  );
 
   // Old detailed format (commented out, can be enabled with --verbose flag)
   /*
@@ -274,7 +304,7 @@ export function validatePlan(plan: SyncPlan): PlanValidation {
 
   // Check if plan has target tools
   if (Object.keys(plan.diffs).length === 0) {
-    errors.push("No target tools specified");
+    errors.push(t("planner.validation.noTargets"));
   }
 
   // Check for delete operations
@@ -292,7 +322,7 @@ export function validatePlan(plan: SyncPlan): PlanValidation {
 
   if (hasDeletes) {
     warnings.push(
-      `Plan includes ${deleteCount} delete operation(s). Review carefully before proceeding.`,
+      t("planner.validation.deleteWarning", { count: deleteCount.toString() }),
     );
   }
 
@@ -306,7 +336,7 @@ export function validatePlan(plan: SyncPlan): PlanValidation {
 
   if (totalOps > 50) {
     warnings.push(
-      `Large number of operations (${totalOps}). Consider reviewing before executing.`,
+      t("planner.validation.largeOperations", { count: totalOps.toString() }),
     );
   }
 

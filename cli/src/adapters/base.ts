@@ -337,7 +337,7 @@ export abstract class BaseAdapter implements ToolAdapter {
 
           item.hash = hashFn(item);
           items.push(item);
-        } catch (error) {
+        } catch {
           // Silently skip invalid items (YAML parse errors, etc.)
           // These are usually expected for complex or malformed command files
         }
@@ -398,7 +398,7 @@ export abstract class BaseAdapter implements ToolAdapter {
 
           item.hash = hashFn(item);
           items.push(item);
-        } catch (error) {
+        } catch {
           // Silently skip invalid items (YAML parse errors, etc.)
           // These are usually expected for complex or malformed command files
         }

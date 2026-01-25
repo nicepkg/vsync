@@ -265,6 +265,22 @@
     "updated": "Updated",
     "deleted": "Deleted"
   },
+  "planner": {
+    "header": "📋 Sync Plan - Source: {source}",
+    "separator": "=",
+    "noChanges": "✅ No changes needed - everything is up to date!",
+    "targetsInfo": "Targets: {tools} ({count} total)",
+    "createSection": "✨ CREATE ({count} items):",
+    "updateSection": "🔄 UPDATE ({count} items):",
+    "deleteSection": "🗑️  DELETE ({count} items):",
+    "allTargets": "all targets",
+    "totalSummary": "Total: {create} CREATE, {update} UPDATE, {delete} DELETE across all targets",
+    "validation": {
+      "noTargets": "No target tools specified",
+      "deleteWarning": "Plan includes {count} delete operation(s). Review carefully before proceeding.",
+      "largeOperations": "Large number of operations ({count}). Consider reviewing before executing."
+    }
+  },
   "manifest": {
     "notFound": "Manifest not found, starting fresh sync",
     "loaded": "Manifest loaded",
