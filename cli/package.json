@@ -1,6 +1,6 @@
 {
   "name": "vibe-sync",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI for vibe-sync - AI coding tool config synchronizer",
   "type": "module",
   "publishConfig": {
