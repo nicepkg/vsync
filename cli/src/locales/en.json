@@ -21,12 +21,10 @@
       "selectSyncItemsValidation": "Please select at least one item to sync",
       "skillsChoice": "Skills",
       "mcpChoice": "MCP Servers",
+      "agentsChoiceInit": "Agents",
+      "commandsChoiceInit": "Commands",
       "creatingConfig": "Creating configuration...",
       "configCreated": "Created .vibe-sync.json",
-      "creatingCache": "Creating cache directory...",
-      "cacheCreated": "Created .vibe-sync-cache/",
-      "initializingManifest": "Initializing manifest...",
-      "manifestCreated": "Created manifest.json",
       "complete": "Initialization complete! Run {command} to start syncing.",
       "userLevelOption": "Create user-level config instead of project-level"
     },
@@ -266,6 +264,22 @@
     "created": "Created",
     "updated": "Updated",
     "deleted": "Deleted"
+  },
+  "planner": {
+    "header": "📋 Sync Plan - Source: {source}",
+    "separator": "=",
+    "noChanges": "✅ No changes needed - everything is up to date!",
+    "targetsInfo": "Targets: {tools} ({count} total)",
+    "createSection": "✨ CREATE ({count} items × {tools} tools):",
+    "updateSection": "🔄 UPDATE ({count} items × {tools} tools):",
+    "deleteSection": "🗑️  DELETE ({count} items × {tools} tools):",
+    "allTargets": "all targets",
+    "totalSummary": "Total: {create} CREATE, {update} UPDATE, {delete} DELETE across all targets",
+    "validation": {
+      "noTargets": "No target tools specified",
+      "deleteWarning": "Plan includes {count} delete operation(s). Review carefully before proceeding.",
+      "largeOperations": "Large number of operations ({count}). Consider reviewing before executing."
+    }
   },
   "manifest": {
     "notFound": "Manifest not found, starting fresh sync",

@@ -1,21 +1,36 @@
-# vibe-sync - AI 编程工具配置同步器
+# vibe-sync - AI 氛围编程工具配置同步器
 
-**版本**: 3.0.0 (最终可实施版本)
-**日期**: 2026-01-24
-**理念**: 单一配置源 → 多格式配置编译器 + 差异计划执行器
+**版本**: 1.0.0 (当前实施版本: v1.2)
+**日期**: 2026-01-25
+**理念**: 单一配置源 → 一键同步 → 所有工具保持和谐
+
+---
+
+## 📌 重要说明
+
+**本文档已根据实际代码和项目方向更新 (2026-01-25)**:
+
+- ✅ 版本号更新为 1.0.0 (对应 v1.2 实现)
+- ✅ 定位从 "编译器" 改为 "一键同步工具"
+- ✅ 配置示例使用最新格式 (含 use_symlinks_for_skills, language)
+- ✅ 工具描述使用 "AI 氛围编程工具" (vibe coding tools)
+- ✅ 交互流程基于实际代码更新
+- ✅ v1.0, v1.1, v1.2 状态标记为已完成
+- ✅ 去掉过时的 mcp_security 配置示例
 
 ---
 
 ## 目录
 
-1. [核心定位](#1-核心定位)
-2. [配置格式精确映射表](#2-配置格式精确映射表)
-3. [层级系统](#3-层级系统)
-4. [CLI 命令设计](#4-cli-命令设计)
-5. [同步模式与安全机制](#5-同步模式与安全机制)
-6. [Adapter 架构](#6-adapter-架构)
-7. [差异计划系统](#7-差异计划系统)
-8. [MVP 实施路线](#8-mvp-实施路线)
+1. [核心定位](#1-核心定位) - 问题、解决方案、核心价值
+2. [配置格式精确映射表](#2-配置格式精确映射表) - 各工具格式详解
+3. [层级系统](#3-层级系统) - Project/User 层、配置结构、Manifest
+4. [CLI 命令设计](#4-cli-命令设计) - 所有命令详细说明
+5. [同步模式与安全机制](#5-同步模式与安全机制) - Safe/Prune 模式、原子写入
+6. [Adapter 架构](#6-adapter-架构) - Adapter 模式、数据模型
+7. [差异计划系统](#7-差异计划系统) - 3-way diff、计划生成
+8. [实施路线与版本状态](#8-实施路线与版本状态) - v1.0~v1.3 完成状态
+9. [总结](#9-总结) - 核心价值、技术特性、架构
 
 ---
 
@@ -23,46 +38,67 @@
 
 ### 1.1 我们在做什么
 
-**不是**: 简单的文件拷贝工具
-**而是**: 多格式配置编译器 + 差异计划执行器
+**问题**: 多个 AI 氛围编程工具 (Claude Code、Cursor、OpenCode、Codex) 各有各的目录结构和配置格式，跨工具管理 Skills、MCP、Agents、Commands 成为噩梦。
+
+**解决方案**: vibe-sync 提供一条命令同步一切。选一个工具作为源 (source of truth)，其他工具自动保持同步。
+
+**核心价值**:
+
+- 不是简单的文件复制工具
+- 而是智能的配置转换与同步工具
+- 支持多种格式 (JSON ↔ TOML ↔ JSONC)
+- 保留环境变量语法
+- 可选 symlink 支持 (Skills)
 
 ```
-单一配置源 (Source Tool)
-       ↓
-   读取配置
-       ↓
-   标准化数据模型 (Normalize)
-       ↓
-   计算差异 (Diff)
-       ↓
-   生成执行计划 (Plan)
-       ↓
-   用户确认 / Dry Run
-       ↓
-   按目标工具格式编译 (Compile)
-       ↓
-   原子化写入 (Apply)
-       ↓
-   更新 Manifest
+1. 选择源工具 (Source Tool)
+   ↓
+2. 读取源配置 (Skills, MCP, Agents, Commands)
+   ↓
+3. 标准化数据模型
+   ↓
+4. 读取目标工具配置
+   ↓
+5. 读取 Manifest (上次同步状态)
+   ↓
+6. 计算差异 (3-way diff)
+   ↓
+7. 生成同步计划
+   ↓
+8. 显示计划并请求用户确认
+   ↓
+9. 转换为目标格式 (JSON/TOML/JSONC)
+   ↓
+10. 原子写入 (crash-safe)
+    ↓
+11. 更新 Manifest
+
+支持特性:
+- Safe Mode: 只创建和更新，不删除
+- Prune Mode: 严格镜像，删除源中没有的项
+- Symlinks: Skills 可选符号链接 (v1.2+)
+- i18n: 多语言 CLI (v1.2+)
 ```
 
 ### 1.2 管理的配置类型
 
-| 配置类型     | MVP | v1.1 | 说明                         |
-| ------------ | --- | ---- | ---------------------------- |
-| **Skills**   | ✅  | ✅   | 可复用指令模板               |
-| **MCP**      | ✅  | ✅   | 外部工具集成（**安全敏感**） |
-| **Agents**   | ❌  | ✅   | 自定义 AI 代理               |
-| **Commands** | ❌  | ✅   | 快捷命令                     |
+| 配置类型     | v1.0 | v1.1 | v1.2 | 说明                |
+| ------------ | ---- | ---- | ---- | ------------------- |
+| **Skills**   | ✅   | ✅   | ✅   | 可复用指令模板      |
+| **MCP**      | ✅   | ✅   | ✅   | 外部工具集成        |
+| **Agents**   | ❌   | ✅   | ✅   | 自定义 AI 代理      |
+| **Commands** | ❌   | ✅   | ✅   | 快捷命令            |
+| **Symlinks** | ❌   | ❌   | ✅   | Skills 符号链接支持 |
+| **i18n**     | ❌   | ❌   | ✅   | 多语言 CLI (en/zh)  |
 
 ### 1.3 支持的工具
 
-| 工具            | MVP       | v1.1 | 说明                       |
-| --------------- | --------- | ---- | -------------------------- |
-| **Claude Code** | ✅ Source | ✅   | 功能最完整，推荐作为配置源 |
-| **Cursor**      | ✅ Target | ✅   | 变量插值最强               |
-| **OpenCode**    | ✅ Target | ✅   | 开源，配置格式独特         |
-| **Codex**       | ❌        | ✅   | v1.1 支持                  |
+| 工具            | v1.0      | v1.1 | v1.2 | 说明                            |
+| --------------- | --------- | ---- | ---- | ------------------------------- |
+| **Claude Code** | ✅ Source | ✅   | ✅   | 功能最完整，推荐作为配置源      |
+| **Cursor**      | ✅ Target | ✅   | ✅   | 变量插值最强                    |
+| **OpenCode**    | ✅ Target | ✅   | ✅   | 开源，配置格式独特 (JSONC 注释) |
+| **Codex**       | ❌        | ✅   | ✅   | TOML 格式支持                   |
 
 ---
 
@@ -305,6 +341,14 @@ enabled = true # optional
 | **HTTP 传输**    | ✅           | ✅            | ✅                      | ✅                 |
 | **环境变量格式** | `${X}`       | ❌ 不支持     | `${env:X}` + 5 个固定的 | `{env:X}`          |
 
+**关键差异**:
+- OpenCode 的 MCP 字段名是 `mcp` 而不是 `mcpServers` (最容易出错!)
+- OpenCode 必须指定 `type` 字段 (`"local"` 或 `"remote"`)
+- Codex 使用 TOML 格式，字段名是 `mcp_servers` (下划线)
+- 环境变量语法各不相同，vibe-sync 自动转换：
+  - Claude Code: `${VAR}` → Cursor: `${env:VAR}` → OpenCode: `{env:VAR}`
+  - Codex 不支持插值，直接写值
+
 ---
 
 ## 3. 层级系统
@@ -326,49 +370,78 @@ vibe-sync sync --user   # 操作 ~/.vibe-sync.json
 
 ```json
 {
-  "$schema": "https://vibe-sync.dev/schema.json",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "level": "project",
   "source_tool": "claude-code",
-  "target_tools": ["cursor", "opencode"],
+  "target_tools": ["cursor", "opencode", "codex"],
   "sync_config": {
     "skills": true,
     "mcp": true
   },
-  "last_sync": "2026-01-24T10:30:00Z"
+  "use_symlinks_for_skills": false,
+  "language": "en",
+  "last_sync": "2026-01-25T10:30:00Z"
 }
 ```
 
-### 3.3 Manifest 文件（新增）
+**字段说明**:
+
+- `version`: 配置版本 (当前 1.0.0)
+- `level`: "project" 或 "user"
+- `source_tool`: 源工具 (标准参考)
+- `target_tools`: 目标工具列表 (从源同步)
+- `sync_config.skills`: 是否同步 Skills
+- `sync_config.mcp`: 是否同步 MCP servers
+- `sync_config.agents` (可选): 是否同步 Agents (v1.1+)
+- `sync_config.commands` (可选): 是否同步 Commands (v1.1+)
+- `use_symlinks_for_skills` (可选, v1.2+): 使用符号链接而非复制
+- `language` (可选, v1.2+, 仅 user 层): CLI 语言 ("en" 或 "zh")
+- `last_sync` (自动生成): 最后同步时间
+
+### 3.3 Manifest 文件
 
 **位置**: `.vibe-sync-cache/manifest.json`
 
-**作用**: 记录每个配置项的 hash，用于快速判定是否需要同步
+**作用**:
+
+- 记录每个配置项的 hash
+- 用于快速判定是否需要同步
+- 跟踪每个目标工具的同步状态
+- 支持增量同步
 
 ```json
 {
   "version": "1.0.0",
-  "last_sync": "2026-01-24T10:30:00Z",
+  "last_sync": "2026-01-25T10:30:00Z",
   "items": {
     "skill/git-release": {
-      "hash": "sha256:abc123...",
-      "last_synced": "2026-01-24T10:30:00Z",
+      "type": "skill",
+      "hash": "abc123...",
+      "last_synced": "2026-01-25T10:30:00Z",
       "targets": {
-        "cursor": "sha256:abc123...",
-        "opencode": "sha256:abc123..."
+        "cursor": "abc123...",
+        "opencode": "abc123..."
       }
     },
     "mcp/sqlite": {
-      "hash": "sha256:def456...",
-      "last_synced": "2026-01-24T10:30:00Z",
+      "type": "mcp",
+      "hash": "def456...",
+      "last_synced": "2026-01-25T10:30:00Z",
       "targets": {
-        "cursor": "sha256:def456...",
-        "opencode": "sha256:def456..."
+        "cursor": "def456...",
+        "opencode": "def456..."
       }
     }
   }
 }
 ```
+
+**字段说明**:
+
+- `type`: 配置类型 ("skill", "mcp", "agent", "command")
+- `hash`: 源配置的 SHA256 hash
+- `last_synced`: 最后同步时间
+- `targets`: 各目标工具的 hash (用于检测目标是否被手动修改)
 
 ---
 
@@ -388,33 +461,45 @@ vibe-sync plan [--user]                    # 查看同步计划（不执行）
 
 ### 4.2 `vibe-sync init` - 初始化
 
-**触发时机**: 任何命令找不到 `.vibe-sync.json` 时自动触发
+**触发时机**: 用户主动运行或任何命令找不到 `.vibe-sync.json` 时
 
-**交互流程**:
+**交互流程** (基于实际代码):
 
 ```bash
 $ vibe-sync init
 
 🚀 Welcome to vibe-sync!
 
-? Which AI coding tools do you use? (Space to select, Enter to confirm)
-  ◉ Claude Code (Recommended as source)
-  ◉ Cursor
-  ◉ OpenCode
-  ◯ Codex (v1.1 support)
+✔ Detecting existing tools...
+✔ Detected: claude-code, cursor
 
-? Which tool should be the configuration source?
-  ❯ Claude Code (Most features, recommended)
-    Cursor (Best variable interpolation)
-    OpenCode (Open source)
+? Which AI coding tools do you use?
+  ◉ claude-code (detected)
+  ◉ cursor (detected)
+  ◯ opencode
+  ◯ codex
 
-? What do you want to sync? (MVP: Skills + MCP only)
+? Which tool is your source of truth?
+  ❯ claude-code
+
+? What do you want to sync?
   ◉ Skills
-  ◉ MCP Servers
+  ◉ MCP
 
-✓ Configuration saved to .vibe-sync.json
-✓ Run `vibe-sync sync` to start syncing
+✔ Configuration created
+✔ Cache directory created
+✔ Manifest initialized
+
+✅ Setup complete! Run vibe-sync sync to start syncing
 ```
+
+**关键特性**:
+
+- 自动检测现有工具目录
+- 提示用户选择工具
+- 选择源工具 (source of truth)
+- 选择要同步的配置类型
+- 创建配置文件、缓存目录、manifest
 
 ### 4.3 `vibe-sync sync` - 同步配置
 
@@ -446,19 +531,6 @@ $ vibe-sync sync
   ✓ Found 2 MCP servers
 
 📊 Analyzing differences...
-  Skills:
-    • git-release: source hash changed (will update)
-    • api-conventions: unchanged (skip)
-    • deploy-prod: new in source (will create)
-
-  MCP Servers:
-    • sqlite: unchanged (skip)
-    • github: source hash changed (will update)
-
-🔒 Security check for MCP changes...
-  ⚠️  New MCP server detected: Will show details for confirmation
-
-──────────────────────────────────────────────────────────
 
 📋 Sync Plan (Safe Mode)
 
@@ -1215,117 +1287,167 @@ async function updateManifest(
 
 ---
 
-## 8. MVP 实施路线
+## 8. 实施路线与版本状态
 
-### 8.1 MVP 范围
+### 8.1 v1.0 (MVP) ✅ 已完成
 
 **目标**: 打通核心流程，验证价值
 
-**MVP包含**:
+**包含功能**:
 
-- ✅ Project 层（User 层 v1.1）
-- ✅ Claude Code 作为配置源
-- ✅ Cursor 和 OpenCode 作为目标
-- ✅ 只同步 Skills 和 MCP
-- ✅ Safe 模式同步
-- ✅ Prune 模式同步
+- ✅ Project 层配置
+- ✅ Claude Code、Cursor、OpenCode 支持
+- ✅ Skills 和 MCP 同步
+- ✅ Safe 模式 (不删除)
+- ✅ Prune 模式 (严格镜像)
+- ✅ 智能差异计划系统
+- ✅ Manifest 管理 (hash-based)
+- ✅ 原子写入 (crash-safe)
+- ✅ 612 个测试通过
+
+### 8.2 v1.1 ✅ 已完成
+
+**目标**: 扩展功能，支持更多配置类型和工具
+
+**新增功能**:
+
+- ✅ User 层配置 (~/.vibe-sync.json)
+- ✅ Agents 同步
+- ✅ Commands 同步
+- ✅ Codex 支持 (TOML 格式)
+- ✅ Import 命令
+- ✅ Clean 命令增强
+
+### 8.3 v1.2 ✅ 当前版本
+
+**目标**: 性能优化与用户体验改进
+
+**新增功能**:
+
+- ✅ 多语言支持 (English & 中文)
+- ✅ Symlinks 支持 (Skills 可选符号链接)
+- ✅ 性能优化 (并行操作、智能缓存)
+- ✅ 更友好的错误提示
+- ✅ 生产级稳定性
+
+### 8.4 v1.3 🔜 计划中
+
+**目标**: 自动化与集成
+
+**计划功能**:
+
+- [ ] Watch 模式 (文件变更自动同步)
+- [ ] GitHub Actions 集成
+- [ ] Pre-commit hooks
+- [ ] 验证功能改进
+
+### 8.5 开发总结 (已完成)
+
+#### 核心架构
+
+- ✅ TypeScript 5 严格模式
+- ✅ pnpm Monorepo 结构
+- ✅ Commander.js CLI 框架
+- ✅ Adapter 模式 (可扩展)
+- ✅ 统一数据模型
+
+#### Adapter 实现
+
+- ✅ ClaudeCodeAdapter
+- ✅ CursorAdapter
+- ✅ OpenCodeAdapter
+- ✅ CodexAdapter (TOML)
+
+#### 核心功能
+
 - ✅ 差异计划系统
 - ✅ Manifest 管理
-- ✅ 原子化写入
+- ✅ 原子写入
+- ✅ Symlink 支持
+- ✅ i18n 支持
 
-**v1.1包含**:
+#### CLI 命令
 
-- ✅ Agents 和 Commands（v1.1）
-- ✅ Codex 支持（v1.1）
-- ✅ User 层（v1.1）
-- ✅ import 命令（v1.1）
+- ✅ `init` - 初始化配置
+- ✅ `sync` - 同步配置
+- ✅ `plan` - 查看计划
+- ✅ `status` - 查看状态
+- ✅ `list` - 列出配置
+- ✅ `clean` - 清理配置
+- ✅ `import` - 导入配置
 
-### 8.2 开发阶段
+#### 测试
 
-#### Phase 1: 基础架构（1-2 天）
-
-- [ ] 项目初始化（TypeScript + Commander.js）
-- [ ] 统一数据模型定义
-- [ ] ToolAdapter 接口定义
-- [ ] 配置文件结构定义
-
-#### Phase 2: Adapter 实现（3-5 天）
-
-- [ ] ClaudeCodeAdapter (Skills + MCP 读取)
-- [ ] CursorAdapter (Skills + MCP 写入)
-- [ ] OpenCodeAdapter (Skills + MCP 写入)
-- [ ] 单元测试（mock-fs）
-
-#### Phase 3: 差异计划系统（2-3 天）
-
-- [ ] Hash 计算
-- [ ] 差异计算逻辑
-- [ ] 计划生成器
-- [ ] Manifest 管理
-
-#### Phase 4: CLI 命令（2-3 天）
-
-- [ ] `init` 命令
-- [ ] `sync` 命令（safe + prune）
-- [ ] `plan` 命令
-- [ ] `status` 命令
-- [ ] `list` 命令
-- [ ] `clean` 命令
-
-#### Phase 5: 安全机制（1-2 天）
-
-- [ ] 原子化写入
-- [ ] 环境变量保留
-
-#### Phase 6: 测试与优化（2-3 天）
-
-- [ ] 集成测试
-- [ ] 端到端测试
-- [ ] 错误处理优化
-- [ ] 用户体验优化
-
-**总计**: 11-18 天
-
-### 8.3 v1.1 路线图
-
-- User 层支持
-- Agents 同步
-- Commands 同步
-- Codex 支持
-- import 命令
-- 性能优化
+- ✅ 612 个测试通过
+- ✅ 45 个测试文件
+- ✅ 单元测试 + 集成测试 + E2E 测试
+- ✅ mock-fs 文件系统模拟
 
 ---
 
-## 总结
+## 9. 总结
 
-### 核心理念
+### 9.1 核心价值
 
-**我们不是在做文件同步器，而是在做：**
+**vibe-sync 解决的核心问题**:
 
-- 多格式配置编译器
-- 差异计划执行器
-- 安全敏感配置管理器
+多个 AI 氛围编程工具 (Claude Code, Cursor, OpenCode, Codex) 各有各的配置目录和文件格式，导致：
 
-### 关键技术点
+- 手动复制配置繁琐易错
+- 环境变量在不同格式间容易破坏
+- 团队协作时配置不一致
+- 管理多个工具成本高
 
-1. **按工具格式编译**: 每个工具有自己的序列化器
-2. **环境变量保留**: 不展开变量
-3. **原子化写入**: 避免半写入状态
-4. **差异计划系统**: read → normalize → diff → plan → apply
-5. **Manifest 管理**: 快速判定是否需要同步
+**vibe-sync 的解决方案**:
 
-### 技术栈
+一条命令同步所有工具：
 
-- **TypeScript** (类型安全)
-- **Commander.js** (CLI 框架)
-- **Inquirer.js** (交互式提示)
-- **chalk** (终端颜色)
-- **ora** (加载动画)
-- **jsonc-parser** (JSONC 支持)
-- **gray-matter** (frontmatter 解析)
-- **Vitest + mock-fs** (测试)
+- 选一个工具作为源 (source of truth)
+- 其他工具自动保持同步
+- 智能格式转换 (JSON ↔ TOML ↔ JSONC)
+- 环境变量语法自动适配
+- 可选 symlink 节省磁盘空间
 
----
+### 9.2 关键技术特性
 
-**准备开干了吗？** 🚀
+1. **智能差异计划**: 3-way diff (源 vs 目标 vs manifest)
+2. **多格式转换**: 每个工具有专门的 adapter
+3. **环境变量保护**: 从不展开变量，保留原始语法
+4. **原子写入**: temp → fsync → rename (crash-safe)
+5. **Hash-based 追踪**: 快速判定是否需要同步
+6. **Symlink 支持**: Skills 可选符号链接 (v1.2+)
+7. **多语言 CLI**: 英文/中文自动适配 (v1.2+)
+
+### 9.3 架构特点
+
+- **Adapter 模式**: 易于扩展新工具
+- **Type-safe**: TypeScript 严格模式
+- **Well-tested**: 612 测试保证质量
+- **Monorepo**: pnpm workspace 管理
+- **CLI-first**: 专注命令行体验
+
+### 9.4 技术栈
+
+**核心**:
+
+- TypeScript 5 (strict mode)
+- Node.js >= 18 (用户) / >= 24 (开发)
+- pnpm Monorepo
+
+**CLI**:
+
+- Commander.js - CLI 框架
+- Inquirer.js - 交互提示
+- chalk - 终端颜色
+- ora - 加载动画
+
+**解析**:
+
+- jsonc-parser - JSONC 支持
+- @iarna/toml - TOML 支持
+- gray-matter - Frontmatter 解析
+
+**测试**:
+
+- Vitest - 测试框架
+- mock-fs - 文件系统模拟

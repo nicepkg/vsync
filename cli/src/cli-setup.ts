@@ -12,19 +12,15 @@ import { createListCommand } from "./commands/list.js";
 import { createPlanCommand } from "./commands/plan.js";
 import { createStatusCommand } from "./commands/status.js";
 import { createSyncCommand } from "./commands/sync.js";
-import { initializeLanguage } from "./utils/language-prompt.js";
+import { ensureLanguageConfig } from "./utils/config-initializer.js";
 import { setDebugMode } from "./utils/logger.js";
 /**
  * Get package.json version
  *
  * @returns Version string from package.json
  */
-async function getVersion(): Promise<string> {
-  try {
-    return packageJson.version || "1.0.0";
-  } catch {
-    return "1.0.0";
-  }
+function getVersion(): string {
+  return packageJson.version || "1.0.0";
 }
 
 /**
@@ -41,7 +37,7 @@ export function createCLI(): Command {
       "AI Coding Tool Config Synchronizer\n" +
         "Single source of truth → Compile to multiple formats → Diff-based sync",
     )
-    .version("1.0.0", "-v, --version", "Display version number")
+    .version(getVersion(), "-v, --version", "Display version number")
     .option("--debug", "Enable debug logging with stack traces");
 
   // Register all commands
@@ -78,13 +74,9 @@ export async function runCLI(): Promise<void> {
   try {
     // Initialize i18n BEFORE creating CLI
     // This detects language from user config or system, prompts if needed
-    await initializeLanguage();
+    await ensureLanguageConfig();
 
     const program = createCLI();
-
-    // Set version asynchronously
-    const version = await getVersion();
-    program.version(version, "-v, --version", "Display version number");
 
     // Show help if no arguments
     if (process.argv.length === 2) {

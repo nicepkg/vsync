@@ -21,12 +21,10 @@
       "selectSyncItemsValidation": "请至少选择一个同步项",
       "skillsChoice": "技能",
       "mcpChoice": "MCP 服务器",
+      "agentsChoiceInit": "代理",
+      "commandsChoiceInit": "命令",
       "creatingConfig": "正在创建配置...",
       "configCreated": "已创建 .vibe-sync.json",
-      "creatingCache": "正在创建缓存目录...",
-      "cacheCreated": "已创建 .vibe-sync-cache/",
-      "initializingManifest": "正在初始化清单...",
-      "manifestCreated": "已创建 manifest.json",
       "complete": "初始化完成! 运行 {command} 开始同步。",
       "userLevelOption": "创建用户级配置而不是项目级配置"
     },
@@ -266,6 +264,22 @@
     "created": "已创建",
     "updated": "已更新",
     "deleted": "已删除"
+  },
+  "planner": {
+    "header": "📋 同步计划 - 源: {source}",
+    "separator": "=",
+    "noChanges": "✅ 无需更改 - 所有内容都是最新的!",
+    "targetsInfo": "目标: {tools} ({count} 个)",
+    "createSection": "✨ 创建 ({count} 个项目 × {tools} 个工具):",
+    "updateSection": "🔄 更新 ({count} 个项目 × {tools} 个工具):",
+    "deleteSection": "🗑️  删除 ({count} 个项目 × {tools} 个工具):",
+    "allTargets": "所有目标",
+    "totalSummary": "总计: 创建 {create}、更新 {update}、删除 {delete} 个操作（跨所有目标）",
+    "validation": {
+      "noTargets": "未指定目标工具",
+      "deleteWarning": "计划包含 {count} 个删除操作。请仔细检查后再继续。",
+      "largeOperations": "操作数量较多 ({count})。建议在执行前检查。"
+    }
   },
   "manifest": {
     "notFound": "未找到清单，开始全新同步",

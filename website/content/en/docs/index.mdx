@@ -1,0 +1,96 @@
+---
+title: Documentation
+description: Complete guide to vibe-sync - sync AI coding tool configs (Claude Code, Cursor, OpenCode, Codex) with one command. Learn installation, configuration, CLI commands, and advanced features.
+---
+
+# Documentation
+
+Welcome to the vibe-sync documentation! Here you'll find everything you need to sync your AI coding tool configurations effortlessly.
+
+## What is vibe-sync?
+
+**vibe-sync** is a powerful CLI tool that synchronizes configuration files across multiple AI coding tools (Claude Code, Cursor, OpenCode, and Codex). It provides:
+
+- **Single Source of Truth**: Choose one tool as your reference, others sync automatically
+- **Smart Format Conversion**: Handles JSON ↔ TOML ↔ JSONC conversions
+- **Environment Variable Safety**: Preserves variable syntax without expansion
+- **Intelligent Diff Planning**: Shows exactly what will change before applying
+- **Safe & Prune Modes**: Choose between conservative updates or strict mirroring
+
+## Quick Navigation
+
+### Getting Started
+
+- **[Getting Started](../getting-started)** - Installation, initialization, and first sync
+- **[Core Concepts](../core-concepts)** - Understanding sync modes, layers, and workflows
+
+### Reference
+
+- **[Configuration](../configuration)** - Config file structure and tool-specific formats
+- **[CLI Commands](../cli-commands)** - Complete command reference with examples
+- **[Quick Reference](../quick-reference)** - Command cheat sheet and common patterns
+
+### Advanced
+
+- **[Advanced Features](../advanced-features)** - Symlinks, performance optimization, and more
+- **[FAQ](../faq)** - Common questions and troubleshooting
+
+## Supported AI Tools
+
+vibe-sync supports synchronization for the following AI coding tools:
+
+| Tool | Support Level | Config Format | Special Features |
+|:-----|:-------------|:--------------|:----------------|
+| **Claude Code** | ✅ Full (Source/Target) | JSON | Most complete feature set |
+| **Cursor** | ✅ Full (Source/Target) | JSON | Advanced variable interpolation |
+| **OpenCode** | ✅ Full (Source/Target) | JSONC | Comment preservation |
+| **Codex** | ✅ Full (Source/Target) | TOML | TOML format support |
+
+## What Gets Synced?
+
+vibe-sync manages the following configuration types:
+
+- **Skills**: Reusable agent skill templates
+- **MCP Servers**: Model Context Protocol integrations
+- **Agents**: Custom AI agent definitions (v1.1+)
+- **Commands**: Quick command shortcuts (v1.1+)
+
+## Key Features
+
+### 🎯 Smart Diff Planning
+Preview exactly what will change before applying, with detailed reasons for each operation.
+
+### 🛡️ Safe Mode (Default)
+Only creates and updates configurations—never deletes unless explicitly requested.
+
+### ⚡ Performance Optimized
+- Parallel operations for multiple targets
+- Hash-based change detection
+- Smart caching with manifest tracking
+
+### 🔗 Symlink Support (v1.2+)
+Optionally use symbolic links for Skills to save disk space and enable instant updates.
+
+### 🌐 Multi-Language CLI (v1.2+)
+Native support for English and Chinese (中文).
+
+## Quick Start
+
+```bash
+# Install
+npm install -g vibe-sync
+
+# Initialize
+vibe-sync init
+
+# Sync
+vibe-sync sync
+```
+
+## Getting Help
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/nicepkg/vibe-sync/issues)
+- **CLI Help**: Run `vibe-sync --help` or `vibe-sync <command> --help`
+- **Contributing**: Check out the [Contributing Guide](../../contributing)
+
+Ready to get started? Head over to [Getting Started](../getting-started)!

@@ -3,6 +3,7 @@
  * Add new adapters here to make them available to the CLI.
  */
 
+import { join } from "node:path";
 import type { ToolName } from "@src/types/config.js";
 import type { AdapterConfig, ToolAdapter } from "./base.js";
 import { ClaudeCodeAdapter } from "./claude-code.js";
@@ -11,6 +12,13 @@ import { CursorAdapter } from "./cursor.js";
 import { OpenCodeAdapter } from "./opencode.js";
 
 type AdapterConstructor = new (config: AdapterConfig) => ToolAdapter;
+
+// Static metadata interface for adapters
+interface AdapterStatic {
+  readonly TOOL_NAME: string;
+  readonly DISPLAY_NAME: string;
+  new (config: AdapterConfig): ToolAdapter;
+}
 
 type AdapterEntry = {
   toolName: string;
@@ -25,16 +33,14 @@ export const ADAPTERS = [
   CodexAdapter,
 ] as const;
 
-function makeEntry(AdapterClass: AdapterConstructor): AdapterEntry {
-  const instance = new AdapterClass({
-    baseDir: "",
-    tool: "" as ToolName,
-    level: "project",
-  });
-
+/**
+ * Create registry entry without instantiating adapter
+ * Uses static metadata instead of creating temporary instances
+ */
+function makeEntry(AdapterClass: AdapterStatic): AdapterEntry {
   return {
-    toolName: instance.toolName,
-    displayName: instance.displayName,
+    toolName: AdapterClass.TOOL_NAME,
+    displayName: AdapterClass.DISPLAY_NAME,
     AdapterClass,
   };
 }
@@ -110,7 +116,9 @@ export function getToolConfigFiles(
   level: AdapterConfig["level"] = "project",
 ): string[] {
   const adapter = createAdapter(toolName, { baseDir, level });
-  return adapter.getMCPConfigPaths().map((p) => `${baseDir}/${p}`);
+  // Only return MCP config files (JSON) - not directories
+  // Full directory tree backup requires transaction mechanism (out of scope)
+  return adapter.getMCPConfigPaths().map((p) => join(baseDir, p));
 }
 
 /**

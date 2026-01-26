@@ -4,6 +4,7 @@
  */
 
 import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
@@ -13,6 +14,7 @@ import {
   setupSymlinkWithBackup,
 } from "@src/core/symlink-sync.js";
 import type { DirectoryBackupInfo } from "@src/core/symlink-sync.js";
+import { isSamePath } from "../utils/path.js";
 
 describe("Symlink Rollback Support", () => {
   beforeEach(() => {
@@ -37,7 +39,7 @@ describe("Symlink Rollback Support", () => {
     it("should backup directory with all files", async () => {
       const backup = await createDirectoryBackup("/target/skills");
 
-      expect(backup.originalPath).toBe("/target/skills");
+      expect(isSamePath(backup.originalPath, "/target/skills")).toBe(true);
       expect(backup.backupPath).toMatch(/\.vibe-sync-backup-\d+-skills$/);
       expect(backup.existed).toBe(true);
       expect(backup.timestamp).toBeTruthy();
@@ -57,7 +59,7 @@ describe("Symlink Rollback Support", () => {
     it("should handle non-existent directory", async () => {
       const backup = await createDirectoryBackup("/nonexistent/skills");
 
-      expect(backup.originalPath).toBe("/nonexistent/skills");
+      expect(isSamePath(backup.originalPath, "/nonexistent/skills")).toBe(true);
       expect(backup.backupPath).toBe("");
       expect(backup.existed).toBe(false);
     });
@@ -73,11 +75,14 @@ describe("Symlink Rollback Support", () => {
     });
 
     it("should create backup in parent directory", async () => {
-      const backup = await createDirectoryBackup("/target/skills");
+      const originalPath = "/target/skills";
+      const backup = await createDirectoryBackup(originalPath);
 
       // Backup should be in /target, not /target/skills
-      expect(backup.backupPath).toMatch(/^\/target\//);
-      expect(backup.backupPath).not.toMatch(/^\/target\/skills\//);
+      const backupParent = path.dirname(backup.backupPath);
+      const originalParent = path.dirname(originalPath);
+      expect(isSamePath(backupParent, originalParent)).toBe(true);
+      expect(backup.backupPath).not.toBe(originalPath);
     });
   });
 
@@ -218,7 +223,7 @@ describe("Symlink Rollback Support", () => {
         "/target/skills",
       );
 
-      expect(backup.originalPath).toBe("/target/skills");
+      expect(isSamePath(backup.originalPath, "/target/skills")).toBe(true);
       expect(backup.existed).toBe(true);
       expect(backup.backupPath).toBeTruthy();
 

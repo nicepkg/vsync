@@ -3,6 +3,7 @@
  * Defines the structure of .vibe-sync.json
  */
 
+import { z } from "zod";
 import type { ADAPTERS } from "@src/adapters/registry.js";
 
 /**
@@ -55,12 +56,12 @@ export interface VibeConfig {
   version: string;
   /** Configuration level */
   level: ConfigLevel;
-  /** Source tool to read configuration from */
-  source_tool: ToolName;
-  /** Target tools to sync configuration to */
-  target_tools: ToolName[];
-  /** What to synchronize */
-  sync_config: SyncConfig;
+  /** Source tool to read configuration from (optional for user-level language-only config) */
+  source_tool?: ToolName;
+  /** Target tools to sync configuration to (optional for user-level language-only config) */
+  target_tools?: ToolName[];
+  /** What to synchronize (optional for user-level language-only config) */
+  sync_config?: SyncConfig;
   /** Last successful sync timestamp (ISO 8601) */
   last_sync?: string;
   /**
@@ -77,4 +78,111 @@ export interface VibeConfig {
    * @since v1.2
    */
   language?: "en" | "zh";
+}
+
+/**
+ * Zod schemas for runtime validation
+ */
+
+// Language schema
+const LanguageSchema = z.enum(["en", "zh"]);
+
+// Sync config schema
+const SyncConfigSchema = z
+  .object({
+    skills: z.boolean(),
+    mcp: z.boolean(),
+    agents: z.boolean().optional(),
+    commands: z.boolean().optional(),
+  })
+  .refine((data) => data.skills || data.mcp, {
+    message: "At least one sync type must be enabled (skills or mcp)",
+  });
+
+// Base config fields (common to all configs)
+const BaseConfigSchema = z.object({
+  $schema: z.string().optional(),
+  version: z.string().min(1, "version is required"),
+  last_sync: z.string().optional(),
+  use_symlinks_for_skills: z.boolean().optional(),
+  language: LanguageSchema.optional(),
+});
+
+/**
+ * Create tool name schema with dynamic validation
+ * This function must be called with available tools from registry
+ */
+export function createToolNameSchema(validTools: string[]) {
+  return z.enum(validTools as [string, ...string[]]);
+}
+
+/**
+ * Create project-level config schema
+ * Requires source_tool, target_tools, and sync_config
+ */
+export function createProjectConfigSchema(validTools: string[]) {
+  const ToolNameSchema = createToolNameSchema(validTools);
+
+  return BaseConfigSchema.extend({
+    level: z.literal("project"),
+    source_tool: ToolNameSchema,
+    target_tools: z
+      .array(ToolNameSchema)
+      .min(1, "target_tools cannot be empty"),
+    sync_config: SyncConfigSchema,
+  }).refine((data) => !data.target_tools.includes(data.source_tool), {
+    message:
+      "source_tool cannot be included in target_tools (would create a loop)",
+    path: ["target_tools"],
+  });
+}
+
+/**
+ * Create user-level config schema
+ * Can be either full config or minimal (language-only) config
+ */
+export function createUserConfigSchema(validTools: string[]) {
+  const ToolNameSchema = createToolNameSchema(validTools);
+
+  // Base user config (level + common fields)
+  const UserBaseSchema = BaseConfigSchema.extend({
+    level: z.literal("user"),
+  });
+
+  // Full user config - has source_tool, target_tools, sync_config
+  const FullUserConfigSchema = UserBaseSchema.extend({
+    source_tool: ToolNameSchema,
+    target_tools: z
+      .array(ToolNameSchema)
+      .min(1, "target_tools cannot be empty"),
+    sync_config: SyncConfigSchema,
+  });
+
+  // Minimal user config - only has language, no source/target/sync
+  // This schema explicitly requires language and doesn't include other fields
+  const MinimalUserConfigSchema = z
+    .object({
+      version: z.string().min(1, "version is required"),
+      level: z.literal("user"),
+      language: LanguageSchema,
+      // Optional common fields
+      $schema: z.string().optional(),
+      last_sync: z.string().optional(),
+      use_symlinks_for_skills: z.boolean().optional(),
+    })
+    .strict(); // Use strict mode to reject extra fields
+
+  // User config can be either full or minimal
+  return z.union([FullUserConfigSchema, MinimalUserConfigSchema]);
+}
+
+/**
+ * Create complete config schema
+ * Uses union to support both project-level and user-level configs
+ */
+export function createVibeConfigSchema(validTools: string[]) {
+  return z.union([
+    createProjectConfigSchema(validTools),
+    createUserConfigSchema(validTools),
+  ]);
 }

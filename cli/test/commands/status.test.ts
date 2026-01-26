@@ -1,7 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { formatStatus } from "@src/commands/status.js";
 import type { VibeConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
+
+// Cross-platform test home
+const TEST_HOME =
+  process.platform === "win32" ? "C:\\Users\\test" : "/home/test";
+
+// Mock os.homedir
+vi.mock("node:os", () => ({
+  homedir: () => TEST_HOME,
+}));
 
 describe("Status Command", () => {
   const sampleConfig: VibeConfig = {
@@ -173,7 +182,9 @@ describe("Status Command", () => {
       expect(output).toContain("Configuration:");
       expect(output).toContain(".vibe-sync.json");
       expect(output).toContain("Manifest:");
-      expect(output).toContain(".vibe-sync-cache/manifest.json");
+      expect(output).toContain(".vibe-sync");
+      expect(output).toContain("cache");
+      expect(output).toContain("manifest.json");
     });
 
     it("should indicate project vs user level", () => {

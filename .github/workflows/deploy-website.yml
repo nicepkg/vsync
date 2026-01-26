@@ -78,9 +78,13 @@ jobs:
           name: website-build
           path: ${{ env.BUILD_OUTPUT_DIR }}
 
+      - name: Install wrangler
+        run: pnpm install -g wrangler
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
+          packageManager: pnpm
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy ${{ env.BUILD_OUTPUT_DIR }} --project-name=${{ env.PROJECT_NAME }} --commit-dirty=true
@@ -110,10 +114,14 @@ jobs:
           name: website-build
           path: ${{ env.BUILD_OUTPUT_DIR }}
 
+      - name: Install wrangler
+        run: pnpm install -g wrangler
+
       - name: Deploy Preview to Cloudflare Pages
         id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
+          packageManager: pnpm
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy ${{ env.BUILD_OUTPUT_DIR }} --project-name=${{ env.PROJECT_NAME }} --branch=${{ github.head_ref }} --commit-dirty=true

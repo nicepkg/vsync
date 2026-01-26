@@ -1,0 +1,330 @@
+---
+title: 配置指南
+description: vibe-sync 完整配置指南。学习 .vibe-sync.json 结构、工具特定格式（JSON、TOML、JSONC）、MCP 差异、Claude Code、Cursor、OpenCode 和 Codex 的环境变量语法。
+---
+
+# 配置指南
+
+了解如何配置 vibe-sync 以及 AI 氛围编程工具之间的格式差异。
+
+## 配置文件结构
+
+vibe-sync 使用 `.vibe-sync.json` 进行配置：
+
+- **Project 层**：`<project>/.vibe-sync.json`
+- **User 层**：`~/.vibe-sync.json`
+
+### 配置示例
+
+```json
+{
+  "version": "1.0.0",
+  "level": "project",
+  "source_tool": "claude-code",
+  "target_tools": ["cursor", "opencode", "codex"],
+  "sync_config": {
+    "skills": true,
+    "mcp": true
+  },
+  "use_symlinks_for_skills": false,
+  "language": "en"
+}
+```
+
+### 配置字段
+
+| 字段 | 类型 | 说明 |
+|:------|:-----|:------------|
+| `version` | string | 配置版本（当前为 "1.0.0"） |
+| `level` | string | "project" 或 "user" |
+| `source_tool` | string | 源工具名称（例如 "claude-code"） |
+| `target_tools` | array | 目标工具名称列表 |
+| `sync_config.skills` | boolean | 启用 Skills 同步 |
+| `sync_config.mcp` | boolean | 启用 MCP 服务器同步 |
+| `sync_config.agents` | boolean | 启用 Agents 同步 (v1.1+, 可选) |
+| `sync_config.commands` | boolean | 启用 Commands 同步 (v1.1+, 可选) |
+| `use_symlinks_for_skills` | boolean | 为 Skills 使用符号链接 (v1.2+, 可选) |
+| `language` | string | CLI 语言："en" 或 "zh" (v1.2+, 仅 user 层) |
+
+## 支持的工具
+
+### Claude Code
+
+**配置目录**：
+- User: `~/.claude/`
+- Project: `.claude/`
+
+**功能**：
+- ✅ Skills: `skills/`
+- ✅ Agents: `agents/`
+- ✅ Commands: `commands/`
+- ✅ MCP: `.mcp.json` (项目) 或 `~/.claude.json` (用户)
+
+**MCP 格式**：JSON
+
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
+    }
+  }
+}
+```
+
+**环境变量**：`${VAR}` 或 `${VAR:-default}`
+
+### Cursor
+
+**配置目录**：
+- User: `~/.cursor/`
+- Project: `.cursor/`
+
+**功能**：
+- ✅ Skills: `skills/`
+- ✅ Commands: `commands/`
+- ✅ MCP: `mcp.json`
+- ❌ Agents: 不支持
+
+**MCP 格式**：JSON
+
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "PGPASSWORD": "${env:PGPASSWORD}",
+        "DATA_DIR": "${workspaceFolder}/data"
+      }
+    }
+  }
+}
+```
+
+**环境变量**：`${env:VAR}`、`${userHome}`、`${workspaceFolder}`、`${workspaceFolderBasename}`、`${pathSeparator}`
+
+### OpenCode
+
+**配置目录**：
+- User: `~/.opencode/`
+- Project: `.opencode/`
+
+**功能**：
+- ✅ Skills: `skills/`
+- ✅ Agents: `agents/`
+- ✅ Commands: `commands/`
+- ✅ MCP: `opencode.json` 或 `opencode.jsonc`
+
+**MCP 格式**：JSONC（支持注释）
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {  // ⚠️ 注意："mcp" 而不是 "mcpServers"
+    "sqlite": {
+      "type": "local",  // ⚠️ 必需字段
+      "enabled": true,
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sqlite"],
+      "environment": {
+        "PASSWORD": "{env:LOCAL_PASSWORD}"  // ⚠️ 花括号
+      }
+    }
+  }
+}
+```
+
+**环境变量**：`{env:VAR}`（花括号，无美元符号）
+
+### Codex
+
+**配置目录**：
+- User: `~/.codex/`
+- Project: `.codex/`
+
+**功能**：
+- ✅ Skills: `skills/`
+- ✅ MCP: `config.toml`
+- ❌ Agents: 不支持
+- ❌ Commands: 不支持
+
+**MCP 格式**：TOML
+
+```toml
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+cwd = "/path/to/dir"  # optional
+env_vars = ["CONTEXT7_API_KEY"]  # optional, use system vars
+
+[mcp_servers.context7.env]  # optional
+MY_ENV_VAR = "MY_ENV_VALUE"
+```
+
+**环境变量**：无插值——值为字面字符串
+
+## 格式对比表
+
+### 目录结构
+
+| 配置类型 | Claude Code | Cursor | OpenCode | Codex |
+|:------------|:------------|:-------|:---------|:------|
+| **Skills** | `.claude/skills/` | `.cursor/skills/` | `.opencode/skills/` | `.codex/skills/` |
+| **Agents** | `.claude/agents/` | N/A | `.opencode/agents/` | N/A |
+| **Commands** | `.claude/commands/` | `.cursor/commands/` | `.opencode/commands/` | N/A |
+| **MCP 配置** | `.mcp.json` | `mcp.json` | `opencode.json(c)` | `config.toml` |
+
+### MCP 配置差异
+
+| 特性 | Claude Code | Cursor | OpenCode | Codex |
+|:--------|:------------|:-------|:---------|:------|
+| **格式** | JSON | JSON | JSONC (带注释) | TOML |
+| **根字段** | `mcpServers` | `mcpServers` | `mcp` ⚠️ | `mcp_servers` |
+| **Type 字段** | 非必需 | 非必需 | **必需** (`local`/`remote`) | 必需 |
+| **环境变量语法** | `${VAR}` | `${env:VAR}` | `{env:VAR}` | 无插值 |
+| **注释** | ❌ | ❌ | ✅ | ✅ |
+
+### 关键差异
+
+⚠️ **OpenCode** 有独特要求：
+1. 根字段是 `mcp`（而不是 `mcpServers`）
+2. 必须指定 `type` 字段：`"local"` 或 `"remote"`
+3. 环境变量使用花括号：`{env:VAR}`
+4. 支持 JSONC 注释
+
+⚠️ **Codex** 使用 TOML 格式：
+1. 完全不同的文件格式（`.toml` 而不是 `.json`）
+2. 字段名为 `mcp_servers`（带下划线）
+3. 不支持变量插值
+4. 可选的 `env_vars` 数组用于系统环境变量
+
+## Skills 配置
+
+所有工具使用相同的 Agent Skills 标准：
+
+### 目录结构
+
+```
+<tool>/skills/
+└── my-skill/
+    ├── SKILL.md           # 必需：带 frontmatter 的技能定义
+    ├── template.md        # 可选：支持文件
+    └── scripts/           # 可选：辅助脚本
+        └── deploy.sh
+```
+
+### SKILL.md 格式
+
+```markdown
+---
+name: my-skill
+description: 有用的技能描述
+author: Your Name
+tags: [deployment, automation]
+---
+
+# 技能内容
+
+AI 代理的指令和提示...
+```
+
+## 为什么格式转换很重要
+
+如果没有 vibe-sync，在工具之间迁移配置需要：
+
+1. **手动格式转换**：JSON → TOML → JSONC
+2. **环境变量重写**：`${VAR}` → `${env:VAR}` → `{env:VAR}`
+3. **结构更改**：`mcpServers` → `mcp` → `mcp_servers`
+4. **必需字段添加**：为 OpenCode 添加 `type`
+
+**使用 vibe-sync**，这一切都会自动发生！🎉
+
+## Manifest 文件
+
+vibe-sync 在 `.vibe-sync-cache/manifest.json` 维护 manifest：
+
+```json
+{
+  "version": "1.0.0",
+  "last_sync": "2026-01-25T10:30:00Z",
+  "items": {
+    "skill/git-release": {
+      "type": "skill",
+      "hash": "abc123...",
+      "last_synced": "2026-01-25T10:30:00Z",
+      "targets": {
+        "cursor": "abc123...",
+        "opencode": "abc123..."
+      }
+    }
+  }
+}
+```
+
+**目的**：
+- 使用 SHA256 哈希值跟踪同步状态
+- 无需读取文件即可快速检测更改
+- 启用增量同步
+- 记录最后同步时间戳
+
+## 最佳实践
+
+### 1. 选择正确的源
+
+我们推荐 **Claude Code** 作为源，因为：
+- 功能最完整（Skills、MCP、Agents、Commands）
+- 简洁的 JSON 格式
+- 良好的文档
+
+### 2. Project 与 User 层级
+
+**使用 Project 层级**用于：
+- 团队共享配置
+- 项目特定集成
+- 提交到版本控制
+
+**使用 User 层级**用于：
+- 个人偏好
+- 全局 Skills 库
+- 凭证和 API 密钥
+
+### 3. 环境变量
+
+始终使用变量引用，从不硬编码：
+
+```json
+// ✅ 好的
+{
+  "env": {
+    "API_KEY": "${API_KEY}"
+  }
+}
+
+// ❌ 不好
+{
+  "env": {
+    "API_KEY": "sk-1234567890abcdef"
+  }
+}
+```
+
+### 4. 版本控制
+
+**提交到 git**：
+- `.vibe-sync.json`（安全，无密钥）
+- `.vibe-sync-cache/`（可选，有助于性能）
+
+**不要提交到 git**：
+- 带凭证的工具特定配置文件
+- 使用 `.gitignore` 忽略敏感的 MCP 配置
+
+## 下一步
+
+- 学习所有 [CLI 命令](../cli-commands)
+- 探索[高级功能](../advanced-features)
+- 查看 [FAQ](../faq) 进行故障排除

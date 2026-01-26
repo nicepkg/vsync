@@ -1,4 +1,5 @@
 import { readFile, readdir } from "node:fs/promises";
+import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
@@ -7,6 +8,7 @@ import {
   cleanupBackup,
 } from "@src/core/rollback.js";
 import type { BackupInfo } from "@src/core/rollback.js";
+import { isSamePath } from "../utils/path.js";
 
 describe("Rollback Mechanism", () => {
   beforeEach(() => {
@@ -42,7 +44,7 @@ describe("Rollback Mechanism", () => {
 
       const backup = await createBackup(filePath);
 
-      expect(backup.originalPath).toBe(filePath);
+      expect(isSamePath(backup.originalPath, filePath)).toBe(true);
       expect(backup.backupPath).toContain(".vibe-sync-backup");
       expect(backup.timestamp).toBeTruthy();
 
@@ -56,7 +58,10 @@ describe("Rollback Mechanism", () => {
 
       const backup = await createBackup(filePath);
 
-      expect(backup.backupPath).toContain("/project/.cursor");
+      // Backup should be in the same directory as the original file
+      expect(
+        isSamePath(path.dirname(backup.backupPath), path.dirname(filePath)),
+      ).toBe(true);
       expect(backup.backupPath).toContain(".vibe-sync-backup");
     });
 
@@ -65,7 +70,7 @@ describe("Rollback Mechanism", () => {
 
       const backup = await createBackup(filePath);
 
-      expect(backup.originalPath).toBe(filePath);
+      expect(isSamePath(backup.originalPath, filePath)).toBe(true);
       expect(backup.existed).toBe(false);
       expect(backup.backupPath).toBe("");
     });

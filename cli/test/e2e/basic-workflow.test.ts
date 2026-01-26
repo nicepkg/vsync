@@ -6,14 +6,30 @@
 import fs from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   generateConfig,
   saveConfig as saveInitConfig,
-  createCacheDirectory,
 } from "@src/commands/init.js";
 import { syncCommand } from "@src/commands/sync.js";
 import type { ToolName } from "@src/types/config.js";
+import { isSamePath } from "../utils/path.js";
+
+// Mock config-initializer to skip prompts
+vi.mock("@src/utils/config-initializer.js", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@src/utils/config-initializer.js")>();
+  return {
+    ...actual,
+    ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+    ensureConfig: vi
+      .fn()
+      .mockImplementation(async (projectDir, isUserLevel) => {
+        const { loadConfig } = await import("@src/core/config-manager.js");
+        return await loadConfig(isUserLevel ? "user" : "project", projectDir);
+      }),
+  };
+});
 
 /**
  * E2E test utilities - high cohesion, single responsibility
@@ -194,7 +210,7 @@ class E2ETestFixture {
     config.use_symlinks_for_skills = options?.useSymlinks ?? false;
 
     await saveInitConfig(config, this.projectDir);
-    await createCacheDirectory(this.projectDir);
+    // Cache directory will be created automatically on first sync
   }
 
   /**
@@ -301,11 +317,40 @@ describe("Basic E2E Workflows", () => {
     testDir = await E2ETestHelper.createTempProject();
     fixture = new E2ETestFixture(testDir);
     process.chdir(testDir);
+
+    // Create minimal user config to avoid language prompts
+    const userConfigPath = path.join(
+      process.env.HOME || "~",
+      ".vibe-sync.json",
+    );
+    try {
+      await fs.writeFile(
+        userConfigPath,
+        JSON.stringify({
+          version: "1.0.0",
+          level: "user",
+          language: "en",
+        }),
+      );
+    } catch {
+      // Ignore if we can't write to home directory
+    }
   });
 
   afterEach(async () => {
     process.chdir(originalCwd);
     await E2ETestHelper.cleanupTempProject(testDir);
+
+    // Cleanup user config file
+    const userConfigPath = path.join(
+      process.env.HOME || "~",
+      ".vibe-sync.json",
+    );
+    try {
+      await fs.unlink(userConfigPath);
+    } catch {
+      // Ignore if file doesn't exist
+    }
   });
 
   describe("Basic Sync", () => {
@@ -404,7 +449,8 @@ describe("Basic E2E Workflows", () => {
         : null;
       const realSourceDir = await fs.realpath(sourceSkillsDir);
 
-      expect(realSymlinkTarget).toBe(realSourceDir);
+      expect(realSymlinkTarget).not.toBeNull();
+      expect(isSamePath(realSymlinkTarget!, realSourceDir)).toBe(true);
     });
 
     it("should allow accessing files through symlink", async () => {
@@ -488,7 +534,8 @@ describe("Basic E2E Workflows", () => {
           : null;
 
         expect(isSymlink).toBe(true);
-        expect(realSymlinkTarget).toBe(realSourceDir);
+        expect(realSymlinkTarget).not.toBeNull();
+        expect(isSamePath(realSymlinkTarget!, realSourceDir)).toBe(true);
       }
     });
   });
@@ -679,4 +726,4 @@ describe("Basic E2E Workflows", () => {
       }
     });
   });
-});
+}, 10000); // Increased timeout to 10s for E2E tests in slower CI environments

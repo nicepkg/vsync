@@ -1,14 +1,38 @@
 /**
- * Manifest manager for .vibe-sync-cache/manifest.json
+ * Manifest manager for ~/.vibe-sync/cache/<project-hash>/manifest.json
  * Tracks sync state and hashes for all configuration items
  */
 
+import { createHash } from "node:crypto";
+import { realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
 import { cwd } from "node:process";
 import type { ToolName } from "@src/types/config.js";
 import type { Manifest, ItemType } from "@src/types/manifest.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+
+/**
+ * Get project cache directory path
+ * Uses project path hash to create unique cache dir per project
+ *
+ * @param projectDir - Project directory (defaults to cwd)
+ * @returns Absolute path to project cache directory
+ */
+export function getProjectCacheDir(projectDir?: string): string {
+  const dir = resolve(projectDir ?? cwd());
+  // Resolve symlinks to ensure consistent hashing (e.g., /var vs /private/var on macOS)
+  let realDir: string;
+  try {
+    realDir = realpathSync(dir);
+  } catch {
+    // If realpath fails (e.g., dir doesn't exist yet), use the resolved path
+    realDir = dir;
+  }
+  const hash = createHash("sha256").update(realDir).digest("hex").slice(0, 16);
+  return join(homedir(), ".vibe-sync", "cache", hash);
+}
 
 /**
  * Get manifest file path
@@ -17,8 +41,7 @@ import { atomicWrite } from "@src/utils/atomic-write.js";
  * @returns Absolute path to manifest file
  */
 export function getManifestPath(projectDir?: string): string {
-  const dir = projectDir ?? cwd();
-  return join(dir, ".vibe-sync-cache", "manifest.json");
+  return join(getProjectCacheDir(projectDir), "manifest.json");
 }
 
 /**

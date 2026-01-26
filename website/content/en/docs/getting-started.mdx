@@ -1,0 +1,196 @@
+---
+title: Getting Started
+description: Install vibe-sync in 2 minutes. Learn how to initialize configuration, sync AI coding tools (Claude Code, Cursor, OpenCode, Codex), and handle common setup scenarios.
+---
+
+# Getting Started
+
+Get up and running with vibe-sync in just a few minutes.
+
+## Installation
+
+vibe-sync can be used without installation via `npx`, or installed globally for convenience.
+
+### Option 1: Run with npx (Recommended)
+
+No installation needed—just run:
+
+```bash
+npx vibe-sync
+```
+
+### Option 2: Global Installation
+
+```bash
+npm install -g vibe-sync
+```
+
+Verify the installation:
+
+```bash
+vibe-sync --version
+```
+
+## Quick Start
+
+### 1. Initialize Configuration
+
+Navigate to your project directory and run:
+
+```bash
+vibe-sync init
+```
+
+For global user-level configuration:
+
+```bash
+vibe-sync init --user
+```
+
+> 💡 **Tip**: Learn more about [project vs user levels](../core-concepts#configuration-layers) in Core Concepts.
+
+### Interactive Setup
+
+The CLI will guide you through the setup process:
+
+```
+🚀 Welcome to vibe-sync!
+
+✔ Detecting existing tools...
+✔ Detected: claude-code, cursor
+
+? Which AI coding tools do you use?
+  ◉ claude-code (detected)
+  ◉ cursor (detected)
+  ◯ opencode
+  ◯ codex
+
+? Which tool is your source of truth?
+  ❯ claude-code
+
+? What do you want to sync?
+  ◉ Skills
+  ◉ MCP
+
+✔ Configuration created
+✔ Cache directory created
+✔ Manifest initialized
+
+✅ Setup complete! Run vibe-sync sync to start syncing
+```
+
+> 📚 **Learn more**: See [Configuration](../configuration) for detailed config options.
+
+### 2. Sync Your Configs
+
+Once initialized, sync your configurations:
+
+```bash
+# Safe mode (default: no deletions)
+vibe-sync sync
+
+# Preview changes without applying
+vibe-sync sync --dry-run
+
+# Strict mirroring (deletes extra items in targets)
+vibe-sync sync --prune
+```
+
+> 🔍 **Details**: Understand [sync modes](../core-concepts#sync-modes) in Core Concepts.
+
+## Understanding the Output
+
+When you run `vibe-sync sync`, you'll see a detailed plan:
+
+```
+📖 Reading source (claude-code)...
+  ✓ Found 3 skills
+  ✓ Found 2 MCP servers
+
+📊 Analyzing differences...
+
+📋 Sync Plan (Safe Mode)
+
+cursor:
+  CREATE:
+    • skill/deploy-prod
+  UPDATE:
+    • skill/git-release
+    • mcp/github
+  SKIP:
+    • skill/api-conventions (unchanged)
+    • mcp/sqlite (unchanged)
+
+? Proceed with sync? (Y/n) y
+
+✓ Sync completed in 1.2s
+```
+
+## Next Steps
+
+Now that you've installed and initialized vibe-sync:
+
+1. **Learn the Concepts**: Understand [Core Concepts](../core-concepts) like sync modes and layers
+2. **Configure Tools**: Explore [Configuration](../configuration) options for each tool
+3. **Master Commands**: Check out all [CLI Commands](../cli-commands)
+4. **Quick Reference**: Use the [Quick Reference](../quick-reference) cheat sheet
+5. **Advanced Usage**: Dive into [Advanced Features](../advanced-features) like symlinks
+
+## Real-World Examples
+
+### Team Onboarding
+
+New team member joins with Claude Code already set up:
+
+```bash
+cd my-project
+vibe-sync init  # Choose Claude Code as source, Cursor & OpenCode as targets
+vibe-sync sync  # All tools configured instantly!
+```
+
+### User-Level Config Sync
+
+Set up global personal configs once, use everywhere:
+
+```bash
+vibe-sync init --user  # Configure which tools to sync
+vibe-sync sync --user  # Sync personal Skills, MCP servers globally
+```
+
+> 💡 **Related**: Learn about [configuration layers](../core-concepts#configuration-layers).
+
+### Migration Between Tools
+
+Moving from Cursor to Claude Code:
+
+```bash
+vibe-sync init  # Choose Cursor as SOURCE (reference standard)
+                # Choose Claude Code as TARGET (will pull from source)
+vibe-sync sync  # All configs migrated instantly!
+```
+
+> 📖 **More info**: See [FAQ - Migration Questions](../faq#migration-questions).
+
+## Troubleshooting
+
+### Config File Not Found
+
+If you see "Config file not found", run `vibe-sync init` first to create the configuration.
+
+### Tool Not Detected
+
+Make sure the tool's configuration directory exists (e.g., `.claude/`, `.cursor/`) in your project or home directory.
+
+### Permission Errors
+
+On macOS/Linux, you may need to grant permissions for file operations. Check that you have write access to the target directories.
+
+> 🔧 **More help**: See the [FAQ](../faq#troubleshooting) for detailed troubleshooting.
+
+## Getting Help
+
+- Run `vibe-sync --help` for command overview
+- Run `vibe-sync <command> --help` for specific command help
+- Check the [FAQ](../faq) for common questions
+- Use the [Quick Reference](../quick-reference) for command examples
+- Open an issue on [GitHub](https://github.com/nicepkg/vibe-sync/issues)

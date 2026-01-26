@@ -4,6 +4,7 @@ import type {
   WriteResult,
   ValidationResult,
 } from "@src/adapters/base.js";
+import { isSamePath } from "../utils/path.js";
 
 describe("Adapter Base Types", () => {
   describe("AdapterConfig", () => {
@@ -15,7 +16,7 @@ describe("Adapter Base Types", () => {
       };
 
       expect(config.tool).toBe("claude-code");
-      expect(config.baseDir).toBe("/project");
+      expect(isSamePath(config.baseDir, "/project")).toBe(true);
       expect(config.level).toBe("project");
     });
   });

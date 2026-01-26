@@ -1,9 +1,13 @@
-import { readFile, access } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 // Import for module side-effects (needed for dynamic imports in tests)
 import "@src/commands/init.js";
 import type { VibeConfig, ToolName } from "@src/types/config.js";
+
+const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const homeDir = path.join(testRoot, "home", "user");
 
 describe("Init Command", () => {
   beforeEach(() => {
@@ -16,7 +20,7 @@ describe("Init Command", () => {
         ".cursor": {},
       },
       "/empty": {},
-      "/home/user": {},
+      [homeDir]: {},
     });
   });
 
@@ -80,8 +84,8 @@ describe("Init Command", () => {
 
       expect(config.source_tool).toBe("claude-code");
       expect(config.target_tools).toEqual(["cursor"]);
-      expect(config.sync_config.skills).toBe(true);
-      expect(config.sync_config.mcp).toBe(true);
+      expect(config.sync_config!.skills).toBe(true);
+      expect(config.sync_config!.mcp).toBe(true);
       expect(config.level).toBe("project");
     });
 
@@ -114,8 +118,8 @@ describe("Init Command", () => {
         m.generateConfig(options),
       );
 
-      expect(config.sync_config.skills).toBe(true);
-      expect(config.sync_config.mcp).toBe(false);
+      expect(config.sync_config!.skills).toBe(true);
+      expect(config.sync_config!.mcp).toBe(false);
     });
   });
 
@@ -141,29 +145,6 @@ describe("Init Command", () => {
 
       expect(parsed.source_tool).toBe("claude-code");
       expect(parsed.target_tools).toEqual(["cursor"]);
-    });
-
-    it("should create .vibe-sync-cache directory", async () => {
-      await import("@src/commands/init.js").then((m) =>
-        m.createCacheDirectory("/project"),
-      );
-
-      await expect(access("/project/.vibe-sync-cache")).resolves.not.toThrow();
-    });
-
-    it("should create empty manifest.json in cache", async () => {
-      await import("@src/commands/init.js").then((m) =>
-        m.initializeManifest("/project"),
-      );
-
-      const content = await readFile(
-        "/project/.vibe-sync-cache/manifest.json",
-        "utf-8",
-      );
-      const parsed = JSON.parse(content);
-
-      expect(parsed.version).toBe("1.0.0");
-      expect(parsed.items).toEqual({});
     });
 
     it("should format JSON with indentation", async () => {
@@ -202,10 +183,13 @@ describe("Init Command", () => {
       };
 
       await import("@src/commands/init.js").then((m) =>
-        m.saveConfig(config, "/home/user"),
+        m.saveConfig(config, homeDir),
       );
 
-      const content = await readFile("/home/user/.vibe-sync.json", "utf-8");
+      const content = await readFile(
+        path.join(homeDir, ".vibe-sync.json"),
+        "utf-8",
+      );
       const parsed = JSON.parse(content);
 
       expect(parsed.source_tool).toBe("claude-code");

@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
@@ -10,6 +11,10 @@ import {
   loadMergedConfig,
 } from "@src/core/config-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
+import { isSamePath } from "../utils/path.js";
+
+const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const homeDir = path.join(testRoot, "home", "user");
 
 describe("Config Manager", () => {
   beforeEach(() => {
@@ -26,7 +31,7 @@ describe("Config Manager", () => {
           },
         }),
       },
-      "/home/user": {
+      [homeDir]: {
         ".vibe-sync.json": JSON.stringify({
           version: "3.0.0",
           level: "user",
@@ -48,13 +53,17 @@ describe("Config Manager", () => {
 
   describe("getConfigPath", () => {
     it("should return project config path", () => {
-      const path = getConfigPath("project", "/project");
-      expect(path).toBe("/project/.vibe-sync.json");
+      const configPath = getConfigPath("project", "/project");
+      expect(
+        isSamePath(configPath, path.join("/project", ".vibe-sync.json")),
+      ).toBe(true);
     });
 
     it("should return user config path", () => {
-      const path = getConfigPath("user", undefined, "/home/user");
-      expect(path).toBe("/home/user/.vibe-sync.json");
+      const configPath = getConfigPath("user", undefined, homeDir);
+      expect(
+        isSamePath(configPath, path.join(homeDir, ".vibe-sync.json")),
+      ).toBe(true);
     });
   });
 
@@ -69,7 +78,7 @@ describe("Config Manager", () => {
     });
 
     it("should load user-level config", async () => {
-      const config = await loadConfig("user", "/empty", "/home/user");
+      const config = await loadConfig("user", "/empty", homeDir);
 
       expect(config.level).toBe("user");
       expect(config.source_tool).toBe("cursor");
@@ -124,9 +133,12 @@ describe("Config Manager", () => {
         },
       };
 
-      await saveConfig(config, "user", "/empty", "/home/user");
+      await saveConfig(config, "user", "/empty", homeDir);
 
-      const saved = await readFile("/home/user/.vibe-sync.json", "utf-8");
+      const saved = await readFile(
+        path.join(homeDir, ".vibe-sync.json"),
+        "utf-8",
+      );
       const parsed = JSON.parse(saved);
 
       expect(parsed.level).toBe("user");
@@ -367,8 +379,8 @@ describe("Config Manager", () => {
       // Project config should override user config
       expect(merged.source_tool).toBe("claude-code");
       expect(merged.target_tools).toEqual(["cursor"]);
-      expect(merged.sync_config.skills).toBe(true);
-      expect(merged.sync_config.mcp).toBe(true);
+      expect(merged.sync_config!.skills).toBe(true);
+      expect(merged.sync_config!.mcp).toBe(true);
       expect(merged.level).toBe("project");
     });
 
@@ -388,8 +400,8 @@ describe("Config Manager", () => {
 
       expect(merged.source_tool).toBe("cursor");
       expect(merged.target_tools).toEqual(["opencode"]);
-      expect(merged.sync_config.skills).toBe(true);
-      expect(merged.sync_config.mcp).toBe(false);
+      expect(merged.sync_config!.skills).toBe(true);
+      expect(merged.sync_config!.mcp).toBe(false);
       expect(merged.level).toBe("user");
     });
 
@@ -564,12 +576,12 @@ describe("Config Manager", () => {
 
   describe("loadMergedConfig", () => {
     it("should load and merge user and project configs", async () => {
-      const merged = await loadMergedConfig("/project", "/home/user");
+      const merged = await loadMergedConfig("/project", homeDir);
 
       // Project config should take precedence
       expect(merged.source_tool).toBe("claude-code");
       expect(merged.target_tools).toEqual(["cursor"]);
-      expect(merged.sync_config.skills).toBe(true);
+      expect(merged.sync_config!.skills).toBe(true);
     });
 
     it("should work with only project config", async () => {
@@ -580,7 +592,7 @@ describe("Config Manager", () => {
     });
 
     it("should work with only user config", async () => {
-      const merged = await loadMergedConfig("/nonexistent", "/home/user");
+      const merged = await loadMergedConfig("/nonexistent", homeDir);
 
       expect(merged.source_tool).toBe("cursor");
       expect(merged.level).toBe("user");

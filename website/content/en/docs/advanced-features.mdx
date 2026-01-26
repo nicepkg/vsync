@@ -1,0 +1,452 @@
+---
+title: Advanced Features
+description: Master advanced vibe-sync features - symlink support for Skills, performance optimization (hash-based detection, parallel ops), multi-language CLI (en/zh), rollback safety, and CI/CD integration.
+---
+
+# Advanced Features
+
+Explore advanced features and optimization techniques in vibe-sync.
+
+## Symlink Support (v1.2+)
+
+vibe-sync can use symbolic links for Skills directories instead of copying files, providing instant updates and significant disk space savings.
+
+### How Symlinks Work
+
+When symlinks are enabled:
+
+1. Source tool Skills directory remains untouched
+2. Target tools get symlinks pointing to the source
+3. Changes in source are instantly visible in all targets
+4. No file duplication = disk space saved
+
+```
+~/.claude/skills/my-skill/  (Source - actual files)
+       ↑
+       ├── symlink from ~/.cursor/skills/my-skill/
+       ├── symlink from ~/.opencode/skills/my-skill/
+       └── symlink from ~/.codex/skills/my-skill/
+```
+
+### Enabling Symlinks
+
+#### During First Sync
+
+On your first `vibe-sync sync`, you'll be prompted:
+
+```
+? How would you like to sync Skills?
+  ❯ Use symlinks (recommended - instant updates, saves space)
+    Copy files (traditional - independent copies)
+```
+
+Your choice is saved in `.vibe-sync.json`.
+
+#### Manual Configuration
+
+Edit `.vibe-sync.json`:
+
+```json
+{
+  "use_symlinks_for_skills": true
+}
+```
+
+### Benefits
+
+✅ **Instant Updates**: Edit once in source, changes reflect everywhere
+✅ **Disk Space**: One copy instead of N+1 copies
+✅ **Performance**: Faster sync operations (no file copying)
+✅ **Simplicity**: Single source of truth becomes literal
+
+### Limitations
+
+⚠️ **Platform Support**: Requires OS support for symlinks (works on macOS, Linux, Windows 10+)
+⚠️ **Skills Only**: Currently only Skills support symlinks (MCP, Agents, Commands still copied)
+⚠️ **Permission Issues**: May require admin rights on some systems
+
+### Switching Between Modes
+
+You can change the setting anytime:
+
+```bash
+# 1. Edit config
+vim .vibe-sync.json
+# Change "use_symlinks_for_skills" to true/false
+
+# 2. Re-sync to apply
+vibe-sync sync
+```
+
+vibe-sync will handle the conversion automatically, replacing symlinks with copies or vice versa.
+
+---
+
+## Performance Optimization
+
+vibe-sync is optimized for speed and efficiency.
+
+### Hash-Based Change Detection
+
+Uses SHA256 hashes to detect changes:
+
+- **Fast**: No need to compare file contents
+- **Accurate**: Even tiny changes are detected
+- **Efficient**: Skip unchanged configs automatically
+
+```json
+// Manifest tracks hashes
+{
+  "items": {
+    "skill/my-skill": {
+      "hash": "abc123...",
+      "targets": {
+        "cursor": "abc123..."
+      }
+    }
+  }
+}
+```
+
+### Parallel Operations
+
+Multiple targets are synced in parallel:
+
+```
+Source Read (1s)
+    ↓
+Diff Calculation (0.2s)
+    ↓
+Write to cursor (0.5s)  ─┐
+Write to opencode (0.5s) ├─ Parallel (0.5s total)
+Write to codex (0.5s)   ─┘
+    ↓
+Total: ~1.7s instead of 2.7s
+```
+
+### Smart Caching
+
+The manifest acts as a cache:
+
+- Skip files with matching hashes
+- Avoid redundant I/O operations
+- Incremental syncs are nearly instant
+
+### Atomic Writes
+
+All writes use atomic operations:
+
+1. Write to temporary file
+2. fsync to disk
+3. Atomic rename
+
+**Result**: Crash-safe, no partial writes
+
+---
+
+## Multi-Language CLI (v1.2+)
+
+vibe-sync supports English and Chinese (中文) interfaces.
+
+### Setting Language
+
+#### User-Level (Global)
+
+Edit `~/.vibe-sync.json`:
+
+```json
+{
+  "language": "en"  // or "zh"
+}
+```
+
+#### Environment Variable
+
+```bash
+export VIBE_SYNC_LANG=zh
+vibe-sync sync
+```
+
+### Supported Languages
+
+- `en` - English (default)
+- `zh` - 简体中文 (Simplified Chinese)
+
+### Example Output
+
+**English**:
+```
+📖 Reading source (claude-code)...
+  ✓ Found 3 skills
+  ✓ Found 2 MCP servers
+```
+
+**中文**:
+```
+📖 正在读取源配置 (claude-code)...
+  ✓ 找到 3 个技能
+  ✓ 找到 2 个 MCP 服务器
+```
+
+---
+
+## Advanced Sync Patterns
+
+### Selective Sync
+
+Only sync specific config types:
+
+```json
+{
+  "sync_config": {
+    "skills": true,
+    "mcp": false,      // Don't sync MCP
+    "agents": true,
+    "commands": false  // Don't sync Commands
+  }
+}
+```
+
+### Multi-Source Strategy
+
+For complex setups, use multiple configs:
+
+```bash
+# Project has its own config
+cd ~/my-project
+vibe-sync sync
+
+# User has global config
+vibe-sync sync --user
+```
+
+Both layers can coexist—project configs don't override user configs.
+
+### Temporary Source Switch
+
+Need to import from a different tool temporarily?
+
+```bash
+# 1. Import from Cursor to current source
+vibe-sync import /path/to/cursor/project
+
+# 2. Sync to targets
+vibe-sync sync
+```
+
+Your source tool remains unchanged; you're just importing new items.
+
+---
+
+## Environment Variable Management
+
+### Best Practices
+
+1. **Never hardcode secrets**:
+   ```json
+   // ✅ Good
+   { "API_KEY": "${API_KEY}" }
+
+   // ❌ Bad
+   { "API_KEY": "sk-abc123" }
+   ```
+
+2. **Use defaults for local dev**:
+   ```json
+   {
+     "DATABASE_URL": "${DATABASE_URL:-postgresql://localhost/dev}"
+   }
+   ```
+
+3. **Document required variables**:
+   ```json
+   // In your README.md
+   // Required environment variables:
+   // - API_KEY: Your API key
+   // - DATABASE_URL: Database connection string
+   ```
+
+### Cross-Tool Variable Syntax
+
+vibe-sync automatically converts between tools:
+
+| Source (Claude Code) | Target (Cursor) | Target (OpenCode) |
+|:--------------------|:----------------|:------------------|
+| `${VAR}` | `${env:VAR}` | `{env:VAR}` |
+| `${VAR:-default}` | `${env:VAR}` (default lost) | `{env:VAR}` (default lost) |
+
+**Note**: Defaults are preserved only in Claude Code format.
+
+---
+
+## Rollback and Safety
+
+### Automatic Rollback
+
+If any error occurs during sync:
+
+1. All changes are rolled back automatically
+2. Original configs are restored from backups
+3. No partial sync state
+
+```
+✓ Backup created: cursor/mcp.json
+✓ Backup created: opencode/opencode.json
+❌ Error writing to opencode
+⚠️  Rolling back all changes...
+✅ Rollback complete - all files restored
+```
+
+### Manual Rollback
+
+If you need to undo a sync:
+
+1. Use version control (if configs are committed)
+2. Use system backups (Time Machine, etc.)
+3. Re-run `sync` with previous source state
+
+---
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: Sync AI Tool Configs
+
+on:
+  push:
+    paths:
+      - '.claude/**'
+      - '.vibe-sync.json'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Sync configs
+        run: npx vibe-sync sync --yes
+        env:
+          # Add any required environment variables
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Pre-commit Hook
+
+Automatically sync before commits:
+
+```bash
+#!/bin/bash
+# .git/hooks/pre-commit
+
+# Check if .vibe-sync.json exists
+if [ -f .vibe-sync.json ]; then
+  echo "Running vibe-sync..."
+  npx vibe-sync sync --yes
+
+  # Add synced files to commit
+  git add .cursor/ .opencode/ .codex/
+fi
+```
+
+---
+
+## Watch Mode (Coming in v1.3)
+
+Planned feature for automatic syncing on file changes:
+
+```bash
+# Auto-sync when source configs change
+vibe-sync watch
+```
+
+This will monitor source directories and trigger syncs automatically.
+
+---
+
+## Debugging
+
+### Enable Debug Logging
+
+Set environment variable:
+
+```bash
+export VIBE_SYNC_DEBUG=1
+vibe-sync sync
+```
+
+### Verbose Output
+
+```bash
+vibe-sync sync --verbose
+```
+
+### Check Manifest
+
+Inspect the manifest to see sync state:
+
+```bash
+cat .vibe-sync-cache/manifest.json | jq
+```
+
+---
+
+## Performance Tips
+
+1. **Use Symlinks**: Significantly faster for Skills
+2. **Commit Manifest**: Helps with incremental syncs
+3. **Selective Sync**: Only sync what you need
+4. **Run in Background**: Use `--yes` flag for automation
+
+---
+
+## Advanced Configuration Examples
+
+### Mixed Sync Strategy
+
+```json
+{
+  "sync_config": {
+    "skills": true,      // Full sync
+    "mcp": true,         // Full sync
+    "agents": false,     // Skip (manual management)
+    "commands": false    // Skip (manual management)
+  },
+  "use_symlinks_for_skills": true
+}
+```
+
+### Multi-Tool Development
+
+```bash
+# Project uses Claude Code + Cursor
+cd ~/project-a
+cat .vibe-sync.json
+{
+  "source_tool": "claude-code",
+  "target_tools": ["cursor"]
+}
+
+# Another project uses Cursor + OpenCode
+cd ~/project-b
+cat .vibe-sync.json
+{
+  "source_tool": "cursor",
+  "target_tools": ["opencode"]
+}
+```
+
+---
+
+## Next Steps
+
+- Check the [FAQ](../faq) for common questions
+- Read about [Contributing](../../contributing) to vibe-sync
+- Explore [Configuration](../configuration) details

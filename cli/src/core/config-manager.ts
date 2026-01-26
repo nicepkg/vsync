@@ -1,16 +1,21 @@
 /**
  * Configuration manager for .vibe-sync.json
- * Handles loading, saving, and validation of configuration
+ * Pure config operations (no UI logic)
+ *
+ * Separation of Concerns:
+ * - This module: Pure config read/write/validate
+ * - utils/config-initializer: UI interaction for setup
  */
 
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { cwd } from "node:process";
+import { ZodError, type ZodIssue } from "zod";
 import { getAvailableTools } from "@src/adapters/registry.js";
 import type { VibeConfig, ConfigLevel } from "@src/types/config.js";
+import { createVibeConfigSchema } from "@src/types/config.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
-import { langs } from "@src/utils/i18n.js";
 
 /**
  * Validation result
@@ -138,14 +143,38 @@ export function mergeConfigs(
   const merged: VibeConfig = {
     version: projectConfig.version || userConfig.version,
     level: projectConfig.level, // Always use project level when merging
-    source_tool: projectConfig.source_tool || userConfig.source_tool,
-    target_tools: projectConfig.target_tools || userConfig.target_tools,
-    sync_config: {
-      skills:
-        projectConfig.sync_config?.skills ?? userConfig.sync_config?.skills,
-      mcp: projectConfig.sync_config?.mcp ?? userConfig.sync_config?.mcp,
-    },
   };
+
+  // Add optional fields if present
+  const sourceTool = projectConfig.source_tool || userConfig.source_tool;
+  if (sourceTool) {
+    merged.source_tool = sourceTool;
+  }
+
+  const targetTools = projectConfig.target_tools || userConfig.target_tools;
+  if (targetTools) {
+    merged.target_tools = targetTools;
+  }
+
+  // Only add sync_config if at least one config has it
+  if (projectConfig.sync_config || userConfig.sync_config) {
+    merged.sync_config = {
+      skills:
+        projectConfig.sync_config?.skills ??
+        userConfig.sync_config?.skills ??
+        true,
+      mcp:
+        projectConfig.sync_config?.mcp ?? userConfig.sync_config?.mcp ?? true,
+      agents:
+        projectConfig.sync_config?.agents ??
+        userConfig.sync_config?.agents ??
+        true,
+      commands:
+        projectConfig.sync_config?.commands ??
+        userConfig.sync_config?.commands ??
+        true,
+    };
+  }
 
   // Add last_sync if either config has it (project takes precedence)
   const lastSync = projectConfig.last_sync ?? userConfig.last_sync;
@@ -209,96 +238,106 @@ export async function loadMergedConfig(
 }
 
 /**
- * Validate configuration structure and values
+ * Format a single Zod issue into error message
+ * Pure function - no side effects
+ */
+function formatZodIssue(issue: ZodIssue): string {
+  const path = issue.path?.join(".") || "";
+  let message = issue.message;
+  let includePath = true;
+
+  // Custom messages for specific fields
+  if (path === "use_symlinks_for_skills" && issue.code === "invalid_type") {
+    message = "use_symlinks_for_skills must be a boolean";
+    includePath = false;
+  } else if (path === "language") {
+    if (issue.code === "invalid_type" || issue.code === "invalid_value") {
+      message = "language must be 'en' or 'zh'";
+      includePath = false;
+    }
+  }
+
+  return path && includePath ? `${path}: ${message}` : message;
+}
+
+/**
+ * Flatten nested union errors recursively
+ * Pure function - returns new array without modifying input
+ */
+function flattenZodIssues(issues: ZodIssue[]): ZodIssue[] {
+  return issues.flatMap((issue) => {
+    // Handle invalid_union - recursively flatten nested errors
+    if (issue.code === "invalid_union" && issue.errors) {
+      return issue.errors.flatMap((errorGroup) =>
+        Array.isArray(errorGroup) ? flattenZodIssues(errorGroup) : [],
+      );
+    }
+    // Regular issue - return as is
+    return [issue];
+  });
+}
+
+/**
+ * Extract and format errors from Zod issues, handling nested union errors
+ * Pure function - no external state mutation
+ */
+function extractZodErrors(issues: ZodIssue[]): string[] {
+  // 1. Flatten nested union errors
+  const flatIssues = flattenZodIssues(issues);
+
+  // 2. Format each issue
+  const messages = flatIssues.map(formatZodIssue);
+
+  // 3. Deduplicate
+  return Array.from(new Set(messages));
+}
+
+/**
+ * Validate configuration structure and values using Zod
  *
  * @param config - Configuration to validate
  * @returns Validation result with errors if any
  */
 export function validateConfig(config: VibeConfig): ValidationResult {
-  const errors: string[] = [];
-
-  // Check required fields
-  if (!config.version) {
-    errors.push("Missing required field: version");
-  }
-
-  if (!config.level) {
-    errors.push("Missing required field: level");
-  } else if (config.level !== "project" && config.level !== "user") {
-    errors.push(`Invalid level: ${config.level}`);
-  }
-
-  if (!config.source_tool) {
-    errors.push("Missing required field: source_tool");
-  } else {
-    // Get valid tools from registry (no hardcoding!)
+  try {
+    // Get valid tools from registry (dynamic validation)
     const validTools = getAvailableTools();
-    if (!validTools.includes(config.source_tool)) {
-      errors.push(`Invalid source_tool: ${config.source_tool}`);
+
+    // Create schema with current valid tools
+    const schema = createVibeConfigSchema(validTools);
+
+    // Validate config
+    schema.parse(config);
+
+    return {
+      valid: true,
+      errors: [],
+    };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      // Extract errors, handling nested union errors
+      const errors = extractZodErrors(error.issues);
+
+      return {
+        valid: false,
+        errors,
+      };
     }
+
+    // Unexpected error
+    return {
+      valid: false,
+      errors: [
+        `Validation error: ${error instanceof Error ? error.message : String(error)}`,
+      ],
+    };
   }
-
-  if (!config.target_tools) {
-    errors.push("Missing required field: target_tools");
-  } else {
-    if (!Array.isArray(config.target_tools)) {
-      errors.push("target_tools must be an array");
-    } else if (config.target_tools.length === 0) {
-      errors.push("target_tools cannot be empty");
-    } else {
-      // Get valid tools from registry (no hardcoding!)
-      const validTools = getAvailableTools();
-      for (const tool of config.target_tools) {
-        if (!validTools.includes(tool)) {
-          errors.push(`Invalid target tool: ${tool}`);
-        }
-      }
-
-      // Source tool cannot be in target tools
-      if (
-        config.source_tool &&
-        config.target_tools.includes(config.source_tool)
-      ) {
-        errors.push(
-          "source_tool cannot be included in target_tools (would create a loop)",
-        );
-      }
-    }
-  }
-
-  if (!config.sync_config) {
-    errors.push("Missing required field: sync_config");
-  } else {
-    if (typeof config.sync_config.skills !== "boolean") {
-      errors.push("sync_config.skills must be a boolean");
-    }
-    if (typeof config.sync_config.mcp !== "boolean") {
-      errors.push("sync_config.mcp must be a boolean");
-    }
-
-    // At least one sync type must be enabled
-    if (!config.sync_config.skills && !config.sync_config.mcp) {
-      errors.push("At least one sync type must be enabled (skills or mcp)");
-    }
-  }
-
-  // Validate use_symlinks_for_skills (optional boolean)
-  if (
-    config.use_symlinks_for_skills !== undefined &&
-    typeof config.use_symlinks_for_skills !== "boolean"
-  ) {
-    errors.push("use_symlinks_for_skills must be a boolean");
-  }
-
-  // Validate language (optional 'en' | 'zh')
-  if (config.language !== undefined) {
-    if (!langs.includes(config.language)) {
-      errors.push("language must be 'en' or 'zh'");
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
 }
+
+/**
+ * Required configuration fields (used by config-initializer)
+ */
+export type RequiredConfigField =
+  | "source_tool"
+  | "target_tools"
+  | "sync_config";

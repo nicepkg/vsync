@@ -1,3 +1,6 @@
+import type { MetaRecord } from "nextra";
+import packageJson from "../../../cli/package.json";
+
 export default {
   index: {
     title: "首页",
@@ -13,4 +16,31 @@ export default {
       timestamp: false,
     },
   },
-};
+  docs: {
+    title: "文档",
+    type: "page",
+  },
+  commands: {
+    title: "CLI 命令",
+    type: "page",
+    href: "./docs/cli-commands",
+  },
+  [packageJson.version]: {
+    title: `v${packageJson.version}`,
+    type: "menu",
+    items: {
+      contributing: {
+        title: "贡献指南",
+        href: "./contributing",
+      },
+      changelog: {
+        title: "更新日志",
+        href: "https://github.com/nicepkg/vibe-sync/blob/main/CHANGELOG.md",
+      },
+      release: {
+        title: "发布",
+        href: `https://github.com/nicepkg/vibe-sync/releases`,
+      },
+    },
+  },
+} satisfies MetaRecord;

@@ -103,7 +103,7 @@ describe("BaseAdapter Symlink Handling", () => {
       expect(result.count).toBe(0);
 
       // Verify the skills directory is still a symlink
-      const { isSymlink } = await import("@src/utils/symlink.js");
+      const { isSymlink } = await import("@src/utils/file-ops.js");
       const isLink = await isSymlink("/project/.test/skills");
       expect(isLink).toBe(true);
     });

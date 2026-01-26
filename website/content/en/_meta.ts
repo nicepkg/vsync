@@ -1,4 +1,5 @@
 import type { MetaRecord } from "nextra";
+import packageJson from "../../../cli/package.json";
 
 export default {
   index: {
@@ -13,6 +14,33 @@ export default {
       pagination: false,
       copyPage: false,
       timestamp: false,
+    },
+  },
+  docs: {
+    title: "Documentation",
+    type: "page",
+  },
+  commands: {
+    title: "Commands",
+    type: "page",
+    href: "./docs/cli-commands",
+  },
+  [packageJson.version]: {
+    title: `v${packageJson.version}`,
+    type: "menu",
+    items: {
+      contributing: {
+        title: "Contributing",
+        href: "./contributing",
+      },
+      changelog: {
+        title: "Changelog",
+        href: "https://github.com/nicepkg/vibe-sync/blob/main/CHANGELOG.md",
+      },
+      release: {
+        title: "Release",
+        href: `https://github.com/nicepkg/vibe-sync/releases`,
+      },
     },
   },
 } satisfies MetaRecord;

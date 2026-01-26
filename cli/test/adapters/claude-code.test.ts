@@ -1,8 +1,12 @@
+import path from "node:path";
 import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { ClaudeCodeAdapter } from "@src/adapters/claude-code.js";
 import type { MCPServer } from "@src/types/models.js";
 import * as fileOps from "@src/utils/file-ops.js";
+
+const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const homeDir = path.join(testRoot, "home", "user");
 
 describe("ClaudeCodeAdapter", () => {
   let adapter: ClaudeCodeAdapter;
@@ -204,7 +208,7 @@ No frontmatter, just content.`,
     it("should read user-level MCP servers from .claude.json", async () => {
       mockFs.restore();
       mockFs({
-        "/home": {
+        [homeDir]: {
           ".claude.json": JSON.stringify({
             mcpServers: {
               userPostgres: {
@@ -218,7 +222,7 @@ No frontmatter, just content.`,
 
       const userAdapter = new ClaudeCodeAdapter({
         tool: "claude-code",
-        baseDir: "/home",
+        baseDir: homeDir,
         level: "user",
       });
 

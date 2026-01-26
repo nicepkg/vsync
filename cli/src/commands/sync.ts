@@ -7,10 +7,7 @@ import { join } from "node:path";
 import { cwd } from "node:process";
 import chalk from "chalk";
 import { Command } from "commander";
-import inquirer from "inquirer";
-import ora from "ora";
 import { getAdapter, getToolConfigFiles } from "@src/adapters/registry.js";
-import { loadConfig } from "@src/core/config-manager.js";
 import {
   loadManifest,
   saveManifest,
@@ -18,7 +15,7 @@ import {
   updateAfterUpdate,
   updateAfterDelete,
 } from "@src/core/manifest-manager.js";
-import { generatePlan, formatPlan, validatePlan } from "@src/core/planner.js";
+import { generatePlan, validatePlan } from "@src/core/planner.js";
 import {
   createBackup,
   restoreBackup,
@@ -31,6 +28,10 @@ import {
   cleanupDirectoryBackup,
 } from "@src/core/symlink-sync.js";
 import type { DirectoryBackupInfo } from "@src/core/symlink-sync.js";
+import {
+  SyncExecutor,
+  SourceData as SourceDataClass,
+} from "@src/core/sync-executor.js";
 import type {
   ConfigLevel,
   SyncMode,
@@ -45,6 +46,7 @@ import type {
   Command as VibeCommand,
 } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
+import { ensureConfig } from "@src/utils/config-initializer.js";
 import { t } from "@src/utils/i18n.js";
 import {
   debug,
@@ -52,6 +54,7 @@ import {
   debugObject,
   debugTiming,
 } from "@src/utils/logger.js";
+import { SyncUI } from "@src/utils/sync-ui.js";
 
 /**
  * Source configuration data
@@ -86,23 +89,6 @@ export interface SyncOperations {
   created: Array<{ type: ItemType; name: string; hash: string }>;
   updated: Array<{ type: ItemType; name: string; hash: string }>;
   deleted: Array<{ type: ItemType; name: string }>;
-}
-
-/**
- * Load sync configuration
- *
- * @param projectDir - Project directory
- * @param isUserLevel - Whether to load user-level config
- * @returns Loaded config
- */
-export async function loadSyncConfig(
-  projectDir: string,
-  isUserLevel: boolean,
-): Promise<VibeConfig> {
-  const level = isUserLevel ? "user" : "project";
-  const config = await loadConfig(level, projectDir);
-
-  return config;
 }
 
 /**
@@ -173,7 +159,7 @@ export function shouldPromptForSymlinks(
   }
 
   // Don't prompt if skills not in sync config
-  if (!config.sync_config.skills) {
+  if (!config.sync_config?.skills) {
     return false;
   }
 
@@ -187,72 +173,161 @@ export function shouldPromptForSymlinks(
 }
 
 /**
- * Read target tool configurations
+ * Target configuration with capabilities
+ */
+interface TargetConfig {
+  skills: Skill[];
+  mcpServers: MCPServer[];
+  agents: Agent[];
+  commands: VibeCommand[];
+  capabilities: import("@src/adapters/base.js").AdapterCapabilities;
+}
+
+/**
+ * Read items with fallback to empty array on error
+ * Single responsibility: handle one type of read operation
+ */
+async function readItemsWithFallback<T>(
+  reader: () => Promise<T[]>,
+  itemType: string,
+  tool: ToolName,
+  mode: SyncMode,
+): Promise<T[]> {
+  try {
+    return await reader();
+  } catch (error) {
+    // File not found is expected on first sync - don't warn
+    const isFileNotFound =
+      error instanceof Error &&
+      (error.message.includes("ENOENT") || error.message.includes("not found"));
+
+    if (isFileNotFound) {
+      return [];
+    }
+
+    // ⚠️ CRITICAL: Non-ENOENT errors in prune mode could cause data loss!
+    // If we can't read the target config (permission, corruption, etc.),
+    // returning [] would make prune think "user deleted everything" → delete all
+    if (mode === "prune") {
+      throw new Error(
+        `Cannot read ${itemType} from ${tool} in prune mode: ${error instanceof Error ? error.message : String(error)}. ` +
+          `Prune mode requires reliable target reads to prevent accidental deletion.`,
+      );
+    }
+
+    // Safe mode: Warn but continue (user can fix and re-sync)
+    console.warn(
+      `⚠️  Warning: Failed to read ${itemType} from ${tool}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return [];
+  }
+}
+
+/**
+ * Read configuration from a single tool
+ * Single responsibility: coordinate reading all item types for one tool
+ */
+async function readToolConfig(
+  tool: ToolName,
+  projectDir: string,
+  level: ConfigLevel,
+  mode: SyncMode,
+): Promise<TargetConfig> {
+  const adapter = getAdapter({ tool, baseDir: projectDir, level });
+  const capabilities = adapter.getCapabilities();
+
+  // Read each type in parallel if supported
+  // Pass mode to enable strict error handling in prune mode
+  const [skills, mcpServers, agents, commands] = await Promise.all([
+    capabilities.skills
+      ? readItemsWithFallback(() => adapter.readSkills(), "skills", tool, mode)
+      : Promise.resolve([]),
+    capabilities.mcp
+      ? readItemsWithFallback(
+          () => adapter.readMCPServers(),
+          "MCP servers",
+          tool,
+          mode,
+        )
+      : Promise.resolve([]),
+    capabilities.agents
+      ? readItemsWithFallback(() => adapter.readAgents(), "agents", tool, mode)
+      : Promise.resolve([]),
+    capabilities.commands
+      ? readItemsWithFallback(
+          () => adapter.readCommands(),
+          "commands",
+          tool,
+          mode,
+        )
+      : Promise.resolve([]),
+  ]);
+
+  return { skills, mcpServers, agents, commands, capabilities };
+}
+
+/**
+ * Read configurations from all target tools in parallel
  *
  * @param targetTools - Target tool names
  * @param projectDir - Project directory
- * @returns Map of target data
+ * @param level - Config level
+ * @returns Map of target data with capabilities
  */
-async function readTargetConfigs(targetTools: ToolName[]): Promise<
-  Record<
-    ToolName,
-    {
-      skills: Skill[];
-      mcpServers: MCPServer[];
-      agents: Agent[];
-      commands: VibeCommand[];
-    }
-  >
-> {
-  const targetData = {} as Record<
-    ToolName,
-    {
-      skills: Skill[];
-      mcpServers: MCPServer[];
-      agents: Agent[];
-      commands: VibeCommand[];
-    }
-  >;
+async function readTargetConfigs(
+  targetTools: ToolName[],
+  projectDir: string,
+  level: ConfigLevel,
+  mode: SyncMode,
+): Promise<Record<ToolName, TargetConfig>> {
+  // Parallel read for performance
+  const configs = await Promise.all(
+    targetTools.map((tool) => readToolConfig(tool, projectDir, level, mode)),
+  );
 
-  // For vibe-sync, target tools are write-only.
-  // We rely on the manifest to track what was previously written,
-  // rather than reading from target tools.
-  // This allows us to support write-only adapters like Cursor.
-  for (const tool of targetTools) {
-    targetData[tool] = {
-      skills: [],
-      mcpServers: [],
-      agents: [],
-      commands: [],
-    };
-  }
-
-  return targetData;
+  // Convert array to record
+  return Object.fromEntries(
+    targetTools.map((tool, i) => [tool, configs[i]]),
+  ) as Record<ToolName, TargetConfig>;
 }
 
 /**
  * Calculate sync diff for all targets
  *
  * @param sourceData - Source configuration
+ * @param sourceTool - Source tool name
  * @param targetTools - Target tool names
  * @param manifest - Current manifest
  * @param mode - Sync mode
+ * @param syncConfig - Sync configuration (what to sync)
  * @param projectDir - Project directory
+ * @param level - Config level
  * @returns Sync plan
  */
 export async function calculateSyncDiff(
   sourceData: SourceData,
+  sourceTool: ToolName,
   targetTools: ToolName[],
   manifest: Manifest,
   mode: SyncMode,
+  syncConfig: VibeConfig["sync_config"],
+  projectDir: string,
+  level: ConfigLevel,
 ): Promise<SyncPlan> {
-  const targetData = await readTargetConfigs(targetTools);
+  const targetData = await readTargetConfigs(
+    targetTools,
+    projectDir,
+    level,
+    mode,
+  );
 
+  // Filter source data based on sync_config
+  // Only include items that are enabled in configuration
   const plan = generatePlan({
-    sourceSkills: sourceData.skills,
-    sourceMCPServers: sourceData.mcpServers,
-    sourceAgents: sourceData.agents,
-    sourceCommands: sourceData.commands,
+    sourceSkills: syncConfig?.skills ? sourceData.skills : [],
+    sourceMCPServers: syncConfig?.mcp ? sourceData.mcpServers : [],
+    sourceAgents: syncConfig?.agents ? sourceData.agents : [],
+    sourceCommands: syncConfig?.commands ? sourceData.commands : [],
     targetSkills: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.skills]),
     ),
@@ -265,9 +340,15 @@ export async function calculateSyncDiff(
     targetCommands: Object.fromEntries(
       Object.entries(targetData).map(([tool, data]) => [tool, data.commands]),
     ),
+    targetCapabilities: Object.fromEntries(
+      Object.entries(targetData).map(([tool, data]) => [
+        tool,
+        data.capabilities,
+      ]),
+    ),
     manifest,
     mode,
-    sourceTool: "claude-code", // Will be passed from config
+    sourceTool,
     targetTools,
   });
 
@@ -319,7 +400,15 @@ export async function executeSyncPlan(
       }
     }
 
-    // Phase 2: Execute sync operations for each target
+    // Phase 2: Execute sync operations for each target (using SyncExecutor - DRY principle)
+    // Convert source data to SourceDataClass for proper abstraction
+    const sourceDataObj = new SourceDataClass(
+      sourceData.skills,
+      sourceData.mcpServers,
+      sourceData.agents,
+      sourceData.commands,
+    );
+
     for (const [toolName, diff] of Object.entries(plan.diffs)) {
       if (!diff) continue;
 
@@ -330,186 +419,22 @@ export async function executeSyncPlan(
         level,
       });
 
-      const result: TargetSyncResult = {
-        success: true,
-        created: 0,
-        updated: 0,
-        deleted: 0,
-        errors: [],
-      };
-
       try {
-        // Collect skills and MCP servers to CREATE
-        const skillsToCreate = diff.toCreate
-          .filter((op) => op.itemType === "skill")
-          .map((op) => sourceData.skills.find((s) => s.name === op.name))
-          .filter((s): s is NonNullable<typeof s> => s !== undefined);
+        // Use SyncExecutor to handle all sync logic (eliminates 200+ lines of duplication)
+        const executor = new SyncExecutor(adapter, sourceDataObj);
+        const result = await executor.execute(diff);
 
-        const mcpToCreate = diff.toCreate
-          .filter((op) => op.itemType === "mcp")
-          .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
-          .filter((m): m is NonNullable<typeof m> => m !== undefined);
-
-        // Collect skills and MCP servers to UPDATE
-        const skillsToUpdate = diff.toUpdate
-          .filter((op) => op.itemType === "skill")
-          .map((op) => sourceData.skills.find((s) => s.name === op.name))
-          .filter((s): s is NonNullable<typeof s> => s !== undefined);
-
-        const mcpToUpdate = diff.toUpdate
-          .filter((op) => op.itemType === "mcp")
-          .map((op) => sourceData.mcpServers.find((m) => m.name === op.name))
-          .filter((m): m is NonNullable<typeof m> => m !== undefined);
-
-        // Collect agents to CREATE
-        const agentsToCreate = diff.toCreate
-          .filter((op) => op.itemType === "agent")
-          .map((op) => sourceData.agents.find((a) => a.name === op.name))
-          .filter((a): a is NonNullable<typeof a> => a !== undefined);
-
-        // Collect agents to UPDATE
-        const agentsToUpdate = diff.toUpdate
-          .filter((op) => op.itemType === "agent")
-          .map((op) => sourceData.agents.find((a) => a.name === op.name))
-          .filter((a): a is NonNullable<typeof a> => a !== undefined);
-
-        // Collect commands to CREATE
-        const commandsToCreate = diff.toCreate
-          .filter((op) => op.itemType === "command")
-          .map((op) => sourceData.commands.find((c) => c.name === op.name))
-          .filter((c): c is NonNullable<typeof c> => c !== undefined);
-
-        // Collect commands to UPDATE
-        const commandsToUpdate = diff.toUpdate
-          .filter((op) => op.itemType === "command")
-          .map((op) => sourceData.commands.find((c) => c.name === op.name))
-          .filter((c): c is NonNullable<typeof c> => c !== undefined);
-
-        // Write skills (CREATE + UPDATE combined)
-        const allSkills = [...skillsToCreate, ...skillsToUpdate];
-        if (allSkills.length > 0) {
-          try {
-            const writeResult = await adapter.writeSkills(allSkills);
-            if (writeResult.success) {
-              // Use actual write count (may be 0 for symlinked directories)
-              if (writeResult.count > 0) {
-                result.created += skillsToCreate.length;
-                result.updated += skillsToUpdate.length;
-              }
-            } else {
-              result.errors.push(writeResult.error || "Failed to write skills");
-              result.success = false;
-              throw new Error("Skill write failed - initiating rollback");
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to write skills: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
-
-        // Write MCP servers (CREATE + UPDATE combined)
-        const allMCP = [...mcpToCreate, ...mcpToUpdate];
-        if (allMCP.length > 0) {
-          try {
-            const writeResult = await adapter.writeMCPServers(allMCP);
-            if (writeResult.success) {
-              result.created += mcpToCreate.length;
-              result.updated += mcpToUpdate.length;
-            } else {
-              result.errors.push(
-                writeResult.error || "Failed to write MCP servers",
-              );
-              result.success = false;
-              throw new Error("MCP write failed - initiating rollback");
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to write MCP servers: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
-
-        // Write agents (CREATE + UPDATE combined)
-        const allAgents = [...agentsToCreate, ...agentsToUpdate];
-        if (allAgents.length > 0) {
-          try {
-            const writeResult = await adapter.writeAgents(allAgents);
-            if (writeResult.success) {
-              result.created += agentsToCreate.length;
-              result.updated += agentsToUpdate.length;
-            } else {
-              result.errors.push(writeResult.error || "Failed to write agents");
-              result.success = false;
-              throw new Error("Agent write failed - initiating rollback");
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to write agents: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
-
-        // Write commands (CREATE + UPDATE combined)
-        const allCommands = [...commandsToCreate, ...commandsToUpdate];
-        if (allCommands.length > 0) {
-          try {
-            const writeResult = await adapter.writeCommands(allCommands);
-            if (writeResult.success) {
-              result.created += commandsToCreate.length;
-              result.updated += commandsToUpdate.length;
-            } else {
-              result.errors.push(
-                writeResult.error || "Failed to write commands",
-              );
-              result.success = false;
-              throw new Error("Command write failed - initiating rollback");
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to write commands: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
-
-        // Execute DELETE operations (one at a time)
-        for (const op of diff.toDelete) {
-          try {
-            if (op.itemType === "skill") {
-              await adapter.deleteSkill(op.name);
-              result.deleted++;
-            } else if (op.itemType === "mcp") {
-              await adapter.deleteMCPServer(op.name);
-              result.deleted++;
-            } else if (op.itemType === "agent") {
-              await adapter.deleteAgent(op.name);
-              result.deleted++;
-            } else if (op.itemType === "command") {
-              await adapter.deleteCommand(op.name);
-              result.deleted++;
-            }
-          } catch (error) {
-            result.errors.push(
-              `Failed to delete ${op.itemType} ${op.name}: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            result.success = false;
-            throw error;
-          }
-        }
+        results[tool] = {
+          success: result.success,
+          created: result.created,
+          updated: result.updated,
+          deleted: result.deleted,
+          errors: result.errors,
+        };
       } catch (error) {
-        result.success = false;
-        if (!result.errors.some((e) => e.includes("Fatal error"))) {
-          result.errors.push(
-            `Fatal error syncing to ${tool}: ${error instanceof Error ? error.message : String(error)}`,
-          );
+        // Error already handled by SyncExecutor
+        if (error instanceof Error) {
+          debugError(`Error syncing to ${tool}:`, error);
         }
 
         // Rollback all changes on error
@@ -526,8 +451,6 @@ export async function executeSyncPlan(
 
         throw error; // Re-throw to exit sync
       }
-
-      results[tool] = result;
     }
 
     // Phase 3: Success - cleanup all backups
@@ -563,7 +486,16 @@ export async function updateManifestAfterSync(
 
   // Update for UPDATE operations
   for (const item of operations.updated) {
-    updateAfterUpdate(manifest, item.type, item.name, item.hash, targetTool);
+    const key = `${item.type}/${item.name}`;
+    const manifestItem = manifest.items[key];
+
+    // If item doesn't exist in manifest yet (first time syncing to this target),
+    // treat it as CREATE instead of UPDATE
+    if (!manifestItem || !manifestItem.targets[targetTool]) {
+      updateAfterCreate(manifest, item.type, item.name, item.hash, targetTool);
+    } else {
+      updateAfterUpdate(manifest, item.type, item.name, item.hash, targetTool);
+    }
   }
 
   // Update for DELETE operations
@@ -592,8 +524,9 @@ export async function syncWithSymlinks(
   }
 
   // Get source adapter to determine source skills directory
+  // Config fields are guaranteed by ensureConfig validation
   const sourceAdapter = getAdapter({
-    tool: config.source_tool,
+    tool: config.source_tool!,
     baseDir: projectDir,
     level: config.level,
   });
@@ -645,52 +578,15 @@ export async function syncWithSymlinks(
  * @param config - Current config
  * @param projectDir - Project directory
  */
+/**
+ * Prompt for symlink usage (simplified - delegates to UI service)
+ * Updates config with user's choice and saves
+ */
 async function promptForSymlinkUsage(
   config: VibeConfig,
   projectDir: string,
 ): Promise<void> {
-  // Display info
-  console.log(chalk.cyan(t("commands.sync.symlinkPromptTitle")));
-  console.log(
-    chalk.gray(
-      `  ${t("commands.sync.symlinkPromptSource", { tool: config.source_tool })}`,
-    ),
-  );
-  console.log(
-    chalk.gray(
-      `  ${t("commands.sync.symlinkPromptTargets", { tools: config.target_tools.join(", ") })}`,
-    ),
-  );
-  console.log();
-  console.log(t("commands.sync.symlinkPromptInfo"));
-  console.log();
-
-  // Ask user
-  const { useSymlinks } = await inquirer.prompt<{ useSymlinks: boolean }>([
-    {
-      type: "list",
-      name: "useSymlinks",
-      message: t("commands.sync.symlinkPromptQuestion"),
-      choices: [
-        {
-          name: t("commands.sync.symlinkChoiceSymlink"),
-          value: true,
-        },
-        {
-          name: t("commands.sync.symlinkChoiceCopy"),
-          value: false,
-        },
-      ],
-      default: true, // Recommend symlinks
-    },
-  ]);
-
-  // Show warning/benefits based on choice
-  if (useSymlinks) {
-    console.log(chalk.yellow(`\n  ${t("commands.sync.symlinkWarning")}`));
-    console.log(chalk.blue(`  ${t("commands.sync.symlinkBenefits")}`));
-  }
-  console.log();
+  const useSymlinks = await SyncUI.promptForSymlinkUsage(config);
 
   // Update config with user's choice
   config.use_symlinks_for_skills = useSymlinks;
@@ -719,69 +615,71 @@ export async function syncCommand(options: {
 
     debug("Sync command started", { projectDir, mode, options });
 
-    // Load configuration
-    const spinner = ora(t("commands.sync.loadingConfig")).start();
-    const config = await loadSyncConfig(projectDir, options.user || false);
+    // Load configuration (with auto-init if needed)
+    const spinner = SyncUI.showLoadingConfig();
+    const config = await ensureConfig(projectDir, options.user || false, {
+      spinner,
+      requireFields: ["source_tool", "target_tools", "sync_config"],
+    });
     debugObject("Loaded config", config);
-    spinner.succeed(t("commands.sync.configLoaded"));
+    SyncUI.configLoaded(spinner);
 
     // Read source configuration
-    const readSpinner = ora(
-      t("commands.sync.reading", { tool: config.source_tool }),
-    ).start();
+    const readSpinner = SyncUI.showReadingSource(config.source_tool!);
     const sourceData = await readSourceConfig(
-      config.source_tool,
+      config.source_tool!,
       projectDir,
       config.level,
     );
-    readSpinner.succeed(
-      t("commands.sync.readComplete", {
-        skills: sourceData.skills.length,
-        mcp: sourceData.mcpServers.length,
-        agents: sourceData.agents.length,
-        commands: sourceData.commands.length,
-      }),
-    );
+    SyncUI.readComplete(readSpinner, {
+      skills: sourceData.skills.length,
+      mcp: sourceData.mcpServers.length,
+      agents: sourceData.agents.length,
+      commands: sourceData.commands.length,
+    });
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
 
     // Check if we should prompt for symlink usage (only on first skills sync)
-    if (shouldPromptForSymlinks(config, manifest, config.target_tools)) {
+    // Config fields are guaranteed by ensureConfig validation
+    if (shouldPromptForSymlinks(config, manifest, config.target_tools!)) {
       await promptForSymlinkUsage(config, projectDir);
     }
 
     // Calculate diff and generate plan
-    const planSpinner = ora(t("commands.sync.calculating")).start();
+    // Debug: Show manifest state before calculating diff
+    debug("Manifest items count:", Object.keys(manifest.items).length);
+    if (Object.keys(manifest.items).length > 0) {
+      debug(
+        "Sample manifest items:",
+        Object.keys(manifest.items).slice(0, 5).join(", "),
+      );
+    }
+
+    const planSpinner = SyncUI.showCalculating();
     const plan = await calculateSyncDiff(
       sourceData,
-      config.target_tools,
+      config.source_tool!,
+      config.target_tools!,
       manifest,
       mode,
+      config.sync_config!,
+      projectDir,
+      config.level,
     );
-    planSpinner.succeed(t("commands.sync.planGenerated"));
+    SyncUI.planGenerated(planSpinner);
 
     // Display plan
-    console.log(formatPlan(plan));
+    SyncUI.displayPlan(plan);
 
     // Validate plan
     const validation = validatePlan(plan);
     if (!validation.valid) {
-      console.error(
-        chalk.red(`\n❌ ${t("commands.sync.planValidationFailed")}`),
-      );
-      validation.errors.forEach((err) =>
-        console.error(chalk.red(`  - ${err}`)),
-      );
-      process.exit(1);
+      SyncUI.displayValidationErrors(validation);
     }
 
-    if (validation.warnings && validation.warnings.length > 0) {
-      console.log(chalk.yellow(`\n⚠️  ${t("commands.sync.warnings")}`));
-      validation.warnings.forEach((warn) =>
-        console.log(chalk.yellow(`  - ${warn}`)),
-      );
-    }
+    SyncUI.displayValidationWarnings(validation);
 
     // Check if there are any operations
     const hasOperations = Object.values(plan.diffs).some(
@@ -793,54 +691,48 @@ export async function syncCommand(options: {
     );
 
     if (!hasOperations) {
-      console.log(chalk.green(`\n✅ ${t("commands.sync.noChanges")}\n`));
+      SyncUI.showNoChanges();
       return;
     }
 
     // Dry run - skip execution
     if (options.dryRun) {
-      console.log(chalk.blue(`\n💡 ${t("commands.sync.dryRun")}\n`));
+      SyncUI.showDryRun();
       return;
     }
 
     // Prompt for confirmation (skip if --yes flag is provided)
     if (!options.yes) {
-      const { confirm } = await inquirer.prompt<{ confirm: boolean }>([
-        {
-          type: "confirm",
-          name: "confirm",
-          message: t("commands.sync.confirmPrompt"),
-          default: false,
-        },
-      ]);
+      const isDestructive = mode === "prune";
+      const confirm = await SyncUI.confirmSync(isDestructive);
 
       if (!confirm) {
-        console.log(chalk.yellow(`\n⚠️  ${t("commands.sync.cancelled")}\n`));
+        SyncUI.showCancelled();
         return;
       }
     }
 
     // Setup symlinks if enabled
     if (shouldUseSymlinks(config)) {
-      const symlinkSpinner = ora(t("commands.sync.settingUpSymlinks")).start();
+      const symlinkSpinner = SyncUI.showSettingUpSymlinks();
       try {
         await syncWithSymlinks(config, plan, projectDir);
-        symlinkSpinner.succeed(t("commands.sync.symlinksConfigured"));
+        SyncUI.symlinksConfigured(symlinkSpinner);
       } catch (error) {
-        symlinkSpinner.fail(t("commands.sync.symlinksFailed"));
+        SyncUI.symlinksFailed(symlinkSpinner);
         throw error;
       }
     }
 
     // Execute sync
-    const execSpinner = ora(t("commands.sync.syncing")).start();
+    const execSpinner = SyncUI.showSyncing();
     const results = await executeSyncPlan(
       plan,
       sourceData,
       projectDir,
       config.level,
     );
-    execSpinner.succeed(t("commands.sync.completed"));
+    SyncUI.syncCompleted(execSpinner);
 
     // Update manifest
     for (const [toolName, result] of Object.entries(results)) {
@@ -850,16 +742,24 @@ export async function syncCommand(options: {
       const diff = plan.diffs[tool];
       if (!diff) continue;
 
+      // Use SourceData class method instead of inline if-else chain (DRY principle)
+      const sourceDataObj = new SourceDataClass(
+        sourceData.skills,
+        sourceData.mcpServers,
+        sourceData.agents,
+        sourceData.commands,
+      );
+
       const operations: SyncOperations = {
         created: diff.toCreate.map((op) => ({
           type: op.itemType,
           name: op.name,
-          hash: op.newHash || "",
+          hash: sourceDataObj.getHash(op.itemType, op.name),
         })),
         updated: diff.toUpdate.map((op) => ({
           type: op.itemType,
           name: op.name,
-          hash: op.newHash || "",
+          hash: sourceDataObj.getHash(op.itemType, op.name),
         })),
         deleted: diff.toDelete.map((op) => ({
           type: op.itemType,
@@ -871,39 +771,20 @@ export async function syncCommand(options: {
     }
 
     // Display summary
-    console.log(chalk.bold(`\n📊 ${t("commands.sync.syncSummary")}\n`));
-    for (const [toolName, result] of Object.entries(results)) {
-      if (!result) continue;
-
-      const icon = result.success ? "✅" : "❌";
-      console.log(chalk.bold(`${icon} ${toolName}:`));
-      console.log(`  ${t("commands.sync.created")}: ${result.created}`);
-      console.log(`  ${t("commands.sync.updated")}: ${result.updated}`);
-      console.log(`  ${t("commands.sync.deleted")}: ${result.deleted}`);
-
-      if (result.errors.length > 0) {
-        console.log(chalk.red(`  ${t("commands.sync.errors")}:`));
-        result.errors.forEach((err) => console.log(chalk.red(`    - ${err}`)));
-      }
-    }
+    SyncUI.displaySyncSummary(results);
 
     const allSuccess = Object.values(results).every((r) => r?.success);
-    if (allSuccess) {
-      console.log(chalk.green(`\n✅ ${t("commands.sync.syncSuccess")}\n`));
-      endTiming();
-    } else {
-      console.log(
-        chalk.yellow(`\n⚠️  ${t("commands.sync.completedWithErrors")}\n`),
-      );
+    endTiming();
+
+    if (!allSuccess) {
       debugObject("Sync results with errors", results);
-      endTiming();
       process.exit(1);
     }
   } catch (error) {
     debugError("Sync command failed", error);
     endTiming();
     if (error instanceof Error) {
-      console.error(chalk.red(`\n❌ ${t("common.error")}: ${error.message}\n`));
+      SyncUI.showError(`${t("common.error")}: ${error.message}`);
       process.exit(1);
     }
   }

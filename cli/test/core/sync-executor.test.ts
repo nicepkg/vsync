@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { ToolAdapter } from "@src/adapters/base.js";
-import { SyncExecutor, type SourceData } from "@src/core/sync-executor.js";
+import { SyncExecutor, SourceData } from "@src/core/sync-executor.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { DiffResult } from "@src/types/plan.js";
 
@@ -24,36 +24,50 @@ describe("SyncExecutor", () => {
       getSkillsDir: vi.fn(() => ".test/skills"),
       getAgentsDir: vi.fn(() => ".test/agents"),
       getCommandsDir: vi.fn(() => ".test/commands"),
+      getCapabilities: vi.fn(() => ({
+        skills: true,
+        mcp: true,
+        agents: true,
+        commands: true,
+      })),
       readSkills: vi.fn(async () => []),
       readMCPServers: vi.fn(async () => []),
       readAgents: vi.fn(async () => []),
       readCommands: vi.fn(async () => []),
-      writeSkills: vi.fn(async () => ({ success: true, count: 0 })),
-      writeMCPServers: vi.fn(async () => ({ success: true, count: 0 })),
-      writeAgents: vi.fn(async () => ({ success: true, count: 0 })),
-      writeCommands: vi.fn(async () => ({ success: true, count: 0 })),
+      writeSkills: vi.fn(async (items) => ({
+        success: true,
+        count: items.length,
+      })),
+      writeMCPServers: vi.fn(async (items) => ({
+        success: true,
+        count: items.length,
+      })),
+      writeAgents: vi.fn(async (items) => ({
+        success: true,
+        count: items.length,
+      })),
+      writeCommands: vi.fn(async (items) => ({
+        success: true,
+        count: items.length,
+      })),
       deleteSkill: vi.fn(async () => {}),
       deleteMCPServer: vi.fn(async () => {}),
       deleteAgent: vi.fn(async () => {}),
       deleteCommand: vi.fn(async () => {}),
     } as ToolAdapter;
 
-    // Source data
-    sourceData = {
-      skills: [
+    // Source data (now using class instead of plain object)
+    sourceData = new SourceData(
+      [
         { name: "skill1", content: "content1", hash: "hash1" },
         { name: "skill2", content: "content2", hash: "hash2" },
       ] as Skill[],
-      mcpServers: [
+      [
         { name: "mcp1", type: "stdio", command: "cmd1", hash: "hash3" },
       ] as MCPServer[],
-      agents: [
-        { name: "agent1", content: "content3", hash: "hash4" },
-      ] as Agent[],
-      commands: [
-        { name: "cmd1", content: "content4", hash: "hash5" },
-      ] as Command[],
-    };
+      [{ name: "agent1", content: "content3", hash: "hash4" }] as Agent[],
+      [{ name: "cmd1", content: "content4", hash: "hash5" }] as Command[],
+    );
   });
 
   describe("execute", () => {
@@ -352,6 +366,48 @@ describe("SyncExecutor", () => {
       // MCP write should not be called since skills failed
       expect(mockAdapter.writeSkills).toHaveBeenCalled();
       expect(mockAdapter.writeMCPServers).not.toHaveBeenCalled();
+    });
+
+    it("should skip gracefully when tool does not support a feature", async () => {
+      // Mock Codex-like behavior: supports skills but not commands
+      vi.mocked(mockAdapter.writeCommands).mockResolvedValue({
+        success: false,
+        count: 0,
+        error: "codex does not support commands",
+      });
+
+      const diff: DiffResult = {
+        tool: "codex",
+        toCreate: [
+          {
+            type: "create",
+            itemType: "skill",
+            name: "skill1",
+            description: "new",
+            reason: "new",
+          },
+          {
+            type: "create",
+            itemType: "command",
+            name: "cmd1",
+            description: "new",
+            reason: "new",
+          },
+        ],
+        toUpdate: [],
+        toDelete: [],
+        toSkip: [],
+      };
+
+      const executor = new SyncExecutor(mockAdapter, sourceData);
+      const result = await executor.execute(diff);
+
+      // Should succeed (not rollback) and only count the skill
+      expect(result.success).toBe(true);
+      expect(result.created).toBe(1); // Only skill counted
+      expect(result.errors).toHaveLength(0); // No errors logged
+      expect(mockAdapter.writeSkills).toHaveBeenCalled();
+      expect(mockAdapter.writeCommands).toHaveBeenCalled();
     });
   });
 });

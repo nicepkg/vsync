@@ -6,10 +6,27 @@
 import fs from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { syncCommand } from "@src/commands/sync.js";
 import { saveConfig } from "@src/core/config-manager.js";
+import { getProjectCacheDir } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
+
+// Mock config-initializer to skip prompts
+vi.mock("@src/utils/config-initializer.js", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@src/utils/config-initializer.js")>();
+  return {
+    ...actual,
+    ensureLanguageConfig: vi.fn().mockResolvedValue("en"),
+    ensureConfig: vi
+      .fn()
+      .mockImplementation(async (projectDir, isUserLevel) => {
+        const { loadConfig } = await import("@src/core/config-manager.js");
+        return await loadConfig(isUserLevel ? "user" : "project", projectDir);
+      }),
+  };
+});
 
 describe("Full Sync Flow Integration", () => {
   let testDir: string;
@@ -28,7 +45,15 @@ describe("Full Sync Flow Integration", () => {
     claudeDir = path.join(testDir, ".claude");
     cursorDir = path.join(testDir, ".cursor");
     opencodeDir = path.join(testDir, ".opencode");
-    cacheDir = path.join(testDir, ".vibe-sync-cache");
+    // Cache dir is now in user home directory
+    cacheDir = getProjectCacheDir(testDir);
+
+    // Clean cache directory if it exists from previous test
+    try {
+      await fs.rm(cacheDir, { recursive: true, force: true });
+    } catch {
+      // Ignore errors if cache dir doesn't exist
+    }
 
     // Create directory structure
     await fs.mkdir(path.join(claudeDir, "skills"), { recursive: true });
@@ -37,6 +62,24 @@ describe("Full Sync Flow Integration", () => {
     await fs.mkdir(path.join(cursorDir), { recursive: true });
     await fs.mkdir(path.join(opencodeDir), { recursive: true });
     await fs.mkdir(cacheDir, { recursive: true });
+
+    // Create minimal user config to avoid language prompts
+    const userConfigPath = path.join(
+      process.env.HOME || "~",
+      ".vibe-sync.json",
+    );
+    try {
+      await fs.writeFile(
+        userConfigPath,
+        JSON.stringify({
+          version: "1.0.0",
+          level: "user",
+          language: "en",
+        }),
+      );
+    } catch {
+      // Ignore if we can't write to home directory
+    }
 
     // Change to test directory
     process.chdir(testDir);
@@ -48,6 +91,24 @@ describe("Full Sync Flow Integration", () => {
 
     // Cleanup test directory
     await fs.rm(testDir, { recursive: true, force: true });
+
+    // Cleanup cache directory in user home
+    try {
+      await fs.rm(cacheDir, { recursive: true, force: true });
+    } catch {
+      // Ignore errors if cache dir doesn't exist
+    }
+
+    // Cleanup user config file
+    const userConfigPath = path.join(
+      process.env.HOME || "~",
+      ".vibe-sync.json",
+    );
+    try {
+      await fs.unlink(userConfigPath);
+    } catch {
+      // Ignore if file doesn't exist
+    }
   });
 
   describe("Claude Code → Cursor sync", () => {
@@ -688,4 +749,4 @@ Content`,
       expect(manifest.items["skill/tracked-skill"].hash).toBeDefined();
     });
   });
-});
+}, 10000); // Increased timeout to 10s for integration tests in slower CI environments

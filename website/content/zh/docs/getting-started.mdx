@@ -1,0 +1,196 @@
+---
+title: 快速开始
+description: 2 分钟安装 vibe-sync。学习如何初始化配置、同步 AI 氛围编程工具（Claude Code、Cursor、OpenCode、Codex）以及处理常见设置场景。
+---
+
+# 快速开始
+
+只需几分钟即可开始使用 vibe-sync。
+
+## 安装
+
+vibe-sync 可以通过 `npx` 直接使用无需安装，也可以全局安装以便使用。
+
+### 方式 1：使用 npx 运行（推荐）
+
+无需安装——直接运行：
+
+```bash
+npx vibe-sync
+```
+
+### 方式 2：全局安装
+
+```bash
+npm install -g vibe-sync
+```
+
+验证安装：
+
+```bash
+vibe-sync --version
+```
+
+## 快速开始
+
+### 1. 初始化配置
+
+导航到您的项目目录并运行：
+
+```bash
+vibe-sync init
+```
+
+对于全局用户级配置：
+
+```bash
+vibe-sync init --user
+```
+
+> 💡 **提示**：在核心概念中了解更多关于[项目层与用户层](../core-concepts#configuration-layers)的信息。
+
+### 交互式设置
+
+CLI 将引导您完成设置过程：
+
+```
+🚀 欢迎使用 vibe-sync！
+
+✔ 检测现有工具...
+✔ 已检测到: claude-code, cursor
+
+? 您使用哪些 AI 氛围编程工具？
+  ◉ claude-code (已检测到)
+  ◉ cursor (已检测到)
+  ◯ opencode
+  ◯ codex
+
+? 哪个工具是您的配置源？
+  ❯ claude-code
+
+? 您想同步什么？
+  ◉ Skills
+  ◉ MCP
+
+✔ 配置文件已创建
+✔ 缓存目录已创建
+✔ Manifest 已初始化
+
+✅ 设置完成！运行 vibe-sync sync 开始同步
+```
+
+> 📚 **了解更多**：查看[配置指南](../configuration)了解详细配置选项。
+
+### 2. 同步您的配置
+
+初始化完成后，同步您的配置：
+
+```bash
+# Safe 模式（默认：不删除）
+vibe-sync sync
+
+# 预览更改而不应用
+vibe-sync sync --dry-run
+
+# 严格镜像（删除目标中的额外项）
+vibe-sync sync --prune
+```
+
+> 🔍 **详情**：在核心概念中理解[同步模式](../core-concepts#sync-modes)。
+
+## 理解输出
+
+当您运行 `vibe-sync sync` 时，您将看到详细的计划：
+
+```
+📖 正在读取源配置 (claude-code)...
+  ✓ 找到 3 个技能
+  ✓ 找到 2 个 MCP 服务器
+
+📊 分析差异...
+
+📋 同步计划 (Safe 模式)
+
+cursor:
+  CREATE:
+    • skill/deploy-prod
+  UPDATE:
+    • skill/git-release
+    • mcp/github
+  SKIP:
+    • skill/api-conventions (未更改)
+    • mcp/sqlite (未更改)
+
+? 继续同步？ (Y/n) y
+
+✓ 同步完成，耗时 1.2s
+```
+
+## 下一步
+
+现在您已经安装并初始化了 vibe-sync：
+
+1. **学习概念**：理解[核心概念](../core-concepts)，如同步模式和层级
+2. **配置工具**：探索每个工具的[配置](../configuration)选项
+3. **掌握命令**：查看所有 [CLI 命令](../cli-commands)
+4. **快速参考**：使用[快速参考](../quick-reference)速查表
+5. **高级用法**：深入了解[高级功能](../advanced-features)，如 symlinks
+
+## 实际示例
+
+### 团队新成员入职
+
+新团队成员加入，已经设置好 Claude Code：
+
+```bash
+cd my-project
+vibe-sync init  # 选择 Claude Code 作为源，Cursor 和 OpenCode 作为目标
+vibe-sync sync  # 所有工具立即配置完成！
+```
+
+### 用户级配置同步
+
+一次设置全局个人配置，随处使用：
+
+```bash
+vibe-sync init --user  # 配置要同步哪些工具
+vibe-sync sync --user  # 全局同步个人 Skills、MCP 服务器
+```
+
+> 💡 **相关**：了解[配置层级](../core-concepts#configuration-layers)。
+
+### 工具间迁移
+
+从 Cursor 迁移到 Claude Code：
+
+```bash
+vibe-sync init  # 选择 Cursor 作为 SOURCE（参考标准）
+                # 选择 Claude Code 作为 TARGET（将从源同步）
+vibe-sync sync  # 所有配置立即迁移！
+```
+
+> 📖 **更多信息**：查看 [FAQ - 迁移问题](../faq#migration-questions)。
+
+## 故障排除
+
+### 找不到配置文件
+
+如果您看到"找不到配置文件"，请先运行 `vibe-sync init` 创建配置。
+
+### 未检测到工具
+
+确保工具的配置目录存在（例如，`.claude/`、`.cursor/`）在您的项目或主目录中。
+
+### 权限错误
+
+在 macOS/Linux 上，您可能需要授予文件操作权限。检查您是否具有目标目录的写入权限。
+
+> 🔧 **更多帮助**：查看 [FAQ](../faq#troubleshooting) 获取详细的故障排除。
+
+## 获取帮助
+
+- 运行 `vibe-sync --help` 获取命令概览
+- 运行 `vibe-sync <command> --help` 获取特定命令帮助
+- 查看 [FAQ](../faq) 了解常见问题
+- 使用[快速参考](../quick-reference)获取命令示例
+- 在 [GitHub](https://github.com/nicepkg/vibe-sync/issues) 上提交 issue

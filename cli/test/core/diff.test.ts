@@ -7,6 +7,14 @@ import {
 import type { Manifest } from "@src/types/manifest.js";
 import type { Skill, MCPServer } from "@src/types/models.js";
 
+// Default target capabilities for tests
+const DEFAULT_CAPABILITIES = {
+  skills: true,
+  mcp: true,
+  agents: true,
+  commands: true,
+};
+
 describe("Diff Calculator", () => {
   describe("compareHashes", () => {
     it("should return CREATE when item not in target", () => {
@@ -58,11 +66,21 @@ describe("Diff Calculator", () => {
       expect(result.reason).toContain("content changed");
     });
 
-    it("should return CREATE when manifest exists but target missing", () => {
-      const result = compareHashes("hash123", null, "hash123", "safe");
+    it("should return CREATE when target is missing (regardless of manifest)", () => {
+      // Case 1: Manifest matches source (previously synced)
+      const result1 = compareHashes("hash123", null, "hash123", "safe");
+      expect(result1.operation).toBe("create");
+      expect(result1.reason).toContain("not in target");
 
-      expect(result.operation).toBe("create");
-      expect(result.reason).toContain("not in target");
+      // Case 2: Manifest doesn't match source
+      const result2 = compareHashes("hash123", null, "hash456", "safe");
+      expect(result2.operation).toBe("create");
+      expect(result2.reason).toContain("not in target");
+
+      // Case 3: No manifest entry
+      const result3 = compareHashes("hash123", null, null, "safe");
+      expect(result3.operation).toBe("create");
+      expect(result3.reason).toContain("not in target");
     });
   });
 
@@ -143,7 +161,7 @@ describe("Diff Calculator", () => {
       version: "1.0.0",
       last_synced: "2026-01-24T10:00:00Z",
       items: {
-        skill1: {
+        "skill/skill1": {
           type: "skill",
           name: "skill1",
           hash: "hash-skill1",
@@ -156,7 +174,7 @@ describe("Diff Calculator", () => {
             },
           },
         },
-        skill2: {
+        "skill/skill2": {
           type: "skill",
           name: "skill2",
           hash: "hash-skill2-old",
@@ -169,7 +187,7 @@ describe("Diff Calculator", () => {
             },
           },
         },
-        skill3: {
+        "skill/skill3": {
           type: "skill",
           name: "skill3",
           hash: "hash-skill3",
@@ -182,7 +200,7 @@ describe("Diff Calculator", () => {
             },
           },
         },
-        postgres: {
+        "mcp/postgres": {
           type: "mcp",
           name: "postgres",
           hash: "hash-postgres",
@@ -195,7 +213,7 @@ describe("Diff Calculator", () => {
             },
           },
         },
-        sqlite: {
+        "mcp/sqlite": {
           type: "mcp",
           name: "sqlite",
           hash: "hash-sqlite-old",
@@ -225,6 +243,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -249,6 +268,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -273,6 +293,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -295,6 +316,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -318,6 +340,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -356,6 +379,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "prune",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -380,6 +404,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "prune",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -402,6 +427,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "prune",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -435,6 +461,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "prune",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -461,6 +488,7 @@ describe("Diff Calculator", () => {
           manifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -493,6 +521,7 @@ describe("Diff Calculator", () => {
           manifest: emptyManifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -528,6 +557,7 @@ describe("Diff Calculator", () => {
           manifest: partialManifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);
@@ -552,7 +582,7 @@ describe("Diff Calculator", () => {
           version: "1.0.0",
           last_synced: "2026-01-24T10:00:00Z",
           items: {
-            skill1: {
+            "skill/skill1": {
               type: "skill",
               name: "skill1",
               hash: "original-hash",
@@ -592,6 +622,7 @@ describe("Diff Calculator", () => {
           manifest: modifiedManifest,
           mode: "safe",
           targetTool: "cursor",
+          targetCapabilities: DEFAULT_CAPABILITIES,
         };
 
         const result = calculateDiff(input);

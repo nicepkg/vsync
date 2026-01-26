@@ -8,7 +8,7 @@ import {
   ParallelSyncOrchestrator,
   type TargetSyncConfig,
 } from "@src/core/parallel-sync.js";
-import type { SourceData } from "@src/core/sync-executor.js";
+import { SourceData } from "@src/core/sync-executor.js";
 import type { DiffResult } from "@src/types/plan.js";
 
 describe("ParallelSyncOrchestrator", () => {
@@ -17,14 +17,12 @@ describe("ParallelSyncOrchestrator", () => {
   let mockAdapter2: ToolAdapter;
 
   beforeEach(() => {
-    sourceData = {
-      skills: [{ name: "skill1", content: "content1", hash: "hash1" }] as any,
-      mcpServers: [
-        { name: "mcp1", type: "stdio", command: "cmd1", hash: "hash2" },
-      ] as any,
-      agents: [],
-      commands: [],
-    };
+    sourceData = new SourceData(
+      [{ name: "skill1", content: "content1", hash: "hash1" }] as any,
+      [{ name: "mcp1", type: "stdio", command: "cmd1", hash: "hash2" }] as any,
+      [],
+      [],
+    );
 
     // Create mock adapters
     const createMockAdapter = (toolName: string): ToolAdapter => ({
@@ -37,6 +35,12 @@ describe("ParallelSyncOrchestrator", () => {
       getSkillsDir: vi.fn(() => `.${toolName}/skills`),
       getAgentsDir: vi.fn(() => `.${toolName}/agents`),
       getCommandsDir: vi.fn(() => `.${toolName}/commands`),
+      getCapabilities: vi.fn(() => ({
+        skills: true,
+        mcp: true,
+        agents: true,
+        commands: true,
+      })),
       readSkills: vi.fn(async () => []),
       readMCPServers: vi.fn(async () => []),
       readAgents: vi.fn(async () => []),

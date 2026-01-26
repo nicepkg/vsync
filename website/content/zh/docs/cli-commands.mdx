@@ -1,0 +1,554 @@
+---
+title: CLI 命令
+description: vibe-sync 完整 CLI 参考。所有 7 个命令及选项和示例 - init、sync、plan、status、list、clean、import。学习 safe/prune 模式、dry-run 和自动化标志。
+---
+
+# CLI 命令
+
+所有 vibe-sync 命令的完整参考，包含示例和选项。
+
+## 命令概览
+
+```bash
+vibe-sync <command> [options]
+```
+
+可用命令：
+
+| 命令 | 说明 |
+|:--------|:------------|
+| `init` | 初始化配置 |
+| `sync` | 同步配置 |
+| `plan` | 预览同步计划而不执行 |
+| `status` | 检查同步状态 |
+| `list` | 列出配置 |
+| `clean` | 从目标移除项 |
+| `import` | 从另一个项目导入 |
+
+全局选项：
+- `--help, -h` - 显示帮助
+- `--version, -v` - 显示版本
+
+## init
+
+为 project 或 user 层级初始化 vibe-sync 配置。
+
+### 用法
+
+```bash
+vibe-sync init [options]
+```
+
+### 选项
+
+- `--user` - 创建用户级配置 (~/.vibe-sync.json)
+
+### 交互式提示
+
+1. **工具检测**：自动检测现有工具目录
+2. **工具选择**：选择要管理哪些工具
+3. **源选择**：选择您的配置源
+4. **同步项**：选择要同步什么（Skills、MCP、Agents、Commands）
+
+### 示例
+
+```bash
+$ vibe-sync init
+
+🚀 欢迎使用 vibe-sync！
+
+✔ 检测现有工具...
+✔ 已检测到: claude-code, cursor
+
+? 您使用哪些 AI 氛围编程工具？
+  ◉ claude-code (已检测到)
+  ◉ cursor (已检测到)
+  ◯ opencode
+  ◯ codex
+
+? 哪个工具是您的配置源？
+  ❯ claude-code
+
+? 您想同步什么？
+  ◉ Skills
+  ◉ MCP
+
+✔ 配置文件已创建
+✔ 缓存目录已创建
+✔ Manifest 已初始化
+
+✅ 设置完成！运行 vibe-sync sync 开始同步
+```
+
+### 创建的内容
+
+- `.vibe-sync.json` - 配置文件
+- `.vibe-sync-cache/` - 缓存目录
+- `.vibe-sync-cache/manifest.json` - 同步跟踪 manifest
+
+---
+
+## sync
+
+从源工具同步配置到目标工具。
+
+### 用法
+
+```bash
+vibe-sync sync [options]
+```
+
+### 选项
+
+- `--dry-run` - 预览更改而不应用
+- `--prune` - 启用 prune 模式（删除源中不存在的项）
+- `--user` - 同步用户级配置
+- `-y, --yes` - 跳过确认提示
+
+### 同步模式
+
+#### Safe 模式（默认）
+
+只创建和更新——从不删除。
+
+```bash
+vibe-sync sync
+```
+
+**输出示例**：
+```
+📖 正在读取源配置 (claude-code)...
+  ✓ 找到 3 个技能
+  ✓ 找到 2 个 MCP 服务器
+
+📊 分析差异...
+
+📋 同步计划 (Safe 模式)
+
+cursor:
+  CREATE:
+    • skill/deploy-prod
+  UPDATE:
+    • skill/git-release
+    • mcp/github
+  SKIP:
+    • skill/api-conventions (未更改)
+
+? 继续同步？ (Y/n) y
+
+✓ 同步完成，耗时 1.2s
+```
+
+#### Prune 模式
+
+严格镜像——删除源中不存在的项。
+
+```bash
+vibe-sync sync --prune
+```
+
+**警告**：目标中存在但源中不存在的项将被删除！
+
+### 示例
+
+```bash
+# 预览更改
+vibe-sync sync --dry-run
+
+# 使用严格镜像同步
+vibe-sync sync --prune
+
+# 同步用户级配置
+vibe-sync sync --user
+
+# 跳过确认（用于自动化）
+vibe-sync sync -y
+```
+
+### 首次 Symlink 提示
+
+在首次同步时，vibe-sync 会询问关于 Skills 的 symlink 使用：
+
+```
+? 您想如何同步 Skills？
+  ❯ 使用符号链接（推荐 - 即时更新，节省空间）
+    复制文件（传统 - 独立副本）
+```
+
+此偏好会保存在配置中，不会再次询问。
+
+---
+
+## plan
+
+预览同步计划而不执行任何更改。
+
+### 用法
+
+```bash
+vibe-sync plan [options]
+```
+
+### 选项
+
+- `--user` - 显示用户级配置的计划
+
+### 示例
+
+```bash
+$ vibe-sync plan
+
+📖 正在读取源配置 (claude-code)...
+  ✓ 找到 3 个技能
+  ✓ 找到 2 个 MCP 服务器
+
+📊 分析差异...
+
+📋 同步计划 (Safe 模式)
+
+cursor:
+  CREATE:
+    • skill/deploy-prod
+      原因: 源中的新项
+      Hash: sha256:abc123...
+
+  UPDATE:
+    • skill/git-release
+      原因: 源哈希值已更改
+      旧: sha256:old111...
+      新: sha256:new222...
+
+  SKIP:
+    • skill/api-conventions
+      原因: 哈希值未更改
+
+运行 `vibe-sync sync` 应用此计划
+```
+
+---
+
+## status
+
+检查当前同步状态和配置。
+
+### 用法
+
+```bash
+vibe-sync status [options]
+```
+
+### 选项
+
+- `--user` - 检查用户级状态
+
+### 示例
+
+```bash
+$ vibe-sync status
+
+配置状态 (Project)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+源工具:          claude-code
+目标工具:        cursor, opencode
+最后同步:        2026-01-24 10:30:00 (2小时前)
+配置文件:        .vibe-sync.json
+Manifest:       .vibe-sync-cache/manifest.json
+
+已同步项:
+  Skills:       3 项
+  MCP 服务器:   2 项
+
+工具状态:
+  ✓ claude-code    (源)
+  ✓ cursor         (已同步，最新)
+  ✓ opencode       (已同步，最新)
+
+健康状况:
+  ✓ 所有目标都是最新的
+  ✓ 没有待处理的更改
+
+运行 `vibe-sync plan` 查看同步计划
+```
+
+---
+
+## list
+
+列出源工具中的所有已同步配置。
+
+### 用法
+
+```bash
+vibe-sync list [type] [options]
+```
+
+### 参数
+
+- `type` - 配置类型：`skills`、`mcp`、`agents` 或 `commands`（可选）
+
+### 选项
+
+- `--user` - 列出用户级配置
+
+### 示例
+
+```bash
+# 列出所有配置
+vibe-sync list
+
+# 仅列出 skills
+vibe-sync list skills
+
+# 列出用户级 MCP 服务器
+vibe-sync list mcp --user
+```
+
+### 输出示例
+
+```bash
+$ vibe-sync list skills
+
+Skills (3 项) - 源: claude-code
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌──────────────────┬────────────────────────────────┬──────────────┬────────────┐
+│ 名称             │ 描述                           │ 已同步到     │ Hash       │
+├──────────────────┼────────────────────────────────┼──────────────┼────────────┤
+│ git-release      │ 创建发布和变更日志              │ cursor, open…│ abc123...  │
+│ api-conventions  │ API 设计模式                    │ cursor, open…│ def456...  │
+│ deploy-prod      │ 部署到生产环境                  │ cursor, open…│ ghi789...  │
+└──────────────────┴────────────────────────────────┴──────────────┴────────────┘
+```
+
+---
+
+## clean
+
+从目标工具（以及可选的从源）移除配置。
+
+### 用法
+
+```bash
+vibe-sync clean [item] [options]
+```
+
+### 参数
+
+- `item` - 要移除的项，格式为 `type/name`（例如 `skill/old-skill`）
+
+### 选项
+
+- `--user` - 清理用户级配置
+- `--from-source` - 也从源工具删除（危险！）
+- `-y, --yes` - 跳过确认（不适用于 `--from-source`）
+
+### 模式
+
+#### 仅从目标移除（安全）
+
+默认行为——源不变。
+
+```bash
+vibe-sync clean skill/old-skill
+```
+
+**输出**：
+```
+⚠️  这将仅从目标工具移除（源不变）
+
+将从以下位置移除:
+  • cursor (.cursor/skills/old-skill/)
+  • opencode (.opencode/skills/old-skill/)
+
+源 (claude-code) 不会受到影响。
+
+? 确认从目标移除？ (y/N) y
+
+✓ 清理完成
+```
+
+#### 从源和所有目标删除（危险！）
+
+**警告**：这是破坏性操作，无法撤销！
+
+```bash
+vibe-sync clean skill/old-skill --from-source
+```
+
+**输出**：
+```
+⚠️⚠️⚠️  危险区域  ⚠️⚠️⚠️
+
+这将从 SOURCE 工具 (claude-code) 和所有目标删除。
+此操作无法撤销。
+
+将从以下位置删除:
+  • claude-code (.claude/skills/old-skill/) ← SOURCE
+  • cursor (.cursor/skills/old-skill/)
+  • opencode (.opencode/skills/old-skill/)
+
+? 输入名称以确认: old-skill
+? 您确定吗？ (yes/no) yes
+
+🗑️  删除完成
+```
+
+### 交互模式
+
+不带参数运行以交互式选择：
+
+```bash
+$ vibe-sync clean
+
+? 您想清理什么类型？
+  ❯ Skills
+    MCP Servers
+
+? 选择要从目标移除的项:
+  ◯ git-release
+  ◯ api-conventions
+  ◉ old-skill
+
+已选择的项 (1):
+  • skill/old-skill
+
+⚠️  这将仅从目标工具移除（源不变）
+
+? 确认从目标移除？ (y/N) y
+```
+
+---
+
+## import
+
+从另一个项目导入配置。
+
+### 用法
+
+```bash
+vibe-sync import <path> [options]
+```
+
+### 参数
+
+- `path` - 要导入的项目目录路径
+
+### 选项
+
+- `--user` - 导入到用户级
+
+### 示例
+
+```bash
+$ vibe-sync import ../other-project
+
+扫描 ../other-project...
+
+? 此目录使用:
+  ❯ Claude Code (找到 .claude/)
+    Cursor (找到 .cursor/)
+
+? 从哪个工具导入？
+  ❯ Claude Code
+
+正在读取 claude-code 配置...
+  ✓ 找到 5 个技能
+  ✓ 找到 3 个 MCP 服务器
+
+? 您想导入什么？ (默认: 全部选中)
+  ◉ Skills (5 项)
+    • git-release
+    • api-conventions
+    • deploy-prod
+    • test-generator
+    • code-reviewer
+
+  ◉ MCP Servers (3 项)
+    • sqlite
+    • github
+    • postgres
+
+? 如何处理冲突？
+  ❯ 跳过（保留现有）
+    覆盖（替换现有）
+    重命名（添加后缀）
+
+处理中:
+  ✓ Skills: 5 已导入 (0 跳过)
+  ✓ MCP: 3 已导入 (1 跳过: sqlite 已存在)
+
+✓ 导入完成
+
+? 现在同步到目标工具？ (Y/n) y
+```
+
+---
+
+## 常见工作流
+
+### 更新后的日常同步
+
+```bash
+# 1. 在源工具中编辑配置
+vim ~/.claude/skills/my-skill/SKILL.md
+
+# 2. 同步到目标
+vibe-sync sync
+```
+
+### 应用前预览
+
+```bash
+# 1. 检查将要更改什么
+vibe-sync plan
+
+# 2. 如果满意，应用
+vibe-sync sync
+```
+
+### 清理旧配置
+
+```bash
+# 安全清理（仅目标）
+vibe-sync clean skill/old-skill
+
+# 严格镜像模式
+vibe-sync sync --prune
+```
+
+### 从另一个项目导入
+
+```bash
+vibe-sync import ../other-project
+```
+
+### 使用 --yes 自动化
+
+```bash
+# 在 CI/CD 管道中
+vibe-sync sync --yes
+```
+
+---
+
+## 退出代码
+
+- `0` - 成功
+- `1` - 发生错误
+
+## 获取帮助
+
+```bash
+# 一般帮助
+vibe-sync --help
+
+# 特定命令帮助
+vibe-sync sync --help
+```
+
+## 下一步
+
+- 了解[高级功能](../advanced-features)
+- 查看 [FAQ](../faq) 进行故障排除
+- 探索[配置](../configuration)选项

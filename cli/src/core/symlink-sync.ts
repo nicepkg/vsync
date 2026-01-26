@@ -25,7 +25,7 @@ import {
   createSymlink,
   resolveSymlink,
   removeSymlink,
-} from "@src/utils/symlink.js";
+} from "@src/utils/file-ops.js";
 
 /**
  * Validation result for symlink setup

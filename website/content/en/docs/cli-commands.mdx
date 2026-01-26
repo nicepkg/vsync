@@ -1,0 +1,554 @@
+---
+title: CLI Commands
+description: Complete CLI reference for vibe-sync. All 7 commands with options and examples - init, sync, plan, status, list, clean, import. Learn safe/prune modes, dry-run, and automation flags.
+---
+
+# CLI Commands
+
+Complete reference for all vibe-sync commands with examples and options.
+
+## Command Overview
+
+```bash
+vibe-sync <command> [options]
+```
+
+Available commands:
+
+| Command | Description |
+|:--------|:------------|
+| `init` | Initialize configuration |
+| `sync` | Synchronize configurations |
+| `plan` | Preview sync plan without executing |
+| `status` | Check sync status |
+| `list` | List configurations |
+| `clean` | Remove items from targets |
+| `import` | Import from another project |
+
+Global options:
+- `--help, -h` - Show help
+- `--version, -v` - Show version
+
+## init
+
+Initialize vibe-sync configuration for project or user level.
+
+### Usage
+
+```bash
+vibe-sync init [options]
+```
+
+### Options
+
+- `--user` - Create user-level config (~/.vibe-sync.json)
+
+### Interactive Prompts
+
+1. **Tool Detection**: Automatically detects existing tool directories
+2. **Tool Selection**: Choose which tools to manage
+3. **Source Selection**: Pick your source of truth
+4. **Sync Items**: Select what to sync (Skills, MCP, Agents, Commands)
+
+### Example
+
+```bash
+$ vibe-sync init
+
+🚀 Welcome to vibe-sync!
+
+✔ Detecting existing tools...
+✔ Detected: claude-code, cursor
+
+? Which AI coding tools do you use?
+  ◉ claude-code (detected)
+  ◉ cursor (detected)
+  ◯ opencode
+  ◯ codex
+
+? Which tool is your source of truth?
+  ❯ claude-code
+
+? What do you want to sync?
+  ◉ Skills
+  ◉ MCP
+
+✔ Configuration created
+✔ Cache directory created
+✔ Manifest initialized
+
+✅ Setup complete! Run vibe-sync sync to start syncing
+```
+
+### What Gets Created
+
+- `.vibe-sync.json` - Configuration file
+- `.vibe-sync-cache/` - Cache directory
+- `.vibe-sync-cache/manifest.json` - Sync tracking manifest
+
+---
+
+## sync
+
+Synchronize configurations from source to target tools.
+
+### Usage
+
+```bash
+vibe-sync sync [options]
+```
+
+### Options
+
+- `--dry-run` - Preview changes without applying them
+- `--prune` - Enable prune mode (delete items not in source)
+- `--user` - Sync user-level configs
+- `-y, --yes` - Skip confirmation prompt
+
+### Sync Modes
+
+#### Safe Mode (Default)
+
+Only creates and updates—never deletes.
+
+```bash
+vibe-sync sync
+```
+
+**Output Example**:
+```
+📖 Reading source (claude-code)...
+  ✓ Found 3 skills
+  ✓ Found 2 MCP servers
+
+📊 Analyzing differences...
+
+📋 Sync Plan (Safe Mode)
+
+cursor:
+  CREATE:
+    • skill/deploy-prod
+  UPDATE:
+    • skill/git-release
+    • mcp/github
+  SKIP:
+    • skill/api-conventions (unchanged)
+
+? Proceed with sync? (Y/n) y
+
+✓ Sync completed in 1.2s
+```
+
+#### Prune Mode
+
+Strict mirroring—deletes items not in source.
+
+```bash
+vibe-sync sync --prune
+```
+
+**Warning**: Items in targets but not in source will be deleted!
+
+### Examples
+
+```bash
+# Preview changes
+vibe-sync sync --dry-run
+
+# Sync with strict mirroring
+vibe-sync sync --prune
+
+# Sync user-level configs
+vibe-sync sync --user
+
+# Skip confirmation (useful for automation)
+vibe-sync sync -y
+```
+
+### First-Time Symlink Prompt
+
+On the first sync, vibe-sync will ask about symlink usage for Skills:
+
+```
+? How would you like to sync Skills?
+  ❯ Use symlinks (recommended - instant updates, saves space)
+    Copy files (traditional - independent copies)
+```
+
+This preference is saved in config and won't be asked again.
+
+---
+
+## plan
+
+Preview the sync plan without executing any changes.
+
+### Usage
+
+```bash
+vibe-sync plan [options]
+```
+
+### Options
+
+- `--user` - Show plan for user-level configs
+
+### Example
+
+```bash
+$ vibe-sync plan
+
+📖 Reading source (claude-code)...
+  ✓ Found 3 skills
+  ✓ Found 2 MCP servers
+
+📊 Analyzing differences...
+
+📋 Sync Plan (Safe Mode)
+
+cursor:
+  CREATE:
+    • skill/deploy-prod
+      Reason: New in source
+      Hash: sha256:abc123...
+
+  UPDATE:
+    • skill/git-release
+      Reason: Source hash changed
+      Old: sha256:old111...
+      New: sha256:new222...
+
+  SKIP:
+    • skill/api-conventions
+      Reason: Hash unchanged
+
+Run `vibe-sync sync` to apply this plan
+```
+
+---
+
+## status
+
+Check the current sync status and configuration.
+
+### Usage
+
+```bash
+vibe-sync status [options]
+```
+
+### Options
+
+- `--user` - Check user-level status
+
+### Example
+
+```bash
+$ vibe-sync status
+
+Configuration Status (Project)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Source Tool:       claude-code
+Target Tools:      cursor, opencode
+Last Sync:         2026-01-24 10:30:00 (2 hours ago)
+Configuration:     .vibe-sync.json
+Manifest:          .vibe-sync-cache/manifest.json
+
+Synced Items:
+  Skills:          3 items
+  MCP Servers:     2 items
+
+Tool Status:
+  ✓ claude-code    (source)
+  ✓ cursor         (synced, up-to-date)
+  ✓ opencode       (synced, up-to-date)
+
+Health:
+  ✓ All targets up-to-date
+  ✓ No pending changes
+
+Run `vibe-sync plan` to see sync plan
+```
+
+---
+
+## list
+
+List all synced configurations from the source tool.
+
+### Usage
+
+```bash
+vibe-sync list [type] [options]
+```
+
+### Arguments
+
+- `type` - Configuration type: `skills`, `mcp`, `agents`, or `commands` (optional)
+
+### Options
+
+- `--user` - List user-level configs
+
+### Examples
+
+```bash
+# List all configs
+vibe-sync list
+
+# List only skills
+vibe-sync list skills
+
+# List user-level MCP servers
+vibe-sync list mcp --user
+```
+
+### Output Example
+
+```bash
+$ vibe-sync list skills
+
+Skills (3 items) - Source: claude-code
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌──────────────────┬────────────────────────────────┬──────────────┬────────────┐
+│ Name             │ Description                    │ Synced To    │ Hash       │
+├──────────────────┼────────────────────────────────┼──────────────┼────────────┤
+│ git-release      │ Create releases and changelogs │ cursor, open…│ abc123...  │
+│ api-conventions  │ API design patterns            │ cursor, open…│ def456...  │
+│ deploy-prod      │ Deploy to production           │ cursor, open…│ ghi789...  │
+└──────────────────┴────────────────────────────────┴──────────────┴────────────┘
+```
+
+---
+
+## clean
+
+Remove configurations from target tools (and optionally from source).
+
+### Usage
+
+```bash
+vibe-sync clean [item] [options]
+```
+
+### Arguments
+
+- `item` - Item to remove in format `type/name` (e.g., `skill/old-skill`)
+
+### Options
+
+- `--user` - Clean user-level configs
+- `--from-source` - Also delete from source tool (dangerous!)
+- `-y, --yes` - Skip confirmation (not applicable with `--from-source`)
+
+### Modes
+
+#### Remove from Targets Only (Safe)
+
+Default behavior—source unchanged.
+
+```bash
+vibe-sync clean skill/old-skill
+```
+
+**Output**:
+```
+⚠️  This will remove from target tools only (source unchanged)
+
+Will remove from:
+  • cursor (.cursor/skills/old-skill/)
+  • opencode (.opencode/skills/old-skill/)
+
+Source (claude-code) will NOT be affected.
+
+? Confirm removal from targets? (y/N) y
+
+✓ Cleanup completed
+```
+
+#### Delete from Source and All Targets (Dangerous!)
+
+**Warning**: This is destructive and cannot be undone!
+
+```bash
+vibe-sync clean skill/old-skill --from-source
+```
+
+**Output**:
+```
+⚠️⚠️⚠️  DANGER ZONE  ⚠️⚠️⚠️
+
+This will delete from the SOURCE tool (claude-code) AND all targets.
+This action CANNOT be undone.
+
+Will delete from:
+  • claude-code (.claude/skills/old-skill/) ← SOURCE
+  • cursor (.cursor/skills/old-skill/)
+  • opencode (.opencode/skills/old-skill/)
+
+? Type the name to confirm: old-skill
+? Are you absolutely sure? (yes/no) yes
+
+🗑️  Deletion completed
+```
+
+### Interactive Mode
+
+Run without arguments for interactive selection:
+
+```bash
+$ vibe-sync clean
+
+? What type do you want to clean?
+  ❯ Skills
+    MCP Servers
+
+? Select items to remove from targets:
+  ◯ git-release
+  ◯ api-conventions
+  ◉ old-skill
+
+Selected items (1):
+  • skill/old-skill
+
+⚠️  This will remove from target tools only (source unchanged)
+
+? Confirm removal from targets? (y/N) y
+```
+
+---
+
+## import
+
+Import configurations from another project.
+
+### Usage
+
+```bash
+vibe-sync import <path> [options]
+```
+
+### Arguments
+
+- `path` - Path to project directory to import from
+
+### Options
+
+- `--user` - Import to user-level
+
+### Example
+
+```bash
+$ vibe-sync import ../other-project
+
+Scanning ../other-project...
+
+? This directory uses:
+  ❯ Claude Code (.claude/ found)
+    Cursor (.cursor/ found)
+
+? Import from which tool?
+  ❯ Claude Code
+
+Reading claude-code configuration...
+  ✓ Found 5 skills
+  ✓ Found 3 MCP servers
+
+? What do you want to import? (default: all selected)
+  ◉ Skills (5 items)
+    • git-release
+    • api-conventions
+    • deploy-prod
+    • test-generator
+    • code-reviewer
+
+  ◉ MCP Servers (3 items)
+    • sqlite
+    • github
+    • postgres
+
+? How to handle conflicts?
+  ❯ Skip (keep existing)
+    Overwrite (replace existing)
+    Rename (add suffix)
+
+Processing:
+  ✓ Skills: 5 imported (0 skipped)
+  ✓ MCP: 3 imported (1 skipped: sqlite already exists)
+
+✓ Import completed
+
+? Sync to target tools now? (Y/n) y
+```
+
+---
+
+## Common Workflows
+
+### Daily Sync After Updates
+
+```bash
+# 1. Edit configs in source tool
+vim ~/.claude/skills/my-skill/SKILL.md
+
+# 2. Sync to targets
+vibe-sync sync
+```
+
+### Preview Before Applying
+
+```bash
+# 1. Check what would change
+vibe-sync plan
+
+# 2. If satisfied, apply
+vibe-sync sync
+```
+
+### Clean Up Old Configs
+
+```bash
+# Safe cleanup (targets only)
+vibe-sync clean skill/old-skill
+
+# Strict mirror mode
+vibe-sync sync --prune
+```
+
+### Import from Another Project
+
+```bash
+vibe-sync import ../other-project
+```
+
+### Automation with --yes
+
+```bash
+# In CI/CD pipelines
+vibe-sync sync --yes
+```
+
+---
+
+## Exit Codes
+
+- `0` - Success
+- `1` - Error occurred
+
+## Getting Help
+
+```bash
+# General help
+vibe-sync --help
+
+# Command-specific help
+vibe-sync sync --help
+```
+
+## Next Steps
+
+- Learn about [Advanced Features](../advanced-features)
+- Check the [FAQ](../faq) for troubleshooting
+- Explore [Configuration](../configuration) options

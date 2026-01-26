@@ -49,11 +49,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          OUT="$(npx pkg-pr-new publish "./${{ matrix.package.dir }}" 2>&1 | tee /dev/stderr)"
+
+          # Pin version for stability
+          OUT="$(npx -y pkg-pr-new@0.0.62 publish "./${{ matrix.package.dir }}" 2>&1 | tee /dev/stderr)"
+
+          # Use a random delimiter to avoid "EOF" collisions in GitHub output parsing
+          DELIM="EOF_$(date +%s)_$RANDOM"
+
           {
-            echo "output<<'EOF'"
+            echo "output<<$DELIM"
             echo "$OUT"
-            echo "EOF"
+            echo "$DELIM"
           } >> "$GITHUB_OUTPUT"
 
       - name: Upsert PR comment (no spam)
@@ -70,13 +76,22 @@ jobs:
             const display = process.env.PKG_DISPLAY;
             const out = process.env.PUBLISH_OUTPUT || '';
 
-            // Try to extract a one-line install command from pkg.pr.new output
             const lines = out.split('\n').map(s => s.trim()).filter(Boolean);
+
+            // Prefer explicit pkg.pr.new install lines
             const installLine =
-              lines.find(l => /^pnpm add\s+/i.test(l)) ||
-              lines.find(l => /^npm i\s+/i.test(l) || /^npm install\s+/i.test(l)) ||
-              lines.find(l => /^yarn add\s+/i.test(l)) ||
+              lines.find(l => /^npm\s+i\s+https?:\/\/pkg\.pr\.new\//i.test(l)) ||
+              lines.find(l => /^pnpm\s+add\s+https?:\/\/pkg\.pr\.new\//i.test(l)) ||
+              lines.find(l => /^yarn\s+add\s+https?:\/\/pkg\.pr\.new\//i.test(l)) ||
+              // Fallback to generic install lines if present
+              lines.find(l => /^pnpm\s+add\s+/i.test(l)) ||
+              lines.find(l => /^npm\s+i\s+/i.test(l) || /^npm\s+install\s+/i.test(l)) ||
+              lines.find(l => /^yarn\s+add\s+/i.test(l)) ||
               '';
+
+            // Best-effort extract the preview URL from output
+            const previewUrl =
+              lines.find(l => /https?:\/\/pkg\.pr\.new\/[^\s)]+/i.test(l))?.match(/https?:\/\/pkg\.pr\.new\/[^\s)]+/i)?.[0] || '';
 
             const fallback = 'Could not auto-detect a one-line install command — see raw output below.';
 
@@ -84,6 +99,8 @@ jobs:
             ## 📦 Package Preview Published
 
             **${display}** has been published to **pkg.pr.new** for this PR, so reviewers can test changes without waiting for an official npm release.
+
+            ${previewUrl ? `Preview link: ${previewUrl}\n` : ''}
 
             ### ✅ Install
             ${installLine ? `\`\`\`bash\n${installLine}\n\`\`\`` : fallback}
@@ -107,7 +124,7 @@ jobs:
             (This comment will be updated on new pushes.)
             `.trim();
 
-            // Since this job is matrix, keep ONE comment per package by adding a package-specific marker.
+            // Since this job is matrix, keep ONE comment per package by using a package-specific marker
             const pkgMarker = `${marker}<!-- ${dir} -->`;
             const body = `${pkgMarker}\n${baseBody}`;
 
@@ -137,4 +154,4 @@ jobs:
                 issue_number,
                 body,
               });
-            };
+            }

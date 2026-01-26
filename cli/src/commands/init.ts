@@ -3,7 +3,7 @@
  * Initialize vibe-sync configuration
  */
 
-import { access, mkdir } from "node:fs/promises";
+import { access } from "node:fs/promises";
 import { join } from "node:path";
 import { cwd } from "node:process";
 import chalk from "chalk";
@@ -11,10 +11,6 @@ import { Command } from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
 import { getAllConfigDirs, getToolChoices } from "@src/adapters/registry.js";
-import {
-  createEmptyManifest,
-  saveManifest,
-} from "@src/core/manifest-manager.js";
 import type { ToolName, VibeConfig, ConfigLevel } from "@src/types/config.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 import { t } from "@src/utils/i18n.js";
@@ -86,6 +82,8 @@ export async function generateConfig(
     sync_config: {
       skills: options.syncItems.includes("skills"),
       mcp: options.syncItems.includes("mcp"),
+      agents: options.syncItems.includes("agents"),
+      commands: options.syncItems.includes("commands"),
     },
   };
 
@@ -106,33 +104,6 @@ export async function saveConfig(
   const content = JSON.stringify(config, null, 2);
 
   await atomicWrite(configPath, content);
-}
-
-/**
- * Create .vibe-sync-cache directory
- *
- * @param projectDir - Project directory
- */
-export async function createCacheDirectory(projectDir: string): Promise<void> {
-  const cacheDir = join(projectDir, ".vibe-sync-cache");
-
-  try {
-    await mkdir(cacheDir, { recursive: true });
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code !== "EEXIST") {
-      throw error;
-    }
-  }
-}
-
-/**
- * Initialize empty manifest
- *
- * @param projectDir - Project directory
- */
-export async function initializeManifest(projectDir: string): Promise<void> {
-  const manifest = createEmptyManifest();
-  await saveManifest(manifest, projectDir);
 }
 
 /**
@@ -175,7 +146,7 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
     // Prompt for source tool
     const sourceAnswer = await inquirer.prompt<{ source: ToolName }>([
       {
-        type: "list",
+        type: "select",
         name: "source",
         message: t("commands.init.selectSource"),
         choices: toolsAnswer.tools.map((tool) => ({
@@ -198,6 +169,16 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
             checked: true,
           },
           { name: t("commands.init.mcpChoice"), value: "mcp", checked: true },
+          {
+            name: t("commands.init.agentsChoiceInit"),
+            value: "agents",
+            checked: true,
+          },
+          {
+            name: t("commands.init.commandsChoiceInit"),
+            value: "commands",
+            checked: true,
+          },
         ],
         validate: (input: string[]) => {
           if (input.length === 0) {
@@ -221,17 +202,8 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
     await saveConfig(config, projectDir);
     saveSpinner.succeed(t("commands.init.configCreated"));
 
-    // Create cache directory
-    const cacheSpinner = ora(t("commands.init.creatingCache")).start();
-    await createCacheDirectory(projectDir);
-    cacheSpinner.succeed(t("commands.init.cacheCreated"));
-
-    // Initialize manifest
-    const manifestSpinner = ora(
-      t("commands.init.initializingManifest"),
-    ).start();
-    await initializeManifest(projectDir);
-    manifestSpinner.succeed(t("commands.init.manifestCreated"));
+    // Note: Cache directory and manifest will be created automatically
+    // on first sync (via atomicWrite's mkdir in saveManifest)
 
     console.log(
       chalk.green(

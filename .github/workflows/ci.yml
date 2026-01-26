@@ -8,7 +8,7 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
   pull_request:
     branches: [main, dev]
 
@@ -33,3 +33,8 @@ jobs:
 
       - name: Run TypeScript check
         run: pnpm typecheck
+
+  tests:
+    name: Tests
+    uses: ./.github/workflows/tests.yml
+    secrets: inherit

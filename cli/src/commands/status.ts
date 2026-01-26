@@ -3,15 +3,18 @@
  * Display sync status and configuration info
  */
 
+import { homedir } from "node:os";
+import { relative } from "node:path";
 import { cwd } from "node:process";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
-import { loadManifest } from "@src/core/manifest-manager.js";
+import { loadManifest, getManifestPath } from "@src/core/manifest-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
+import { ensureConfig } from "@src/utils/config-initializer.js";
 import { t } from "@src/utils/i18n.js";
-import { loadSyncConfig, readSourceConfig, calculateSyncDiff } from "./sync.js";
+import { readSourceConfig, calculateSyncDiff } from "./sync.js";
 
 /**
  * Status display data
@@ -86,11 +89,11 @@ export function formatStatus(data: StatusData): string {
   // Configuration info
   lines.push(
     chalk.cyan(`${t("commands.status.sourceTool")}:       `) +
-      data.config.source_tool,
+      data.config.source_tool!,
   );
   lines.push(
     chalk.cyan(`${t("commands.status.targetTools")}:      `) +
-      data.config.target_tools.join(", "),
+      data.config.target_tools!.join(", "),
   );
 
   const lastSync = data.manifest.last_synced
@@ -104,9 +107,16 @@ export function formatStatus(data: StatusData): string {
     chalk.cyan(`${t("commands.status.configuration")}:     `) +
       (data.config.level === "user" ? "~/.vibe-sync.json" : ".vibe-sync.json"),
   );
+
+  // Show manifest path relative to home directory
+  const manifestPath = getManifestPath();
+  const home = homedir();
+  const displayPath = manifestPath.startsWith(home)
+    ? `~/${relative(home, manifestPath)}`
+    : manifestPath;
+
   lines.push(
-    chalk.cyan(`${t("commands.status.manifest")}:          `) +
-      ".vibe-sync-cache/manifest.json",
+    chalk.cyan(`${t("commands.status.manifest")}:          `) + displayPath,
   );
   lines.push("");
 
@@ -124,11 +134,11 @@ export function formatStatus(data: StatusData): string {
   lines.push(chalk.bold(t("commands.status.toolStatus")));
   lines.push(
     chalk.green(
-      `  ✓ ${data.config.source_tool}    ${t("commands.status.sourceIndicator")}`,
+      `  ✓ ${data.config.source_tool!}    ${t("commands.status.sourceIndicator")}`,
     ),
   );
 
-  for (const tool of data.config.target_tools) {
+  for (const tool of data.config.target_tools!) {
     lines.push(
       chalk.green(`  ✓ ${tool}         ${t("commands.status.syncedUpToDate")}`),
     );
@@ -161,10 +171,14 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
   try {
     const projectDir = options.user ? process.env.HOME || cwd() : cwd();
 
-    // Load configuration
+    // Load configuration (with auto-init if needed)
     const spinner = ora(t("commands.status.loadingConfig")).start();
-    const config = await loadSyncConfig(projectDir, options.user || false);
+    const config = await ensureConfig(projectDir, options.user || false, {
+      spinner,
+      requireFields: ["source_tool", "target_tools", "sync_config"],
+    });
     spinner.succeed(t("commands.status.configLoaded"));
+    // Config fields are guaranteed by ensureConfig validation
 
     // Load manifest
     const manifest = await loadManifest(projectDir);
@@ -177,15 +191,19 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
     // Check for pending changes
     const checkSpinner = ora(t("commands.status.checkingChanges")).start();
     const sourceData = await readSourceConfig(
-      config.source_tool,
+      config.source_tool!,
       projectDir,
       config.level,
     );
     const plan = await calculateSyncDiff(
       sourceData,
-      config.target_tools,
+      config.source_tool!,
+      config.target_tools!,
       manifest,
       "safe",
+      config.sync_config!,
+      projectDir,
+      config.level,
     );
 
     const hasChanges = Object.values(plan.diffs).some(
