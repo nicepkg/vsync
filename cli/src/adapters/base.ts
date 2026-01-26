@@ -6,6 +6,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
+import { AdapterPathResolver } from "@src/adapters/path-resolver.js";
 import type { ConfigLevel, ToolName } from "@src/types/config.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
@@ -198,6 +199,12 @@ export interface AdapterCapabilities {
 export abstract class BaseAdapter implements ToolAdapter {
   readonly config: AdapterConfig;
 
+  /**
+   * Path resolver for consistent path handling
+   * Initialized lazily when first accessed
+   */
+  private _pathResolver?: AdapterPathResolver;
+
   constructor(config: AdapterConfig) {
     this.config = config;
   }
@@ -210,6 +217,20 @@ export abstract class BaseAdapter implements ToolAdapter {
   abstract readMCPServers(): Promise<MCPServer[]>;
   abstract writeMCPServers(servers: MCPServer[]): Promise<WriteResult>;
   abstract deleteMCPServer(name: string): Promise<void>;
+
+  /**
+   * Get path resolver instance
+   * Lazy initialization to ensure getConfigDir() is available
+   */
+  protected get pathResolver(): AdapterPathResolver {
+    if (!this._pathResolver) {
+      this._pathResolver = new AdapterPathResolver(
+        this.config.baseDir,
+        this.getConfigDir(),
+      );
+    }
+    return this._pathResolver;
+  }
 
   /**
    * Get adapter capabilities
@@ -225,19 +246,23 @@ export abstract class BaseAdapter implements ToolAdapter {
   }
 
   getSkillsDir(): string {
-    return join(this.getConfigDir(), "skills");
+    return this.pathResolver.skillsDir();
   }
 
   getAgentsDir(): string {
-    return join(this.getConfigDir(), "agents");
+    return this.pathResolver.agentsDir();
   }
 
   getCommandsDir(): string {
-    return join(this.getConfigDir(), "commands");
+    return this.pathResolver.commandsDir();
   }
 
+  /**
+   * Resolve relative path to absolute
+   * @deprecated Use pathResolver.toAbsolute() instead
+   */
   protected resolvePath(relativePath: string): string {
-    return join(this.config.baseDir, relativePath);
+    return this.pathResolver.toAbsolute(relativePath);
   }
 
   protected async getMcpConfigPath(): Promise<string> {

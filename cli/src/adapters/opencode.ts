@@ -4,7 +4,6 @@
  * This adapter is write-only (target tool)
  */
 
-import { join } from "node:path";
 import * as jsonc from "jsonc-parser";
 import type { MCPServer, MCPOAuth } from "@src/types/models.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
@@ -131,7 +130,7 @@ export class OpenCodeAdapter extends BaseAdapter {
     const mcpConfigJsoncPath = await this.getMcpConfigPath();
 
     try {
-      await fileOps.ensureDir(join(this.config.baseDir, this.getConfigDir()));
+      await fileOps.ensureDir(this.pathResolver.configDirAbsolute());
 
       // Read existing config or create new one
       const { data: config, text: jsoncText } =
