@@ -572,6 +572,74 @@ describe("Config Manager", () => {
 
       expect(merged.language).toBeUndefined();
     });
+
+    it("should merge agents and commands config fields (not drop them)", () => {
+      const userConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: {
+          skills: true,
+          mcp: true,
+          agents: false,
+          commands: false,
+        },
+      };
+
+      const projectConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["codex"],
+        sync_config: {
+          skills: false,
+          mcp: false,
+          agents: true,
+          commands: true,
+        },
+      };
+
+      const merged = mergeConfigs(userConfig, projectConfig);
+
+      // Project config takes precedence for all fields
+      expect(merged.sync_config!.skills).toBe(false);
+      expect(merged.sync_config!.mcp).toBe(false);
+      expect(merged.sync_config!.agents).toBe(true);
+      expect(merged.sync_config!.commands).toBe(true);
+    });
+
+    it("should default agents and commands to true if not specified", () => {
+      const userConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "user",
+        source_tool: "claude-code",
+        target_tools: ["cursor"],
+        sync_config: {
+          skills: true,
+          mcp: true,
+          // agents and commands not specified
+        },
+      };
+
+      const projectConfig: VibeConfig = {
+        version: "3.0.0",
+        level: "project",
+        source_tool: "claude-code",
+        target_tools: ["codex"],
+        sync_config: {
+          skills: false,
+          mcp: false,
+          // agents and commands not specified
+        },
+      };
+
+      const merged = mergeConfigs(userConfig, projectConfig);
+
+      // Should default to true
+      expect(merged.sync_config!.agents).toBe(true);
+      expect(merged.sync_config!.commands).toBe(true);
+    });
   });
 
   describe("loadMergedConfig", () => {

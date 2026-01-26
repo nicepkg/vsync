@@ -34,8 +34,9 @@ jobs:
       - name: Create Release PR or Publish
         uses: changesets/action@v1
         with:
-          # use github-api mode for more stable: better for protected branches/permissions, tag/commit is also more "official"
-          commitMode: github-api
+          # use git-cli so symlinks in the repo don't break GitHub API commits
+          commitMode: git-cli
+          setupGitUser: true
   
           # calculate version + generate changelog + update lockfile (very important)
           version: pnpm version-packages

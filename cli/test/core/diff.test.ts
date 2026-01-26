@@ -632,4 +632,135 @@ describe("Diff Calculator", () => {
       });
     });
   });
+
+  describe("capability awareness", () => {
+    it("should not generate delete operations for unsupported item types in manifest cleanup", () => {
+      // Manifest shows agents were synced to target
+      const manifest: Manifest = {
+        version: "3.0.0",
+        last_synced: "2026-01-24T10:00:00Z",
+        items: {
+          "agent/test-agent": {
+            name: "test-agent",
+            type: "agent",
+            hash: "agent-hash",
+            last_synced: "2026-01-24T10:00:00Z",
+            targets: {
+              codex: {
+                synced: true,
+                hash: "agent-hash",
+                last_synced: "2026-01-24T10:00:00Z",
+              },
+            },
+          },
+          "command/test-command": {
+            name: "test-command",
+            type: "command",
+            hash: "command-hash",
+            last_synced: "2026-01-24T10:00:00Z",
+            targets: {
+              codex: {
+                synced: true,
+                hash: "command-hash",
+                last_synced: "2026-01-24T10:00:00Z",
+              },
+            },
+          },
+        },
+      };
+
+      const input: DiffInput = {
+        sourceSkills: [],
+        targetSkills: [],
+        sourceMCPServers: [],
+        targetMCPServers: [],
+        sourceAgents: [], // Not in source
+        targetAgents: [], // Not in target
+        sourceCommands: [], // Not in source
+        targetCommands: [], // Not in target
+        manifest,
+        mode: "prune",
+        targetTool: "codex",
+        // Codex doesn't support agents/commands
+        targetCapabilities: {
+          skills: true,
+          mcp: true,
+          agents: false,
+          commands: false,
+        },
+      };
+
+      const result = calculateDiff(input);
+
+      // Should NOT generate delete operations for unsupported types
+      expect(result.toDelete).toHaveLength(0);
+      expect(result.toDelete.some((op) => op.itemType === "agent")).toBe(false);
+      expect(result.toDelete.some((op) => op.itemType === "command")).toBe(
+        false,
+      );
+    });
+
+    it("should generate delete operations only for supported item types", () => {
+      const manifest: Manifest = {
+        version: "3.0.0",
+        last_synced: "2026-01-24T10:00:00Z",
+        items: {
+          "skill/test-skill": {
+            name: "test-skill",
+            type: "skill",
+            hash: "skill-hash",
+            last_synced: "2026-01-24T10:00:00Z",
+            targets: {
+              cursor: {
+                synced: true,
+                hash: "skill-hash",
+                last_synced: "2026-01-24T10:00:00Z",
+              },
+            },
+          },
+          "agent/test-agent": {
+            name: "test-agent",
+            type: "agent",
+            hash: "agent-hash",
+            last_synced: "2026-01-24T10:00:00Z",
+            targets: {
+              cursor: {
+                synced: true,
+                hash: "agent-hash",
+                last_synced: "2026-01-24T10:00:00Z",
+              },
+            },
+          },
+        },
+      };
+
+      const input: DiffInput = {
+        sourceSkills: [], // Not in source
+        targetSkills: [], // Not in target
+        sourceMCPServers: [],
+        targetMCPServers: [],
+        sourceAgents: [], // Not in source
+        targetAgents: [], // Not in target
+        sourceCommands: [],
+        targetCommands: [],
+        manifest,
+        mode: "prune",
+        targetTool: "cursor",
+        // Cursor supports both
+        targetCapabilities: {
+          skills: true,
+          mcp: true,
+          agents: true,
+          commands: true,
+        },
+      };
+
+      const result = calculateDiff(input);
+
+      // Should generate delete for both supported types
+      expect(result.toDelete).toHaveLength(2);
+      expect(result.toDelete.some((op) => op.itemType === "skill")).toBe(true);
+      expect(result.toDelete.some((op) => op.itemType === "agent")).toBe(true);
+    });
+  });
 });
