@@ -117,10 +117,10 @@ flowchart TD
 
 ```bash
 # Option 1: Run directly with npx (no installation needed)
-npx vsync
+npx @nicepkg/vsync
 
 # Option 2: Install globally with npm
-npm install -g vsync
+npm install -g @nicepkg/vsync
 
 # Verify installation
 vsync --version
