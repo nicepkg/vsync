@@ -35,7 +35,7 @@ export default {
       },
       changelog: {
         title: "Changelog",
-        href: "https://github.com/nicepkg/vsync/blob/main/CHANGELOG.md",
+        href: "https://github.com/nicepkg/vsync/blob/main/cli/CHANGELOG.md",
       },
       release: {
         title: "Release",
