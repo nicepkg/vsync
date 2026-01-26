@@ -332,7 +332,7 @@ jobs:
           node-version: '18'
 
       - name: Sync configs
-        run: npx vsync sync --yes
+        run: npx @nicepkg/vsync sync --yes
         env:
           # Add any required environment variables
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -349,7 +349,7 @@ Automatically sync before commits:
 # Check if .vsync.json exists
 if [ -f .vsync.json ]; then
   echo "Running vsync..."
-  npx vsync sync --yes
+  npx @nicepkg/vsync sync --yes
 
   # Add synced files to commit
   git add .cursor/ .opencode/ .codex/

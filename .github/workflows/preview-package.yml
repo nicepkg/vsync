@@ -24,7 +24,7 @@ jobs:
       matrix:
         package:
           # When you add a new package, add a new line here
-          - name: "vsync"
+          - name: "@nicepkg/vsync"
             dir: "cli"
             display: "vsync (CLI)"
           # - name: "core"

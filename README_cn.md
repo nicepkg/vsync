@@ -117,10 +117,10 @@ flowchart TD
 
 ```bash
 # 方式 1: 使用 npx 直接运行 (无需安装)
-npx vsync
+npx @nicepkg/vsync
 
 # 方式 2: 使用 npm 全局安装
-npm install -g vsync
+npm install -g @nicepkg/vsync
 
 # 验证安装
 vsync --version
