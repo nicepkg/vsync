@@ -14,6 +14,7 @@ import {
   setupSymlinkWithBackup,
 } from "@src/core/symlink-sync.js";
 import type { DirectoryBackupInfo } from "@src/core/symlink-sync.js";
+import { normalizePath } from "../utils/path.js";
 
 describe("Symlink Rollback Support", () => {
   beforeEach(() => {
@@ -80,7 +81,7 @@ describe("Symlink Rollback Support", () => {
       // Backup should be in /target, not /target/skills
       const backupParent = path.dirname(backup.backupPath);
       const originalParent = path.dirname(originalPath);
-      expect(backupParent).toBe(originalParent);
+      expect(normalizePath(backupParent)).toBe(normalizePath(originalParent));
       expect(backup.backupPath).not.toBe(originalPath);
     });
   });

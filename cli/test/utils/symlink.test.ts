@@ -7,6 +7,9 @@ import {
   resolveSymlink,
   removeSymlink,
 } from "@src/utils/file-ops.js";
+import { normalizePath, resolveNormalizedPath } from "./path.js";
+
+const expectedSourcePath = resolveNormalizedPath("/source");
 
 describe("Symlink Utils", () => {
   beforeEach(() => {
@@ -53,7 +56,7 @@ describe("Symlink Utils", () => {
   describe("resolveSymlink", () => {
     it("should resolve symlink to real path", async () => {
       const result = await resolveSymlink("/existing-symlink");
-      expect(result).toBe("/source");
+      expect(normalizePath(result)).toBe(expectedSourcePath);
     });
 
     it("should return original path for non-symlinks", async () => {
@@ -74,14 +77,14 @@ describe("Symlink Utils", () => {
       expect(isLink).toBe(true);
 
       const resolved = await resolveSymlink("/empty/new-link");
-      expect(resolved).toBe("/source");
+      expect(normalizePath(resolved)).toBe(expectedSourcePath);
     });
 
     it("should create symlink with absolute paths", async () => {
       await createSymlink("/empty/abs-link", "/source");
 
       const resolved = await resolveSymlink("/empty/abs-link");
-      expect(resolved).toBe("/source");
+      expect(normalizePath(resolved)).toBe(expectedSourcePath);
     });
 
     it("should throw error if target already exists as regular directory", async () => {

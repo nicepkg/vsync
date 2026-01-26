@@ -316,17 +316,13 @@ export abstract class BaseAdapter implements ToolAdapter {
   }
 
   /**
-   * Generic item reader - DRY principle (eliminates 120+ lines of duplication)
-   * Abstracts common read logic for both directory-based and flat file items
+   * Read directory-based items (Skills only)
+   * Type-safe: no conditional logic, explicit directory structure
    */
-  private async readItems<T extends Skill | Agent | Command>(
+  private async readDirectoryBasedItems<T extends Skill>(
     dirName: string,
-    config: {
-      isDirectory?: boolean;
-      fileName?: string;
-      fileExtension?: string;
-      includeSupportFiles?: boolean;
-    },
+    fileName: string,
+    includeSupportFiles: boolean,
     hashFn: (item: T) => string,
   ): Promise<T[]> {
     const itemsDir = this.resolvePath(dirName);
@@ -336,60 +332,108 @@ export abstract class BaseAdapter implements ToolAdapter {
       const items: T[] = [];
 
       for (const entry of entries) {
-        // Filter entries based on type
-        if (config.isDirectory && !entry.isDirectory()) continue;
-        if (
-          !config.isDirectory &&
-          (!entry.isFile() || !entry.name.endsWith(config.fileExtension || ""))
-        )
-          continue;
+        // Only process directories
+        if (!entry.isDirectory()) continue;
 
-        // Determine item name and path
-        const itemName = config.isDirectory
-          ? entry.name
-          : entry.name.slice(0, -(config.fileExtension?.length || 0));
-        const itemPath = config.isDirectory
-          ? join(itemsDir, entry.name, config.fileName || "")
-          : join(itemsDir, entry.name);
+        const itemName = entry.name;
+        const itemPath = join(itemsDir, entry.name, fileName);
 
         try {
           const content = await readFile(itemPath, "utf-8");
           const parsed = matter(content);
 
-          const item = {
+          // Build item with proper typing
+          const item: Skill = {
             name: itemName,
             content: parsed.content,
             hash: "",
-          } as T;
-
-          const itemMeta = item as T & {
-            description?: string;
-            metadata?: Record<string, unknown>;
-            supportFiles?: Record<string, string>;
           };
 
+          // Add optional fields
           if (parsed.data.description) {
-            itemMeta.description = parsed.data.description;
+            item.description = parsed.data.description;
           }
           if (Object.keys(parsed.data).length > 0) {
-            itemMeta.metadata = parsed.data;
+            item.metadata = parsed.data;
           }
 
-          // Add support files if requested (directory items only)
-          if (config.includeSupportFiles && config.isDirectory) {
+          // Add support files if requested
+          if (includeSupportFiles) {
             const itemDir = join(itemsDir, entry.name);
             const supportFiles = await readSupportFiles(itemDir, {
-              exclude: (relativePath) => relativePath === config.fileName,
+              exclude: (relativePath) => relativePath === fileName,
             });
             if (Object.keys(supportFiles).length > 0) {
-              itemMeta.supportFiles = supportFiles;
+              item.supportFiles = supportFiles;
             }
           }
 
-          item.hash = hashFn(item);
-          items.push(item);
+          item.hash = hashFn(item as T);
+          items.push(item as T);
         } catch (error) {
-          // Log parsing errors - silent skip could hide data corruption
+          console.warn(
+            `⚠️  Warning: Failed to parse ${dirName}/${entry.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        }
+      }
+
+      return items;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Read flat file items (Agents/Commands)
+   * Type-safe: no conditional logic, explicit file structure
+   */
+  private async readFlatFileBasedItems<T extends Agent | Command>(
+    dirName: string,
+    fileExtension: string,
+    hashFn: (item: T) => string,
+  ): Promise<T[]> {
+    const itemsDir = this.resolvePath(dirName);
+
+    try {
+      const entries = await fileOps.readdir(itemsDir, { withFileTypes: true });
+      const items: T[] = [];
+
+      for (const entry of entries) {
+        // Only process files with correct extension
+        if (!entry.isFile() || !entry.name.endsWith(fileExtension)) continue;
+
+        const itemName = entry.name.slice(0, -fileExtension.length);
+        const itemPath = join(itemsDir, entry.name);
+
+        try {
+          const content = await readFile(itemPath, "utf-8");
+          const parsed = matter(content);
+
+          // Build item with proper typing
+          const item: Agent | Command = {
+            name: itemName,
+            content: parsed.content,
+            hash: "",
+          };
+
+          // Add optional fields
+          if (parsed.data.description) {
+            item.description = parsed.data.description;
+          }
+          if (Object.keys(parsed.data).length > 0) {
+            item.metadata = parsed.data;
+          }
+
+          item.hash = hashFn(item as T);
+          items.push(item as T);
+        } catch (error) {
           console.warn(
             `⚠️  Warning: Failed to parse ${dirName}/${entry.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
           );
@@ -414,14 +458,10 @@ export abstract class BaseAdapter implements ToolAdapter {
     fileName: string,
     hashFn: (item: T) => string,
   ): Promise<T[]> {
-    // DRY: Use generic readItems with directory config
-    return this.readItems<T>(
+    return this.readDirectoryBasedItems<T>(
       dirName,
-      {
-        isDirectory: true,
-        fileName,
-        includeSupportFiles: true,
-      },
+      fileName,
+      true, // includeSupportFiles
       hashFn,
     );
   }
@@ -430,13 +470,9 @@ export abstract class BaseAdapter implements ToolAdapter {
     dirName: string,
     hashFn: (item: T) => string,
   ): Promise<T[]> {
-    // DRY: Use generic readItems with flat file config
-    return this.readItems<T>(
+    return this.readFlatFileBasedItems<T>(
       dirName,
-      {
-        isDirectory: false,
-        fileExtension: ".md",
-      },
+      ".md", // fileExtension
       hashFn,
     );
   }
