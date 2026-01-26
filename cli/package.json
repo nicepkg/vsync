@@ -1,6 +1,6 @@
 {
   "name": "@nicepkg/vsync",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "CLI for vsync - AI coding tool config synchronizer",
   "type": "module",
   "publishConfig": {
