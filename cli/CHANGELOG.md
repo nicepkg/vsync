@@ -1,5 +1,11 @@
 # vibe-sync
 
+## 1.0.4
+
+### Patch Changes
+
+- [#10](https://github.com/nicepkg/vibe-sync/pull/10) [`63604c1`](https://github.com/nicepkg/vibe-sync/commit/63604c1250efe9b4e39712e6178ff71852736945) Thanks [@2214962083](https://github.com/2214962083)! - release first version 06
+
 ## 1.0.3
 
 ### Patch Changes
