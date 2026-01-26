@@ -1,5 +1,11 @@
 # vsync
 
+## 1.0.7
+
+### Patch Changes
+
+- [#5](https://github.com/nicepkg/vsync/pull/5) [`3a9d217`](https://github.com/nicepkg/vsync/commit/3a9d217164dcf777ae0673f2e19583caf93813b7) Thanks [@2214962083](https://github.com/2214962083)! - release first version 10
+
 ## 1.0.6
 
 ### Patch Changes
