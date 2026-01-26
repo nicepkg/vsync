@@ -165,6 +165,14 @@ export function mergeConfigs(
         true,
       mcp:
         projectConfig.sync_config?.mcp ?? userConfig.sync_config?.mcp ?? true,
+      agents:
+        projectConfig.sync_config?.agents ??
+        userConfig.sync_config?.agents ??
+        true,
+      commands:
+        projectConfig.sync_config?.commands ??
+        userConfig.sync_config?.commands ??
+        true,
     };
   }
 

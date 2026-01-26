@@ -4,6 +4,7 @@ import { CodexAdapter } from "@src/adapters/codex.js";
 import { CursorAdapter } from "@src/adapters/cursor.js";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
 import { getAdapter, getAvailableTools } from "@src/adapters/registry.js";
+import { isSamePath } from "../utils/path.js";
 
 describe("Adapter Registry", () => {
   describe("getAvailableTools", () => {
@@ -26,7 +27,7 @@ describe("Adapter Registry", () => {
 
       expect(adapter).toBeInstanceOf(ClaudeCodeAdapter);
       expect(adapter.config.tool).toBe("claude-code");
-      expect(adapter.config.baseDir).toBe("/test");
+      expect(isSamePath(adapter.config.baseDir, "/test")).toBe(true);
     });
 
     it("should create CursorAdapter for cursor tool", () => {
@@ -38,7 +39,7 @@ describe("Adapter Registry", () => {
 
       expect(adapter).toBeInstanceOf(CursorAdapter);
       expect(adapter.config.tool).toBe("cursor");
-      expect(adapter.config.baseDir).toBe("/test");
+      expect(isSamePath(adapter.config.baseDir, "/test")).toBe(true);
     });
 
     it("should create OpenCodeAdapter for opencode tool", () => {
@@ -50,7 +51,7 @@ describe("Adapter Registry", () => {
 
       expect(adapter).toBeInstanceOf(OpenCodeAdapter);
       expect(adapter.config.tool).toBe("opencode");
-      expect(adapter.config.baseDir).toBe("/test");
+      expect(isSamePath(adapter.config.baseDir, "/test")).toBe(true);
     });
 
     it("should create CodexAdapter for codex tool", () => {
@@ -62,7 +63,7 @@ describe("Adapter Registry", () => {
 
       expect(adapter).toBeInstanceOf(CodexAdapter);
       expect(adapter.config.tool).toBe("codex");
-      expect(adapter.config.baseDir).toBe("/test");
+      expect(isSamePath(adapter.config.baseDir, "/test")).toBe(true);
     });
 
     it("should throw error for unsupported tool", () => {
@@ -83,7 +84,7 @@ describe("Adapter Registry", () => {
         level: "project",
       });
 
-      expect(adapter.config.baseDir).toBe("/custom/path");
+      expect(isSamePath(adapter.config.baseDir, "/custom/path")).toBe(true);
     });
   });
 });

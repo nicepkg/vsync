@@ -34,6 +34,13 @@ export interface DiffInput {
   mode: SyncMode;
   /** Target tool name */
   targetTool: ToolName;
+  /** Target tool capabilities */
+  targetCapabilities: {
+    skills: boolean;
+    mcp: boolean;
+    agents: boolean;
+    commands: boolean;
+  };
 }
 
 /**
@@ -133,6 +140,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
     manifest,
     mode,
     targetTool,
+    targetCapabilities,
   } = input;
 
   // Arrays to collect operations (will be populated by pure functions)
@@ -296,6 +304,18 @@ export function calculateDiff(input: DiffInput): DiffResult {
   for (const item of Object.values(manifest.items)) {
     // Check if this item was synced to this target
     if (!item.targets[targetTool]?.synced) {
+      continue;
+    }
+
+    // ⚠️ Check if target supports this item type (capability check)
+    // Don't generate delete operations for unsupported types
+    const isSupported =
+      (item.type === "skill" && targetCapabilities.skills) ||
+      (item.type === "mcp" && targetCapabilities.mcp) ||
+      (item.type === "agent" && targetCapabilities.agents) ||
+      (item.type === "command" && targetCapabilities.commands);
+
+    if (!isSupported) {
       continue;
     }
 

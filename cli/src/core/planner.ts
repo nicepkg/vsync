@@ -103,6 +103,7 @@ export function generatePlan(input: PlanInput): SyncPlan {
       manifest,
       mode,
       targetTool,
+      targetCapabilities: capabilities,
     };
 
     diffs[targetTool] = calculateDiff(diffInput);

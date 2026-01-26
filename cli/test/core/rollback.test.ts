@@ -8,7 +8,7 @@ import {
   cleanupBackup,
 } from "@src/core/rollback.js";
 import type { BackupInfo } from "@src/core/rollback.js";
-import { normalizePath } from "../utils/path.js";
+import { isSamePath } from "../utils/path.js";
 
 describe("Rollback Mechanism", () => {
   beforeEach(() => {
@@ -44,7 +44,7 @@ describe("Rollback Mechanism", () => {
 
       const backup = await createBackup(filePath);
 
-      expect(backup.originalPath).toBe(filePath);
+      expect(isSamePath(backup.originalPath, filePath)).toBe(true);
       expect(backup.backupPath).toContain(".vibe-sync-backup");
       expect(backup.timestamp).toBeTruthy();
 
@@ -59,9 +59,9 @@ describe("Rollback Mechanism", () => {
       const backup = await createBackup(filePath);
 
       // Backup should be in the same directory as the original file
-      expect(normalizePath(path.dirname(backup.backupPath))).toBe(
-        normalizePath(path.dirname(filePath)),
-      );
+      expect(
+        isSamePath(path.dirname(backup.backupPath), path.dirname(filePath)),
+      ).toBe(true);
       expect(backup.backupPath).toContain(".vibe-sync-backup");
     });
 
@@ -70,7 +70,7 @@ describe("Rollback Mechanism", () => {
 
       const backup = await createBackup(filePath);
 
-      expect(backup.originalPath).toBe(filePath);
+      expect(isSamePath(backup.originalPath, filePath)).toBe(true);
       expect(backup.existed).toBe(false);
       expect(backup.backupPath).toBe("");
     });

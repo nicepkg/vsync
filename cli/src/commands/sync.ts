@@ -191,21 +191,34 @@ async function readItemsWithFallback<T>(
   reader: () => Promise<T[]>,
   itemType: string,
   tool: ToolName,
+  mode: SyncMode,
 ): Promise<T[]> {
   try {
     return await reader();
   } catch (error) {
     // File not found is expected on first sync - don't warn
-    if (
+    const isFileNotFound =
       error instanceof Error &&
-      !error.message.includes("ENOENT") &&
-      !error.message.includes("not found")
-    ) {
-      // CRITICAL: Parsing errors in prune mode could cause data loss!
-      console.warn(
-        `⚠️  Warning: Failed to read ${itemType} from ${tool}: ${error.message}`,
+      (error.message.includes("ENOENT") || error.message.includes("not found"));
+
+    if (isFileNotFound) {
+      return [];
+    }
+
+    // ⚠️ CRITICAL: Non-ENOENT errors in prune mode could cause data loss!
+    // If we can't read the target config (permission, corruption, etc.),
+    // returning [] would make prune think "user deleted everything" → delete all
+    if (mode === "prune") {
+      throw new Error(
+        `Cannot read ${itemType} from ${tool} in prune mode: ${error instanceof Error ? error.message : String(error)}. ` +
+          `Prune mode requires reliable target reads to prevent accidental deletion.`,
       );
     }
+
+    // Safe mode: Warn but continue (user can fix and re-sync)
+    console.warn(
+      `⚠️  Warning: Failed to read ${itemType} from ${tool}: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return [];
   }
 }
@@ -218,48 +231,39 @@ async function readToolConfig(
   tool: ToolName,
   projectDir: string,
   level: ConfigLevel,
+  mode: SyncMode,
 ): Promise<TargetConfig> {
-  try {
-    const adapter = getAdapter({ tool, baseDir: projectDir, level });
-    const capabilities = adapter.getCapabilities();
+  const adapter = getAdapter({ tool, baseDir: projectDir, level });
+  const capabilities = adapter.getCapabilities();
 
-    // Read each type in parallel if supported
-    const [skills, mcpServers, agents, commands] = await Promise.all([
-      capabilities.skills
-        ? readItemsWithFallback(() => adapter.readSkills(), "skills", tool)
-        : Promise.resolve([]),
-      capabilities.mcp
-        ? readItemsWithFallback(
-            () => adapter.readMCPServers(),
-            "MCP servers",
-            tool,
-          )
-        : Promise.resolve([]),
-      capabilities.agents
-        ? readItemsWithFallback(() => adapter.readAgents(), "agents", tool)
-        : Promise.resolve([]),
-      capabilities.commands
-        ? readItemsWithFallback(() => adapter.readCommands(), "commands", tool)
-        : Promise.resolve([]),
-    ]);
+  // Read each type in parallel if supported
+  // Pass mode to enable strict error handling in prune mode
+  const [skills, mcpServers, agents, commands] = await Promise.all([
+    capabilities.skills
+      ? readItemsWithFallback(() => adapter.readSkills(), "skills", tool, mode)
+      : Promise.resolve([]),
+    capabilities.mcp
+      ? readItemsWithFallback(
+          () => adapter.readMCPServers(),
+          "MCP servers",
+          tool,
+          mode,
+        )
+      : Promise.resolve([]),
+    capabilities.agents
+      ? readItemsWithFallback(() => adapter.readAgents(), "agents", tool, mode)
+      : Promise.resolve([]),
+    capabilities.commands
+      ? readItemsWithFallback(
+          () => adapter.readCommands(),
+          "commands",
+          tool,
+          mode,
+        )
+      : Promise.resolve([]),
+  ]);
 
-    return { skills, mcpServers, agents, commands, capabilities };
-  } catch (error) {
-    // Adapter creation failed - return empty config
-    debug(`Failed to create adapter for ${tool}: ${error}`);
-    return {
-      skills: [],
-      mcpServers: [],
-      agents: [],
-      commands: [],
-      capabilities: {
-        skills: false,
-        mcp: false,
-        agents: false,
-        commands: false,
-      },
-    };
-  }
+  return { skills, mcpServers, agents, commands, capabilities };
 }
 
 /**
@@ -274,10 +278,11 @@ async function readTargetConfigs(
   targetTools: ToolName[],
   projectDir: string,
   level: ConfigLevel,
+  mode: SyncMode,
 ): Promise<Record<ToolName, TargetConfig>> {
   // Parallel read for performance
   const configs = await Promise.all(
-    targetTools.map((tool) => readToolConfig(tool, projectDir, level)),
+    targetTools.map((tool) => readToolConfig(tool, projectDir, level, mode)),
   );
 
   // Convert array to record
@@ -309,7 +314,12 @@ export async function calculateSyncDiff(
   projectDir: string,
   level: ConfigLevel,
 ): Promise<SyncPlan> {
-  const targetData = await readTargetConfigs(targetTools, projectDir, level);
+  const targetData = await readTargetConfigs(
+    targetTools,
+    projectDir,
+    level,
+    mode,
+  );
 
   // Filter source data based on sync_config
   // Only include items that are enabled in configuration

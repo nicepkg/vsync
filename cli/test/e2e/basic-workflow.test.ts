@@ -13,6 +13,7 @@ import {
 } from "@src/commands/init.js";
 import { syncCommand } from "@src/commands/sync.js";
 import type { ToolName } from "@src/types/config.js";
+import { isSamePath } from "../utils/path.js";
 
 // Mock config-initializer to skip prompts
 vi.mock("@src/utils/config-initializer.js", async (importOriginal) => {
@@ -448,7 +449,8 @@ describe("Basic E2E Workflows", () => {
         : null;
       const realSourceDir = await fs.realpath(sourceSkillsDir);
 
-      expect(realSymlinkTarget).toBe(realSourceDir);
+      expect(realSymlinkTarget).not.toBeNull();
+      expect(isSamePath(realSymlinkTarget!, realSourceDir)).toBe(true);
     });
 
     it("should allow accessing files through symlink", async () => {
@@ -532,7 +534,8 @@ describe("Basic E2E Workflows", () => {
           : null;
 
         expect(isSymlink).toBe(true);
-        expect(realSymlinkTarget).toBe(realSourceDir);
+        expect(realSymlinkTarget).not.toBeNull();
+        expect(isSamePath(realSymlinkTarget!, realSourceDir)).toBe(true);
       }
     });
   });

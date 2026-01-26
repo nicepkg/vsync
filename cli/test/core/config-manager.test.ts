@@ -11,6 +11,7 @@ import {
   loadMergedConfig,
 } from "@src/core/config-manager.js";
 import type { VibeConfig } from "@src/types/config.js";
+import { isSamePath } from "../utils/path.js";
 
 const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
 const homeDir = path.join(testRoot, "home", "user");
@@ -53,12 +54,16 @@ describe("Config Manager", () => {
   describe("getConfigPath", () => {
     it("should return project config path", () => {
       const configPath = getConfigPath("project", "/project");
-      expect(configPath).toBe(path.join("/project", ".vibe-sync.json"));
+      expect(
+        isSamePath(configPath, path.join("/project", ".vibe-sync.json")),
+      ).toBe(true);
     });
 
     it("should return user config path", () => {
       const configPath = getConfigPath("user", undefined, homeDir);
-      expect(configPath).toBe(path.join(homeDir, ".vibe-sync.json"));
+      expect(
+        isSamePath(configPath, path.join(homeDir, ".vibe-sync.json")),
+      ).toBe(true);
     });
   });
 
