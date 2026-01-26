@@ -1,7 +1,7 @@
 {
   "name": "@nicepkg/vsync",
   "version": "1.0.5",
-  "description": "CLI for vsync - AI coding tool config synchronizer",
+  "description": "Sync MCP servers, Skills, Agents & Commands across Claude Code, Cursor, OpenCode, Codex. One config, all tools.",
   "type": "module",
   "repository": {
     "type": "git",
