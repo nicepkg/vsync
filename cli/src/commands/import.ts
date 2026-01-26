@@ -1,5 +1,5 @@
 /**
- * vibe-sync import command
+ * vsync import command
  * Import configurations from another project
  */
 

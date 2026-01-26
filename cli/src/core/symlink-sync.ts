@@ -52,7 +52,7 @@ export interface DirectoryBackupInfo {
 /**
  * Check if symlinks should be used based on configuration
  *
- * @param config - vibe-sync configuration
+ * @param config - vsync configuration
  * @returns True if symlinks should be used
  */
 export function shouldUseSymlinks(config: VibeConfig): boolean {
@@ -199,7 +199,7 @@ export async function createDirectoryBackup(
   // Create backup directory in parent directory
   const parentDir = dirname(dirPath);
   const dirName = basename(dirPath);
-  const backupDirName = `.vibe-sync-backup-${Date.now()}-${dirName}`;
+  const backupDirName = `.vsync-backup-${Date.now()}-${dirName}`;
   const backupPath = join(parentDir, backupDirName);
 
   // Copy directory recursively

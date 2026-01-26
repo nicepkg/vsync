@@ -1,5 +1,5 @@
 /**
- * Manifest manager for ~/.vibe-sync/cache/<project-hash>/manifest.json
+ * Manifest manager for ~/.vsync/cache/<project-hash>/manifest.json
  * Tracks sync state and hashes for all configuration items
  */
 
@@ -32,7 +32,7 @@ export function getProjectCacheDir(projectDir?: string): string {
     realDir = dir;
   }
   const hash = createHash("sha256").update(realDir).digest("hex").slice(0, 16);
-  return join(homedir(), ".vibe-sync", "cache", hash);
+  return join(homedir(), ".vsync", "cache", hash);
 }
 
 /**

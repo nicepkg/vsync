@@ -126,20 +126,20 @@ export function createConfigError(
 
   switch (type) {
     case "notFound":
-      message = `Configuration file not found: ${details.filePath || ".vibe-sync.json"}`;
-      suggestion = "Run 'vibe-sync init' to create a new configuration file.";
+      message = `Configuration file not found: ${details.filePath || ".vsync.json"}`;
+      suggestion = "Run 'vsync init' to create a new configuration file.";
       break;
 
     case "invalid":
       message = `Invalid configuration: ${details.reason || "Unknown error"}`;
       suggestion =
-        "Check your .vibe-sync.json file for syntax errors or missing required fields.";
+        "Check your .vsync.json file for syntax errors or missing required fields.";
       break;
 
     case "corrupt":
       message = `Configuration file is corrupted: ${details.reason || "Unable to parse"}`;
       suggestion =
-        "Backup your config and run 'vibe-sync init' to create a fresh configuration.";
+        "Backup your config and run 'vsync init' to create a fresh configuration.";
       break;
   }
 
@@ -247,7 +247,7 @@ export function createSyncError(
     case "noTargets":
       message = "No target tools configured for synchronization";
       suggestion =
-        "Add target tools to your .vibe-sync.json configuration (target_tools array).";
+        "Add target tools to your .vsync.json configuration (target_tools array).";
       break;
 
     case "toolNotFound":
@@ -261,7 +261,7 @@ export function createSyncError(
         message += `\n  Expected: ${details.expected}\n  Actual: ${details.actual}`;
       }
       suggestion =
-        "The item may have been modified outside of vibe-sync. Run 'vibe-sync sync' to update.";
+        "The item may have been modified outside of vsync. Run 'vsync sync' to update.";
       break;
 
     case "syncFailed":

@@ -3,7 +3,7 @@ description: Create new task for feature or bugfix
 argument-hint: "[feature|bugfix|refactor] description"
 ---
 
-# Create Task - vibe-sync
+# Create Task - vsync
 
 Create a new task in `TASKS.md` for a feature, bugfix, or refactoring work.
 

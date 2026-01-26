@@ -65,12 +65,12 @@ describe("Sync Command", () => {
     const mockFsConfig: any = {
       [TEST_HOME]: {
         // Add user-level config with language to avoid prompts
-        ".vibe-sync.json": JSON.stringify({
+        ".vsync.json": JSON.stringify({
           version: "1.0.0",
           level: "user",
           language: "en",
         }),
-        ".vibe-sync": {
+        ".vsync": {
           cache: {
             [PROJECT_HASH]: {
               "manifest.json": JSON.stringify({
@@ -83,7 +83,7 @@ describe("Sync Command", () => {
         },
       },
       [TEST_PROJECT]: {
-        ".vibe-sync.json": JSON.stringify(sampleConfig),
+        ".vsync.json": JSON.stringify(sampleConfig),
         ".claude": {
           skills: {
             "test-skill": {
@@ -297,7 +297,7 @@ describe("Sync Command", () => {
 
       const manifestPath = join(
         TEST_HOME,
-        ".vibe-sync",
+        ".vsync",
         "cache",
         PROJECT_HASH,
         "manifest.json",
@@ -324,7 +324,7 @@ describe("Sync Command", () => {
 
       mockFs({
         "/invalid": {
-          ".vibe-sync.json": JSON.stringify(invalidConfig),
+          ".vsync.json": JSON.stringify(invalidConfig),
           // No .claude directory - adapters should return empty arrays
         },
       });
@@ -344,12 +344,12 @@ describe("Sync Command", () => {
       const mockFsConfig: any = {
         [TEST_HOME]: {
           // Add user-level config with language to avoid prompts
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "user",
             language: "en",
           }),
-          ".vibe-sync": {
+          ".vsync": {
             cache: {
               [PROJECT_HASH]: {
                 "manifest.json": "{ invalid json",
@@ -358,7 +358,7 @@ describe("Sync Command", () => {
           },
         },
         [TEST_PROJECT]: {
-          ".vibe-sync.json": JSON.stringify(sampleConfig),
+          ".vsync.json": JSON.stringify(sampleConfig),
           ".claude": {
             skills: {},
           },

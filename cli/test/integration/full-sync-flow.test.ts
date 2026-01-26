@@ -41,7 +41,7 @@ describe("Full Sync Flow Integration", () => {
     originalCwd = process.cwd();
 
     // Create temporary test directory
-    testDir = await fs.mkdtemp(path.join(tmpdir(), "vibe-sync-test-"));
+    testDir = await fs.mkdtemp(path.join(tmpdir(), "vsync-test-"));
     claudeDir = path.join(testDir, ".claude");
     cursorDir = path.join(testDir, ".cursor");
     opencodeDir = path.join(testDir, ".opencode");
@@ -64,10 +64,7 @@ describe("Full Sync Flow Integration", () => {
     await fs.mkdir(cacheDir, { recursive: true });
 
     // Create minimal user config to avoid language prompts
-    const userConfigPath = path.join(
-      process.env.HOME || "~",
-      ".vibe-sync.json",
-    );
+    const userConfigPath = path.join(process.env.HOME || "~", ".vsync.json");
     try {
       await fs.writeFile(
         userConfigPath,
@@ -100,10 +97,7 @@ describe("Full Sync Flow Integration", () => {
     }
 
     // Cleanup user config file
-    const userConfigPath = path.join(
-      process.env.HOME || "~",
-      ".vibe-sync.json",
-    );
+    const userConfigPath = path.join(process.env.HOME || "~", ".vsync.json");
     try {
       await fs.unlink(userConfigPath);
     } catch {

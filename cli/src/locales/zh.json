@@ -10,8 +10,8 @@
   },
   "commands": {
     "init": {
-      "welcome": "🎯 vibe-sync 初始化",
-      "description": "初始化 vibe-sync 配置",
+      "welcome": "🎯 vsync 初始化",
+      "description": "初始化 vsync 配置",
       "detectingTools": "正在检测已安装的工具...",
       "detectedTools": "检测到的工具: {tools}",
       "selectTools": "您想同步哪些工具?",
@@ -24,7 +24,7 @@
       "agentsChoiceInit": "代理",
       "commandsChoiceInit": "命令",
       "creatingConfig": "正在创建配置...",
-      "configCreated": "已创建 .vibe-sync.json",
+      "configCreated": "已创建 .vsync.json",
       "complete": "初始化完成! 运行 {command} 开始同步。",
       "userLevelOption": "创建用户级配置而不是项目级配置"
     },
@@ -96,7 +96,7 @@
       "hash": "哈希",
       "oldHash": "旧值",
       "newHash": "新值",
-      "applyHint": "运行 `vibe-sync sync` 来应用此计划"
+      "applyHint": "运行 `vsync sync` 来应用此计划"
     },
     "status": {
       "description": "显示同步状态和配置信息",
@@ -124,7 +124,7 @@
       "pendingChanges": "检测到待处理的更改",
       "allUpToDate": "所有目标都是最新的",
       "noChanges": "没有待处理的更改",
-      "runPlanToSee": "运行 `vibe-sync plan` 查看同步计划",
+      "runPlanToSee": "运行 `vsync plan` 查看同步计划",
       "timeJustNow": "刚刚",
       "timeMinutesAgo": "{minutes} 分钟{plural}前",
       "timeHoursAgo": "{hours} 小时{plural}前",
@@ -229,13 +229,13 @@
       "agentsImported": "代理: {imported} 个已导入, {skipped} 个已跳过",
       "commandsImported": "命令: {imported} 个已导入, {skipped} 个已跳过",
       "syncNowPrompt": "现在同步到目标工具?",
-      "syncHint": "运行 'vibe-sync sync' 来同步配置",
+      "syncHint": "运行 'vsync sync' 来同步配置",
       "failed": "导入失败",
       "errors": "错误:"
     }
   },
   "errors": {
-    "configNotFound": "未找到配置文件。请先运行 'vibe-sync init'。",
+    "configNotFound": "未找到配置文件。请先运行 'vsync init'。",
     "invalidConfig": "无效的配置: {message}",
     "readFailed": "读取 {item} 失败: {error}",
     "writeFailed": "写入 {item} 失败: {error}",

@@ -36,7 +36,7 @@ async function createTestFixtures(): Promise<{
 }> {
   const tempDir = path.join(
     tmpdir(),
-    `vibe-sync-bench-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    `vsync-bench-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
   );
   await fs.mkdir(tempDir, { recursive: true });
 
@@ -231,7 +231,7 @@ async function benchmarkIncrementalSync(): Promise<{
  * Run all benchmarks and generate report
  */
 async function runBenchmarks(): Promise<void> {
-  console.log("🚀 vibe-sync Performance Benchmarks");
+  console.log("🚀 vsync Performance Benchmarks");
   console.log("=".repeat(80));
 
   const results: Array<{

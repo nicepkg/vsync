@@ -1,7 +1,7 @@
 /**
- * Manifest type definitions for vibe-sync
+ * Manifest type definitions for vsync
  * Tracks sync status and hashes for all items
- * Stored in ~/.vibe-sync/cache/<project-hash>/manifest.json
+ * Stored in ~/.vsync/cache/<project-hash>/manifest.json
  */
 
 import type { ToolName } from "./config.js";

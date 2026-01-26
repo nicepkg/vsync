@@ -65,7 +65,7 @@ describe("Config Types", () => {
 
     it("should allow optional schema field", () => {
       const config: VibeConfig = {
-        $schema: "https://vibe-sync.dev/schema.json",
+        $schema: "https://vsync.dev/schema.json",
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -76,7 +76,7 @@ describe("Config Types", () => {
         },
       };
 
-      expect(config.$schema).toBe("https://vibe-sync.dev/schema.json");
+      expect(config.$schema).toBe("https://vsync.dev/schema.json");
     });
 
     it("should support symlink configuration for skills", () => {

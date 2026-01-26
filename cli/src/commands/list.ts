@@ -1,5 +1,5 @@
 /**
- * vibe-sync list command
+ * vsync list command
  * List all synced items (skills or MCP servers)
  */
 

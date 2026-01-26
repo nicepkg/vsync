@@ -1,5 +1,5 @@
 /**
- * Data model type definitions for vibe-sync
+ * Data model type definitions for vsync
  * Defines Skills, Agents, and MCP Server structures
  */
 

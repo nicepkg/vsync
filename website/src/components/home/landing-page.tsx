@@ -43,7 +43,7 @@ const Hero3D = dynamic(() => import("./hero-3d").then((mod) => mod.Hero3D), {
 });
 
 // =============================================================================
-// vibe-sync Features - Core capabilities of the configuration sync tool
+// vsync Features - Core capabilities of the configuration sync tool
 // =============================================================================
 const workflows = [
   {
@@ -115,7 +115,7 @@ const workflows = [
 ];
 
 // =============================================================================
-// vibe-sync Pain Points - Before/After comparison showing the value proposition
+// vsync Pain Points - Before/After comparison showing the value proposition
 // =============================================================================
 const problems = [
   {
@@ -125,8 +125,8 @@ const problems = [
       zh: "在多个氛围编程工具间管理配置 - 不同目录、不同格式、无尽的手动复制",
     },
     gain: {
-      en: "One command syncs everything. vibe-sync handles all format conversions automatically.",
-      zh: "一条命令同步所有内容。vibe-sync 自动处理所有格式转换。",
+      en: "One command syncs everything. vsync handles all format conversions automatically.",
+      zh: "一条命令同步所有内容。vsync 自动处理所有格式转换。",
     },
   },
   {
@@ -136,8 +136,8 @@ const problems = [
       zh: "Claude Code 用 ${VAR}，Cursor 需要 ${env:VAR}，OpenCode 要求 {env:VAR}。迁移后 MCP servers 就崩了。",
     },
     gain: {
-      en: "vibe-sync automatically converts env var syntax for each tool. No more broken MCP servers.",
-      zh: "vibe-sync 为每个工具自动转换环境变量语法。不再有坏掉的 MCP servers。",
+      en: "vsync automatically converts env var syntax for each tool. No more broken MCP servers.",
+      zh: "vsync 为每个工具自动转换环境变量语法。不再有坏掉的 MCP servers。",
     },
   },
   {
@@ -187,16 +187,15 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
           : "一处配置，多个 AI 工具同步，不再折腾。",
       desc:
         lang === "en"
-          ? "Each vibe coding tool (Claude Code, Cursor, OpenCode, Codex) has its own directories and formats. Skills, MCP servers, Agents, Commands - they're all different. vibe-sync keeps everything in sync automatically. No more manual copying, no more broken configs."
-          : "每个氛围编程工具（Claude Code、Cursor、OpenCode、Codex）都有自己的目录和格式。Skills、MCP servers、Agents、Commands - 都不一样。vibe-sync 自动保持所有内容同步。不再手动复制，不再有坏掉的配置。",
+          ? "Each vibe coding tool (Claude Code, Cursor, OpenCode, Codex) has its own directories and formats. Skills, MCP servers, Agents, Commands - they're all different. vsync keeps everything in sync automatically. No more manual copying, no more broken configs."
+          : "每个氛围编程工具（Claude Code、Cursor、OpenCode、Codex）都有自己的目录和格式。Skills、MCP servers、Agents、Commands - 都不一样。vsync 自动保持所有内容同步。不再手动复制，不再有坏掉的配置。",
       getStarted: lang === "en" ? "Get Started" : "开始使用",
       viewGithub: lang === "en" ? "Star on GitHub" : "Star on GitHub",
     },
     problem: {
-      title:
-        lang === "en" ? "Before & After vibe-sync" : "使用 vibe-sync 前后对比",
-      without: lang === "en" ? "Without vibe-sync" : "没有 vibe-sync",
-      with: lang === "en" ? "With vibe-sync" : "有了 vibe-sync",
+      title: lang === "en" ? "Before & After vsync" : "使用 vsync 前后对比",
+      without: lang === "en" ? "Without vsync" : "没有 vsync",
+      with: lang === "en" ? "With vsync" : "有了 vsync",
     },
     workflows: {
       title: lang === "en" ? "Core Features" : "核心特性",
@@ -273,9 +272,7 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
                   <div className="bg-card/80 border-primary/10 rounded-xl border p-6 shadow-2xl backdrop-blur-md">
                     <div className="flex items-center overflow-x-auto text-left font-mono text-sm whitespace-nowrap md:text-base">
                       <span className="text-primary mr-3 select-none">$</span>
-                      <span className="text-foreground">
-                        npx vibe-sync sync
-                      </span>
+                      <span className="text-foreground">npx vsync sync</span>
                     </div>
                   </div>
                 </div>

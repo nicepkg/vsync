@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import "@src/commands/init.js";
 import type { VibeConfig, ToolName } from "@src/types/config.js";
 
-const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const testRoot = path.join(path.parse(process.cwd()).root, "vsync-test");
 const homeDir = path.join(testRoot, "home", "user");
 
 describe("Init Command", () => {
@@ -124,7 +124,7 @@ describe("Init Command", () => {
   });
 
   describe("File Creation", () => {
-    it("should create .vibe-sync.json with correct content", async () => {
+    it("should create .vsync.json with correct content", async () => {
       const config: VibeConfig = {
         version: "1.0.0",
         level: "project",
@@ -140,7 +140,7 @@ describe("Init Command", () => {
         m.saveConfig(config, "/project"),
       );
 
-      const content = await readFile("/project/.vibe-sync.json", "utf-8");
+      const content = await readFile("/project/.vsync.json", "utf-8");
       const parsed = JSON.parse(content);
 
       expect(parsed.source_tool).toBe("claude-code");
@@ -163,7 +163,7 @@ describe("Init Command", () => {
         m.saveConfig(config, "/project"),
       );
 
-      const content = await readFile("/project/.vibe-sync.json", "utf-8");
+      const content = await readFile("/project/.vsync.json", "utf-8");
       expect(content).toContain("\n");
       expect(content).toContain("  ");
     });
@@ -187,7 +187,7 @@ describe("Init Command", () => {
       );
 
       const content = await readFile(
-        path.join(homeDir, ".vibe-sync.json"),
+        path.join(homeDir, ".vsync.json"),
         "utf-8",
       );
       const parsed = JSON.parse(content);

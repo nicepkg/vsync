@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-pnpm --filter vibe-sync run build
+pnpm --filter vsync run build
 pnpm ci:publish
 pnpm changeset tag

@@ -1,19 +1,19 @@
 ---
 title: Core Concepts
-description: Master vibe-sync architecture - learn sync modes (safe vs prune), configuration layers (project vs user), manifest system, atomic operations, and how environment variables are preserved safely.
+description: Master vsync architecture - learn sync modes (safe vs prune), configuration layers (project vs user), manifest system, atomic operations, and how environment variables are preserved safely.
 ---
 
 # Core Concepts
 
-Learn the fundamental concepts that power vibe-sync.
+Learn the fundamental concepts that power vsync.
 
-## How vibe-sync Works
+## How vsync Works
 
-vibe-sync follows a simple but powerful workflow:
+vsync follows a simple but powerful workflow:
 
 ```mermaid
 flowchart TD
-    A[Pick Source Tool<br/>Your source of truth] --> B[vibe-sync reads configs<br/>Skills, MCP, Agents, Commands]
+    A[Pick Source Tool<br/>Your source of truth] --> B[vsync reads configs<br/>Skills, MCP, Agents, Commands]
     B --> C[Compare with targets<br/>Calculate differences]
     C --> D[Show you the plan<br/>What will change]
     D --> E{Your approval}
@@ -29,7 +29,7 @@ flowchart TD
 
 ### The Process
 
-1. **Read Source**: vibe-sync reads configuration from your chosen source tool
+1. **Read Source**: vsync reads configuration from your chosen source tool
 2. **Normalize**: Converts tool-specific formats to a unified data model
 3. **Calculate Diff**: Compares source with targets using 3-way diff (source, target, manifest)
 4. **Generate Plan**: Creates a detailed sync plan showing all operations
@@ -40,7 +40,7 @@ flowchart TD
 
 ## Source of Truth Concept
 
-vibe-sync uses a **unidirectional sync model**:
+vsync uses a **unidirectional sync model**:
 
 - **Source Tool**: Your reference standard—where you edit configurations
 - **Target Tools**: They sync FROM the source—changes here will be overwritten
@@ -59,11 +59,11 @@ Claude Code (Source)  →  Cursor (Target)
 
 ## Configuration Layers
 
-vibe-sync supports two configuration layers:
+vsync supports two configuration layers:
 
 ### Project Layer (Default)
 
-Located at: `<project>/.vibe-sync.json`
+Located at: `<project>/.vsync.json`
 
 **Use for**:
 - Team-shared configurations
@@ -71,13 +71,13 @@ Located at: `<project>/.vibe-sync.json`
 - Checked into version control
 
 ```bash
-vibe-sync init       # Create project config
-vibe-sync sync       # Sync project configs
+vsync init       # Create project config
+vsync sync       # Sync project configs
 ```
 
 ### User Layer (Global)
 
-Located at: `~/.vibe-sync.json`
+Located at: `~/.vsync.json`
 
 **Use for**:
 - Personal global configurations
@@ -85,13 +85,13 @@ Located at: `~/.vibe-sync.json`
 - Not shared with team
 
 ```bash
-vibe-sync init --user    # Create user config
-vibe-sync sync --user    # Sync user configs
+vsync init --user    # Create user config
+vsync sync --user    # Sync user configs
 ```
 
 ## Sync Modes
 
-vibe-sync offers two sync modes to handle different scenarios:
+vsync offers two sync modes to handle different scenarios:
 
 ### Safe Mode (Default)
 
@@ -103,7 +103,7 @@ vibe-sync offers two sync modes to handle different scenarios:
 **When to use**: Daily syncing, team environments, when you want conservative behavior
 
 ```bash
-vibe-sync sync
+vsync sync
 ```
 
 **Example**:
@@ -124,7 +124,7 @@ Result: skill-a, skill-b, skill-c, skill-old (old one kept)
 **When to use**: Cleaning up old configs, strict mirroring, when you want exact replicas
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **Example**:
@@ -137,7 +137,7 @@ Result: skill-a, skill-b, skill-c (old one removed)
 
 ## The Manifest System
 
-vibe-sync uses a manifest file (`.vibe-sync-cache/manifest.json`) to track sync state.
+vsync uses a manifest file (`.vsync-cache/manifest.json`) to track sync state.
 
 ### What the Manifest Does
 
@@ -185,7 +185,7 @@ This ensures your configs are never left in a corrupted state, even if the proce
 
 ## Environment Variable Preservation
 
-vibe-sync **never expands** environment variables—it preserves the syntax:
+vsync **never expands** environment variables—it preserves the syntax:
 
 ```json
 // Source (Claude Code)

@@ -41,7 +41,7 @@ class E2ETestHelper {
   static async createTempProject(): Promise<string> {
     const tempDir = path.join(
       tmpdir(),
-      `vibe-sync-e2e-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      `vsync-e2e-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     );
     await fs.mkdir(tempDir, { recursive: true });
     return tempDir;
@@ -189,7 +189,7 @@ class E2ETestFixture {
   }
 
   /**
-   * Initialize vibe-sync configuration
+   * Initialize vsync configuration
    */
   async initVibeSync(
     source: ToolName,
@@ -319,10 +319,7 @@ describe("Basic E2E Workflows", () => {
     process.chdir(testDir);
 
     // Create minimal user config to avoid language prompts
-    const userConfigPath = path.join(
-      process.env.HOME || "~",
-      ".vibe-sync.json",
-    );
+    const userConfigPath = path.join(process.env.HOME || "~", ".vsync.json");
     try {
       await fs.writeFile(
         userConfigPath,
@@ -342,10 +339,7 @@ describe("Basic E2E Workflows", () => {
     await E2ETestHelper.cleanupTempProject(testDir);
 
     // Cleanup user config file
-    const userConfigPath = path.join(
-      process.env.HOME || "~",
-      ".vibe-sync.json",
-    );
+    const userConfigPath = path.join(process.env.HOME || "~", ".vsync.json");
     try {
       await fs.unlink(userConfigPath);
     } catch {

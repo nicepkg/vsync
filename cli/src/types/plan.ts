@@ -1,5 +1,5 @@
 /**
- * Sync plan type definitions for vibe-sync
+ * Sync plan type definitions for vsync
  * Defines the structure of diff results and sync plans
  */
 

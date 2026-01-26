@@ -1,11 +1,11 @@
 ---
 title: 快速参考
-description: vibe-sync 命令、选项和常用模式的快速参考指南和速查表。可复制粘贴的日常工作流示例。
+description: vsync 命令、选项和常用模式的快速参考指南和速查表。可复制粘贴的日常工作流示例。
 ---
 
 # 快速参考
 
-vibe-sync 命令和常用模式的快速参考指南和速查表。
+vsync 命令和常用模式的快速参考指南和速查表。
 
 ## 命令概览
 
@@ -25,12 +25,12 @@ vibe-sync 命令和常用模式的快速参考指南和速查表。
 
 ```bash
 # Project 层级设置
-vibe-sync init
-vibe-sync sync
+vsync init
+vsync sync
 
 # User 层级设置
-vibe-sync init --user
-vibe-sync sync --user
+vsync init --user
+vsync sync --user
 ```
 
 **[了解更多 →](../getting-started)**
@@ -42,30 +42,30 @@ vibe-sync sync --user
 vim ~/.claude/skills/my-skill/SKILL.md
 
 # 2. 同步到目标
-vibe-sync sync
+vsync sync
 ```
 
 ### 同步前预览
 
 ```bash
 # 检查将要更改什么
-vibe-sync plan
+vsync plan
 
 # 或使用 dry-run
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # 如果满意，应用
-vibe-sync sync
+vsync sync
 ```
 
 ### 清理旧配置
 
 ```bash
 # 安全: 仅从目标移除
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # 严格镜像（删除额外项）
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **[了解更多 →](../cli-commands#clean)**
@@ -75,7 +75,7 @@ vibe-sync sync --prune
 ### Safe 模式（默认）
 
 ```bash
-vibe-sync sync
+vsync sync
 ```
 
 - ✅ 创建新项
@@ -87,7 +87,7 @@ vibe-sync sync
 ### Prune 模式
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 - ✅ 创建新项
@@ -102,8 +102,8 @@ vibe-sync sync --prune
 
 ```bash
 # 默认行为
-vibe-sync init       # 创建 .vibe-sync.json
-vibe-sync sync       # 同步项目配置
+vsync init       # 创建 .vsync.json
+vsync sync       # 同步项目配置
 ```
 
 **用于**: 团队配置、项目特定集成
@@ -112,8 +112,8 @@ vibe-sync sync       # 同步项目配置
 
 ```bash
 # 添加 --user 标志
-vibe-sync init --user    # 创建 ~/.vibe-sync.json
-vibe-sync sync --user    # 同步全局配置
+vsync init --user    # 创建 ~/.vsync.json
+vsync sync --user    # 同步全局配置
 ```
 
 **用于**: 个人偏好、全局技能
@@ -126,84 +126,84 @@ vibe-sync sync --user    # 同步全局配置
 
 ```bash
 # 项目配置
-vibe-sync init
+vsync init
 
 # 用户配置
-vibe-sync init --user
+vsync init --user
 ```
 
 ### sync
 
 ```bash
 # Safe 同步
-vibe-sync sync
+vsync sync
 
 # Prune 模式
-vibe-sync sync --prune
+vsync sync --prune
 
 # Dry run
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # 用户级
-vibe-sync sync --user
+vsync sync --user
 
 # 跳过确认
-vibe-sync sync -y
+vsync sync -y
 ```
 
 ### plan
 
 ```bash
 # 预览更改
-vibe-sync plan
+vsync plan
 
 # 用户级计划
-vibe-sync plan --user
+vsync plan --user
 ```
 
 ### status
 
 ```bash
 # 检查同步状态
-vibe-sync status
+vsync status
 
 # 用户级状态
-vibe-sync status --user
+vsync status --user
 ```
 
 ### list
 
 ```bash
 # 列出所有
-vibe-sync list
+vsync list
 
 # 列出 skills
-vibe-sync list skills
+vsync list skills
 
 # 列出 MCP 服务器
-vibe-sync list mcp
+vsync list mcp
 
 # 用户级
-vibe-sync list --user
+vsync list --user
 ```
 
 ### clean
 
 ```bash
 # 从目标移除单个项
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # 交互式选择
-vibe-sync clean
+vsync clean
 
 # 也从源删除（危险！）
-vibe-sync clean skill/old-skill --from-source
+vsync clean skill/old-skill --from-source
 
 # 用户级
-vibe-sync clean --user
+vsync clean --user
 
 # 跳过确认
-vibe-sync clean skill/old-skill -y
+vsync clean skill/old-skill -y
 ```
 
 **[了解更多 →](../cli-commands#clean)**
@@ -212,15 +212,15 @@ vibe-sync clean skill/old-skill -y
 
 ```bash
 # 从另一个项目导入
-vibe-sync import ../other-project
+vsync import ../other-project
 
 # 导入到用户级
-vibe-sync import ../other-project --user
+vsync import ../other-project --user
 ```
 
 ## 配置文件快速参考
 
-### .vibe-sync.json
+### .vsync.json
 
 ```json
 {
@@ -280,13 +280,13 @@ vibe-sync import ../other-project --user
 
 ```bash
 # 1. 提交配置到 git
-git add .vibe-sync.json
-git commit -m "feat: add vibe-sync config"
+git add .vsync.json
+git commit -m "feat: add vsync config"
 
 # 2. 团队成员克隆并同步
 git clone <repo>
 cd <repo>
-vibe-sync sync
+vsync sync
 ```
 
 ### CI/CD 集成
@@ -294,7 +294,7 @@ vibe-sync sync
 ```bash
 # GitHub Actions
 - name: Sync configs
-  run: npx vibe-sync sync --yes
+  run: npx vsync sync --yes
 ```
 
 **[了解更多 →](../advanced-features#cicd-integration)**
@@ -303,13 +303,13 @@ vibe-sync sync
 
 ```bash
 # 1. 从旧项目导入
-vibe-sync import ../old-project
+vsync import ../old-project
 
 # 2. 查看计划
-vibe-sync plan
+vsync plan
 
 # 3. 同步到目标
-vibe-sync sync
+vsync sync
 ```
 
 **[了解更多 →](../faq#migration-questions)**
@@ -325,13 +325,13 @@ vibe-sync sync
 
 ```bash
 # 一般帮助
-vibe-sync --help
+vsync --help
 
 # 命令帮助
-vibe-sync sync --help
+vsync sync --help
 
 # 版本
-vibe-sync --version
+vsync --version
 ```
 
 ## 常见问题
@@ -349,7 +349,7 @@ ls -la ~/.cursor/
 
 ```bash
 # 解决方案: 先初始化
-vibe-sync init
+vsync init
 ```
 
 ### 未检测到工具
@@ -357,7 +357,7 @@ vibe-sync init
 ```bash
 # 解决方案: 创建工具目录
 mkdir -p ~/.cursor
-vibe-sync init
+vsync init
 ```
 
 **[更多故障排除 →](../faq#troubleshooting)**
@@ -365,7 +365,7 @@ vibe-sync init
 ## 相关资源
 
 - **[快速开始](../getting-started)** - 详细安装指南
-- **[核心概念](../core-concepts)** - 理解 vibe-sync
+- **[核心概念](../core-concepts)** - 理解 vsync
 - **[CLI 命令](../cli-commands)** - 完整命令参考
 - **[配置指南](../configuration)** - 配置文件详情
 - **[高级功能](../advanced-features)** - Symlinks、性能

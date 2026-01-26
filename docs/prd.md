@@ -1,4 +1,4 @@
-# vibe-sync - AI 氛围编程工具配置同步器
+# vsync - AI 氛围编程工具配置同步器
 
 **版本**: 1.0.0 (当前实施版本: v1.2)
 **日期**: 2026-01-25
@@ -40,7 +40,7 @@
 
 **问题**: 多个 AI 氛围编程工具 (Claude Code、Cursor、OpenCode、Codex) 各有各的目录结构和配置格式，跨工具管理 Skills、MCP、Agents、Commands 成为噩梦。
 
-**解决方案**: vibe-sync 提供一条命令同步一切。选一个工具作为源 (source of truth)，其他工具自动保持同步。
+**解决方案**: vsync 提供一条命令同步一切。选一个工具作为源 (source of truth)，其他工具自动保持同步。
 
 **核心价值**:
 
@@ -342,10 +342,11 @@ enabled = true # optional
 | **环境变量格式** | `${X}`       | ❌ 不支持     | `${env:X}` + 5 个固定的 | `{env:X}`          |
 
 **关键差异**:
+
 - OpenCode 的 MCP 字段名是 `mcp` 而不是 `mcpServers` (最容易出错!)
 - OpenCode 必须指定 `type` 字段 (`"local"` 或 `"remote"`)
 - Codex 使用 TOML 格式，字段名是 `mcp_servers` (下划线)
-- 环境变量语法各不相同，vibe-sync 自动转换：
+- 环境变量语法各不相同，vsync 自动转换：
   - Claude Code: `${VAR}` → Cursor: `${env:VAR}` → OpenCode: `{env:VAR}`
   - Codex 不支持插值，直接写值
 
@@ -357,16 +358,16 @@ enabled = true # optional
 
 ```bash
 # Project 层（默认）
-vibe-sync sync          # 操作当前项目 .vibe-sync.json
+vsync sync          # 操作当前项目 .vsync.json
 
 # User 层（全局）
-vibe-sync sync --user   # 操作 ~/.vibe-sync.json
+vsync sync --user   # 操作 ~/.vsync.json
 ```
 
 ### 3.2 配置文件结构
 
-**Project 层**: `<project>/.vibe-sync.json`
-**User 层**: `~/.vibe-sync.json`
+**Project 层**: `<project>/.vsync.json`
+**User 层**: `~/.vsync.json`
 
 ```json
 {
@@ -400,7 +401,7 @@ vibe-sync sync --user   # 操作 ~/.vibe-sync.json
 
 ### 3.3 Manifest 文件
 
-**位置**: `.vibe-sync-cache/manifest.json`
+**位置**: `.vsync-cache/manifest.json`
 
 **作用**:
 
@@ -450,25 +451,25 @@ vibe-sync sync --user   # 操作 ~/.vibe-sync.json
 ### 4.1 命令概览
 
 ```bash
-vibe-sync init [--user]                    # 初始化配置
-vibe-sync sync [--user] [--dry-run] [--prune]  # 同步配置
-vibe-sync import <path> [--user]           # 从其他项目导入
-vibe-sync clean [name] [--user]            # 清理目标工具配置
-vibe-sync status [--user]                  # 查看同步状态
-vibe-sync list [type] [--user]             # 列出配置
-vibe-sync plan [--user]                    # 查看同步计划（不执行）
+vsync init [--user]                    # 初始化配置
+vsync sync [--user] [--dry-run] [--prune]  # 同步配置
+vsync import <path> [--user]           # 从其他项目导入
+vsync clean [name] [--user]            # 清理目标工具配置
+vsync status [--user]                  # 查看同步状态
+vsync list [type] [--user]             # 列出配置
+vsync plan [--user]                    # 查看同步计划（不执行）
 ```
 
-### 4.2 `vibe-sync init` - 初始化
+### 4.2 `vsync init` - 初始化
 
-**触发时机**: 用户主动运行或任何命令找不到 `.vibe-sync.json` 时
+**触发时机**: 用户主动运行或任何命令找不到 `.vsync.json` 时
 
 **交互流程** (基于实际代码):
 
 ```bash
-$ vibe-sync init
+$ vsync init
 
-🚀 Welcome to vibe-sync!
+🚀 Welcome to vsync!
 
 ✔ Detecting existing tools...
 ✔ Detected: claude-code, cursor
@@ -490,7 +491,7 @@ $ vibe-sync init
 ✔ Cache directory created
 ✔ Manifest initialized
 
-✅ Setup complete! Run vibe-sync sync to start syncing
+✅ Setup complete! Run vsync sync to start syncing
 ```
 
 **关键特性**:
@@ -501,7 +502,7 @@ $ vibe-sync init
 - 选择要同步的配置类型
 - 创建配置文件、缓存目录、manifest
 
-### 4.3 `vibe-sync sync` - 同步配置
+### 4.3 `vsync sync` - 同步配置
 
 **核心功能**: 从配置源读取 → 计算差异 → 生成计划 → 执行同步
 
@@ -509,22 +510,22 @@ $ vibe-sync init
 
 ```bash
 # Project 层同步（默认 safe 模式）
-vibe-sync sync
+vsync sync
 
 # Prune 模式（严格镜像，会删除目标多余项）
-vibe-sync sync --prune
+vsync sync --prune
 
 # Dry Run（仅显示计划，不执行）
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # User 层同步
-vibe-sync sync --user
+vsync sync --user
 ```
 
 #### 输出示例（Safe 模式）
 
 ```bash
-$ vibe-sync sync
+$ vsync sync
 
 📖 Reading source (claude-code)...
   ✓ Found 3 skills
@@ -575,7 +576,7 @@ opencode:
 #### 输出示例（Prune 模式）
 
 ```bash
-$ vibe-sync sync --prune
+$ vsync sync --prune
 
 📖 Reading source (claude-code)...
   ✓ Found 2 skills
@@ -619,7 +620,7 @@ opencode:
 ✓ Sync completed in 0.8s
 ```
 
-### 4.4 `vibe-sync clean` - 清理目标配置
+### 4.4 `vsync clean` - 清理目标配置
 
 **功能**: 从目标工具移除配置（**不动配置源**）
 
@@ -627,22 +628,22 @@ opencode:
 
 ```bash
 # 删除单个配置
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # 交互式批量选择
-vibe-sync clean
+vsync clean
 
 # 从配置源和所有目标删除（危险！）
-vibe-sync clean skill/old-skill --from-source
+vsync clean skill/old-skill --from-source
 
 # User 层清理
-vibe-sync clean --user
+vsync clean --user
 ```
 
 #### 单个删除示例
 
 ```bash
-$ vibe-sync clean skill/old-skill
+$ vsync clean skill/old-skill
 
 ⚠️  This will remove from target tools only (source unchanged)
 
@@ -664,7 +665,7 @@ Source (claude-code) will NOT be affected.
 #### 从配置源删除示例（危险操作）
 
 ```bash
-$ vibe-sync clean skill/old-skill --from-source
+$ vsync clean skill/old-skill --from-source
 
 ⚠️⚠️⚠️  DANGER ZONE  ⚠️⚠️⚠️
 
@@ -691,7 +692,7 @@ Will delete from:
 #### 批量删除示例
 
 ```bash
-$ vibe-sync clean
+$ vsync clean
 
 ? What type do you want to clean?
   ❯ Skills
@@ -718,10 +719,10 @@ Selected items (1):
 ✓ Cleanup completed
 ```
 
-### 4.5 `vibe-sync import` - 导入配置
+### 4.5 `vsync import` - 导入配置
 
 ```bash
-$ vibe-sync import ../other-project
+$ vsync import ../other-project
 
 Scanning ../other-project...
 
@@ -765,12 +766,12 @@ Processing:
 # 进入正常 sync 流程...
 ```
 
-### 4.6 `vibe-sync plan` - 查看同步计划
+### 4.6 `vsync plan` - 查看同步计划
 
 **功能**: 显示详细的同步计划（相当于 `sync --dry-run`）
 
 ```bash
-$ vibe-sync plan
+$ vsync plan
 
 📖 Reading source (claude-code)...
   ✓ Found 3 skills
@@ -806,13 +807,13 @@ cursor:
 
 ──────────────────────────────────────────────────────────
 
-Run `vibe-sync sync` to apply this plan
+Run `vsync sync` to apply this plan
 ```
 
-### 4.7 `vibe-sync status` - 查看状态
+### 4.7 `vsync status` - 查看状态
 
 ```bash
-$ vibe-sync status
+$ vsync status
 
 Configuration Status (Project)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -820,8 +821,8 @@ Configuration Status (Project)
 Source Tool:       claude-code
 Target Tools:      cursor, opencode
 Last Sync:         2026-01-24 10:30:00 (2 hours ago)
-Configuration:     .vibe-sync.json
-Manifest:          .vibe-sync-cache/manifest.json
+Configuration:     .vsync.json
+Manifest:          .vsync-cache/manifest.json
 
 Synced Items:
   Skills:          3 items
@@ -836,13 +837,13 @@ Health:
   ✓ All targets up-to-date
   ✓ No pending changes
 
-Run `vibe-sync plan` to see sync plan
+Run `vsync plan` to see sync plan
 ```
 
-### 4.8 `vibe-sync list` - 列出配置
+### 4.8 `vsync list` - 列出配置
 
 ```bash
-$ vibe-sync list skills
+$ vsync list skills
 
 Skills (3 items) - Source: claude-code
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -862,10 +863,10 @@ Skills (3 items) - Source: claude-code
 
 ### 5.1 两种同步模式
 
-| 模式      | 命令                     | CREATE | UPDATE | DELETE | 适用场景         |
-| --------- | ------------------------ | ------ | ------ | ------ | ---------------- |
-| **Safe**  | `vibe-sync sync`         | ✅     | ✅     | ❌     | 日常同步（默认） |
-| **Prune** | `vibe-sync sync --prune` | ✅     | ✅     | ✅     | 严格镜像         |
+| 模式      | 命令                 | CREATE | UPDATE | DELETE | 适用场景         |
+| --------- | -------------------- | ------ | ------ | ------ | ---------------- |
+| **Safe**  | `vsync sync`         | ✅     | ✅     | ❌     | 日常同步（默认） |
+| **Prune** | `vsync sync --prune` | ✅     | ✅     | ✅     | 严格镜像         |
 
 ### 5.2 原子化写入
 
@@ -1279,7 +1280,7 @@ async function updateManifest(
   manifest.last_sync = now;
 
   await atomicWrite(
-    ".vibe-sync-cache/manifest.json",
+    ".vsync-cache/manifest.json",
     JSON.stringify(manifest, null, 2),
   );
 }
@@ -1311,7 +1312,7 @@ async function updateManifest(
 
 **新增功能**:
 
-- ✅ User 层配置 (~/.vibe-sync.json)
+- ✅ User 层配置 (~/.vsync.json)
 - ✅ Agents 同步
 - ✅ Commands 同步
 - ✅ Codex 支持 (TOML 格式)
@@ -1389,7 +1390,7 @@ async function updateManifest(
 
 ### 9.1 核心价值
 
-**vibe-sync 解决的核心问题**:
+**vsync 解决的核心问题**:
 
 多个 AI 氛围编程工具 (Claude Code, Cursor, OpenCode, Codex) 各有各的配置目录和文件格式，导致：
 
@@ -1398,7 +1399,7 @@ async function updateManifest(
 - 团队协作时配置不一致
 - 管理多个工具成本高
 
-**vibe-sync 的解决方案**:
+**vsync 的解决方案**:
 
 一条命令同步所有工具：
 

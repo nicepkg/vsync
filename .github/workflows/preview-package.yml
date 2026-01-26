@@ -24,12 +24,12 @@ jobs:
       matrix:
         package:
           # When you add a new package, add a new line here
-          - name: "vibe-sync"
+          - name: "vsync"
             dir: "cli"
-            display: "vibe-sync (CLI)"
+            display: "vsync (CLI)"
           # - name: "core"
           #   dir: "core"
-          #   display: "vibe-sync (core)"
+          #   display: "vsync (core)"
 
     steps:
       - name: Checkout
@@ -107,8 +107,8 @@ jobs:
 
             ### ✅ Quick verification (CLI)
             \`\`\`bash
-            vibe-sync --version
-            vibe-sync --help
+            vsync --version
+            vsync --help
             \`\`\`
 
             ### 🔎 Raw publish output (for troubleshooting)

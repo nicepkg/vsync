@@ -2,14 +2,14 @@
 
 <img src="website/public/icon.svg" width="120" height="120" />
 
-# vibe-sync
+# vsync
 
 ### **One config. Many AI tools. Zero pain.**
 
-[![GitHub stars](https://img.shields.io/github/stars/nicepkg/vibe-sync?style=social)](https://github.com/nicepkg/vibe-sync)
+[![GitHub stars](https://img.shields.io/github/stars/nicepkg/vsync?style=social)](https://github.com/nicepkg/vsync)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/nicepkg/vibe-sync/pulls)
-[![Tests](https://img.shields.io/badge/tests-612%20passing-brightgreen)](https://github.com/nicepkg/vibe-sync)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/nicepkg/vsync/pulls)
+[![Tests](https://img.shields.io/badge/tests-612%20passing-brightgreen)](https://github.com/nicepkg/vsync)
 
 [简体中文](./README_cn.md) | English
 
@@ -23,15 +23,15 @@
 **One-command config sync for AI vibe coding tools**
 
 Managing Skills, MCP servers, Agents & Commands across multiple AI coding tools is a nightmare.
-Each tool has its own directories and formats. vibe-sync solves this with one simple command.
+Each tool has its own directories and formats. vsync solves this with one simple command.
 
-[Get Started](#-quick-start) · [Features](#-features) · [Documentation](https://vibe-sync.xiaominglab.com)
+[Get Started](#-quick-start) · [Features](#-features) · [Documentation](https://vsync.xiaominglab.com)
 
 </div>
 
 ---
 
-## ✨ Why vibe-sync?
+## ✨ Why vsync?
 
 **The Problem**: You love using multiple AI vibe coding tools (Claude Code, Cursor, OpenCode, Codex...), but each tool has:
 
@@ -41,11 +41,11 @@ Each tool has its own directories and formats. vibe-sync solves this with one si
 
 Managing configurations across tools becomes a nightmare, especially for teams.
 
-**The Solution**: vibe-sync gives you one command to sync everything. Pick one tool as your source of truth, and all others stay perfectly in sync.
+**The Solution**: vsync gives you one command to sync everything. Pick one tool as your source of truth, and all others stay perfectly in sync.
 
 ### The Problem We Solve
 
-| 😫 Without vibe-sync                                                 | 🎉 With vibe-sync                                            |
+| 😫 Without vsync                                                     | 🎉 With vsync                                                |
 | :------------------------------------------------------------------- | :----------------------------------------------------------- |
 | 📋 Manually copy configs between multiple vibe coding tools          | ⚡ One command syncs everything automatically                |
 | 📂 Different directories for Skills/Agents/Commands/MCP in each tool | 🎯 One command maps to all correct paths                     |
@@ -71,7 +71,7 @@ Managing configurations across tools becomes a nightmare, especially for teams.
 
 ```mermaid
 flowchart TD
-    A[Pick Source Tool<br/>Your source of truth] --> B[vibe-sync reads configs<br/>Skills, MCP, Agents, Commands]
+    A[Pick Source Tool<br/>Your source of truth] --> B[vsync reads configs<br/>Skills, MCP, Agents, Commands]
     B --> C[Compare with targets<br/>Calculate differences]
     C --> D[Show you the plan<br/>What will change]
     D --> E{Your approval}
@@ -85,7 +85,7 @@ flowchart TD
     style E fill:#fff9c4
 ```
 
-**The magic**: Edit configs in ONE tool → Run `vibe-sync sync` → ALL tools stay in sync
+**The magic**: Edit configs in ONE tool → Run `vsync sync` → ALL tools stay in sync
 
 ---
 
@@ -100,7 +100,7 @@ flowchart TD
 | **Prune Mode**        | Strict mirroring with deletions       | ✅ v1.0 |
 | **Atomic Writes**     | All-or-nothing file operations        | ✅ v1.0 |
 | **Manifest Tracking** | Hash-based change detection           | ✅ v1.0 |
-| **User Layer**        | Global configs (~/.vibe-sync.json)    | ✅ v1.1 |
+| **User Layer**        | Global configs (~/.vsync.json)        | ✅ v1.1 |
 | **Agents Sync**       | Custom AI agents                      | ✅ v1.1 |
 | **Commands Sync**     | Quick commands                        | ✅ v1.1 |
 | **Codex Support**     | Full Codex integration (TOML format)  | ✅ v1.1 |
@@ -117,29 +117,29 @@ flowchart TD
 
 ```bash
 # Option 1: Run directly with npx (no installation needed)
-npx vibe-sync
+npx vsync
 
 # Option 2: Install globally with npm
-npm install -g vibe-sync
+npm install -g vsync
 
 # Verify installation
-vibe-sync --version
+vsync --version
 ```
 
 ### Initialize
 
 ```bash
 # Project-level configuration
-vibe-sync init
+vsync init
 
 # User-level (global) configuration
-vibe-sync init --user
+vsync init --user
 ```
 
 **Interactive prompts:**
 
 ```
-🚀 Welcome to vibe-sync!
+🚀 Welcome to vsync!
 
 ✔ Detecting existing tools...
 ✔ Detected: claude-code, cursor
@@ -161,20 +161,20 @@ vibe-sync init --user
 ✔ Cache directory created
 ✔ Manifest initialized
 
-✅ Setup complete! Run vibe-sync sync to start syncing
+✅ Setup complete! Run vsync sync to start syncing
 ```
 
 ### Sync Your Configs
 
 ```bash
 # Safe mode (default: no deletions)
-vibe-sync sync
+vsync sync
 
 # Preview changes without applying
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # Strict mirroring (deletes extra items in targets)
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **Example output:**
@@ -207,8 +207,8 @@ cursor:
 ```bash
 # New team member joins, already has Claude Code setup
 cd my-project
-vibe-sync init  # Choose Claude Code as source, Cursor & OpenCode as targets
-vibe-sync sync  # Boom! All tools configured in seconds
+vsync init  # Choose Claude Code as source, Cursor & OpenCode as targets
+vsync sync  # Boom! All tools configured in seconds
 
 # Their entire AI coding environment is now in sync with the team
 ```
@@ -217,8 +217,8 @@ vibe-sync sync  # Boom! All tools configured in seconds
 
 ```bash
 # Set up your global personal configs once
-vibe-sync init --user  # Configure which tools to sync
-vibe-sync sync --user  # Sync your personal Skills, MCP servers, Agents globally
+vsync init --user  # Configure which tools to sync
+vsync sync --user  # Sync your personal Skills, MCP servers, Agents globally
 
 # Now ALL your tools share the same user-level configs
 # Works across all your projects automatically
@@ -228,9 +228,9 @@ vibe-sync sync --user  # Sync your personal Skills, MCP servers, Agents globally
 
 ```bash
 # Moving from Cursor to Claude Code?
-vibe-sync init  # Choose Cursor as SOURCE (the reference/standard)
+vsync init  # Choose Cursor as SOURCE (the reference/standard)
                 # Choose Claude Code as TARGET (will pull from source)
-vibe-sync sync  # All your skills, MCP servers, agents migrated instantly
+vsync sync  # All your skills, MCP servers, agents migrated instantly
 
 # SOURCE = Your standard reference (everything syncs FROM here)
 # TARGET = Will match the source (everything syncs TO here)
@@ -244,25 +244,25 @@ vibe-sync sync  # All your skills, MCP servers, agents migrated instantly
 
 ```bash
 # Initialize configuration
-vibe-sync init [--user]
+vsync init [--user]
 
 # Sync configurations
-vibe-sync sync [--user] [--dry-run] [--prune]
+vsync sync [--user] [--dry-run] [--prune]
 
 # View sync plan without executing
-vibe-sync plan [--user]
+vsync plan [--user]
 
 # Check sync status
-vibe-sync status [--user]
+vsync status [--user]
 
 # List configurations
-vibe-sync list [skills|mcp] [--user]
+vsync list [skills|mcp] [--user]
 
 # Clean configs from targets
-vibe-sync clean [name] [--user] [--from-source]
+vsync clean [name] [--user] [--from-source]
 
 # Import from another project
-vibe-sync import <path> [--user]
+vsync import <path> [--user]
 ```
 
 ### Example Workflows
@@ -274,47 +274,47 @@ vibe-sync import <path> [--user]
 vim ~/.claude/skills/my-skill/SKILL.md
 
 # Sync to all target tools
-vibe-sync sync
+vsync sync
 ```
 
 **2. Preview changes before applying:**
 
 ```bash
-vibe-sync plan
+vsync plan
 # Review the plan
-vibe-sync sync
+vsync sync
 ```
 
 **3. Strict mirror mode (delete outdated configs):**
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **4. Clean up a skill from all targets:**
 
 ```bash
 # From targets only (source unchanged)
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # From source AND all targets (dangerous!)
-vibe-sync clean skill/old-skill --from-source
+vsync clean skill/old-skill --from-source
 ```
 
 **5. Import configs from another project:**
 
 ```bash
-vibe-sync import ../other-project
+vsync import ../other-project
 ```
 
 ---
 
 ## 📋 Configuration
 
-### .vibe-sync.json
+### .vsync.json
 
-**Project-level:** `<project>/.vibe-sync.json`
-**User-level:** `~/.vibe-sync.json`
+**Project-level:** `<project>/.vsync.json`
+**User-level:** `~/.vsync.json`
 
 ```json
 {
@@ -339,9 +339,9 @@ vibe-sync import ../other-project
 - `use_symlinks_for_skills`: Use symlinks instead of copying (saves disk space)
 - `language`: CLI language - `"en"` or `"zh"` (user-level only)
 
-### Config Format Differences (Why You Need vibe-sync)
+### Config Format Differences (Why You Need vsync)
 
-Each vibe coding tool uses different formats AND different directory structures. vibe-sync handles all the complexity:
+Each vibe coding tool uses different formats AND different directory structures. vsync handles all the complexity:
 
 **Directory Structure Differences**:
 | Config Type | Claude Code | Cursor | OpenCode | Codex |
@@ -359,14 +359,14 @@ Each vibe coding tool uses different formats AND different directory structures.
 | **Env Var Syntax** | `${VAR}` | `${env:VAR}` | `{env:VAR}` | No interpolation |
 | **Type Field** | Not required | Not required | **Required** (`local`/`remote`) | Required |
 
-**Without vibe-sync**:
+**Without vsync**:
 
 - ❌ Manually copy files between different directories
 - ❌ Remember which tool uses which path
 - ❌ Convert environment variable syntax by hand
 - ❌ Often break configs or forget required fields
 
-**With vibe-sync**:
+**With vsync**:
 
 - ✅ One command → auto-syncs to all tools
 - ✅ Automatic format conversion
@@ -399,7 +399,7 @@ Each vibe coding tool uses different formats AND different directory structures.
 - ❌ **Never deletes**
 
 ```bash
-vibe-sync sync
+vsync sync
 ```
 
 ### Prune Mode
@@ -411,7 +411,7 @@ vibe-sync sync
 - ⚠️ **Deletes items not in source**
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **Use when:** You want strict mirroring (e.g., cleaning up old configs)
@@ -421,29 +421,29 @@ vibe-sync sync --prune
 **Q: Which tool should I use as the source?**
 A: We recommend **Claude Code** as it has the most complete feature set. However, you can use any tool as your source.
 
-**Q: Will vibe-sync overwrite my existing configs?**
+**Q: Will vsync overwrite my existing configs?**
 A: By default, **Safe Mode** only creates and updates—it never deletes. Use `--prune` if you want strict mirroring.
 
 **Q: What happens if I edit configs directly in target tools?**
 A: Changes in target tools will be overwritten on the next sync. The SOURCE is your reference standard—everything syncs FROM the source. Always edit in your source tool, or use `import` to pull changes from another project.
 
 **Q: How do I switch my source tool?**
-A: Run `vibe-sync init` again and choose a different source. Then sync to update all targets.
+A: Run `vsync init` again and choose a different source. Then sync to update all targets.
 
 **Q: Does it work with monorepos?**
-A: Yes! Each project can have its own `.vibe-sync.json`. User-level configs (`~/.vibe-sync.json`) work globally.
+A: Yes! Each project can have its own `.vsync.json`. User-level configs (`~/.vsync.json`) work globally.
 
-**Q: Is it safe to commit `.vibe-sync.json` to git?**
+**Q: Is it safe to commit `.vsync.json` to git?**
 A: Yes! The config file contains no secrets—only tool names and sync preferences. MCP configs with secrets should use environment variables.
 
 **Q: Can I sync in both directions?**
-A: vibe-sync is one-directional (source → targets). To switch directions, re-run `init` and choose a different source tool.
+A: vsync is one-directional (source → targets). To switch directions, re-run `init` and choose a different source tool.
 
 **Q: What's the difference between project-level and user-level?**
 A:
 
-- **Project-level** (`.vibe-sync.json`): Team configs, checked into git
-- **User-level** (`~/.vibe-sync.json`): Personal global configs, not shared
+- **Project-level** (`.vsync.json`): Team configs, checked into git
+- **User-level** (`~/.vsync.json`): Personal global configs, not shared
 
 ---
 
@@ -464,8 +464,8 @@ Want to contribute? See [CONTRIBUTING.md](./CONTRIBUTING.md) for development set
 
 ### Contributors
 
-<a href="https://github.com/nicepkg/vibe-sync/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=nicepkg/vibe-sync" />
+<a href="https://github.com/nicepkg/vsync/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=nicepkg/vsync" />
 </a>
 
 ---
@@ -484,7 +484,7 @@ Want to contribute? See [CONTRIBUTING.md](./CONTRIBUTING.md) for development set
 
 ### v1.1 ✅ Released
 
-- [x] User-level configs (~/.vibe-sync.json)
+- [x] User-level configs (~/.vsync.json)
 - [x] Agents sync (custom AI agents)
 - [x] Commands sync (quick commands)
 - [x] Full Codex support (TOML format)
@@ -525,8 +525,8 @@ MIT © [nicepkg](https://github.com/nicepkg)
 
 **If this project helped you, please consider giving it a ⭐**
 
-<a href="https://github.com/nicepkg/vibe-sync">
-  <img src="https://img.shields.io/github/stars/nicepkg/vibe-sync?style=for-the-badge&logo=github&color=yellow" alt="GitHub stars" />
+<a href="https://github.com/nicepkg/vsync">
+  <img src="https://img.shields.io/github/stars/nicepkg/vsync?style=for-the-badge&logo=github&color=yellow" alt="GitHub stars" />
 </a>
 
 Made with ❤️ by [nicepkg](https://github.com/nicepkg)

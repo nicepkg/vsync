@@ -1,7 +1,7 @@
-# vibe-sync Implementation Tasks
+# vsync Implementation Tasks
 
 **Version**: 3.1.0
-**Project**: vibe-sync - AI Coding Tool Config Synchronizer
+**Project**: vsync - AI Coding Tool Config Synchronizer
 **Timeline**: 15-23 days (including v1.2 features)
 **Last Updated**: 2026-01-25
 
@@ -9,7 +9,7 @@
 
 ## 📋 Task Overview
 
-This document tracks all implementation tasks for vibe-sync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
+This document tracks all implementation tasks for vsync MVP. Each phase must be completed sequentially. Mark completed tasks with `[x]`.
 
 **Current Status**: 🟢 Phase 10 Complete (Multi-language Support - all sub-phases complete)
 **Next Phase**: All core phases complete! 🎉
@@ -47,7 +47,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] `mock-fs` - File system mocking
 - [x] Set up directory structure
   ```
-  vibe-sync/                # Project root
+  vsync/                # Project root
   ├── pnpm-workspace.yaml   # Workspace config (root level)
   └── cli/                  # CLI workspace
       ├── package.json
@@ -65,7 +65,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 ### 1.2 Core Type Definitions
 
 - [x] Define `cli/src/types/config.ts`
-  - [x] `VibeConfig` interface (`.vibe-sync.json` structure)
+  - [x] `VibeConfig` interface (`.vsync.json` structure)
   - [x] `SyncMode` type (`"safe" | "prune"`)
   - [x] `ToolName` type (`"claude-code" | "cursor" | "opencode"`)
   - [x] `ConfigLevel` type (`"project" | "user"`)
@@ -84,7 +84,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 ### 1.3 Configuration Management
 
 - [x] Implement `cli/src/core/config-manager.ts`
-  - [x] `loadConfig(level)` - Load `.vibe-sync.json`
+  - [x] `loadConfig(level)` - Load `.vsync.json`
   - [x] `saveConfig(config, level)` - Save configuration
   - [x] `validateConfig(config)` - Validate schema
   - [x] `getConfigPath(level)` - Resolve config file path
@@ -277,7 +277,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Version flag (`--version`)
   - [x] Help text
 
-### 4.2 `vibe-sync init` Command
+### 4.2 `vsync init` Command
 
 - [x] Implement `cli/src/commands/init.ts`
   - [x] Detect existing tools (check for `.claude/`, `.cursor/`, `.opencode/`)
@@ -285,13 +285,13 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
     - [x] Multi-select: Which tools do you use?
     - [x] Select: Which tool is the source?
     - [x] Multi-select: What to sync? (Skills, MCP)
-  - [x] Generate `.vibe-sync.json`
-  - [x] Create `.vibe-sync-cache/` directory
+  - [x] Generate `.vsync.json`
+  - [x] Create `.vsync-cache/` directory
   - [x] Initialize empty manifest.json
   - [x] Support `--user` flag for global config
 - [x] Add user-friendly output with chalk + ora
 
-### 4.3 `vibe-sync sync` Command
+### 4.3 `vsync sync` Command
 
 - [x] Implement `cli/src/commands/sync.ts`
   - [x] Read configuration
@@ -311,7 +311,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 - [x] Add progress indicators with ora
 - [x] Add error recovery (rollback on failure)
 
-### 4.4 `vibe-sync plan` Command
+### 4.4 `vsync plan` Command
 
 - [x] Implement `cli/src/commands/plan.ts`
   - [x] Same as `sync --dry-run` but with detailed output
@@ -319,7 +319,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Show operation reasons
   - [x] No confirmation prompt
 
-### 4.5 `vibe-sync status` Command
+### 4.5 `vsync status` Command
 
 - [x] Implement `cli/src/commands/status.ts`
   - [x] Read configuration
@@ -332,7 +332,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Check for pending changes
   - [x] Support `--user` flag
 
-### 4.6 `vibe-sync list` Command
+### 4.6 `vsync list` Command
 
 - [x] Implement `cli/src/commands/list.ts`
   - [x] `list skills` - Show all skills with hash, description, synced targets
@@ -340,7 +340,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Table format output
   - [x] Support `--user` flag
 
-### 4.7 `vibe-sync clean` Command
+### 4.7 `vsync clean` Command
 
 - [x] Implement `cli/src/commands/clean.ts`
   - [x] Interactive mode: multi-select items to remove
@@ -777,7 +777,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 
 **Goal**: Support Chinese and English languages for all CLI output
 
-**Background**: Make vibe-sync accessible to Chinese-speaking developers. Detect or prompt for language preference on first run, store in user-level config.
+**Background**: Make vsync accessible to Chinese-speaking developers. Detect or prompt for language preference on first run, store in user-level config.
 
 ### 10.1 i18n Infrastructure ✅
 
@@ -829,10 +829,10 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   - [x] Integration with existing `detectSystemLanguage()` from Phase 10.1
   - [x] Uses existing `loadConfig()` and `saveConfig()` from config-manager
 - [x] Add language prompt (first run only)
-  - [x] Check if `~/.vibe-sync.json` exists via `shouldPromptForLanguage()`
+  - [x] Check if `~/.vsync.json` exists via `shouldPromptForLanguage()`
   - [x] If not, prompt: "Choose language / 选择语言:" (English first per linter)
   - [x] Options: "English" / "中文"
-  - [x] Save choice to `~/.vibe-sync.json` with minimal config
+  - [x] Save choice to `~/.vsync.json` with minimal config
   - [x] Falls back to system language if prompt is skipped
 - [x] Added 14 comprehensive tests
   - [x] `shouldPromptForLanguage()` - Config existence checks
@@ -884,7 +884,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   },
   "commands": {
     "init": {
-      "welcome": "🚀 Welcome to vibe-sync!",
+      "welcome": "🚀 Welcome to vsync!",
       "selectTools": "Which AI coding tools do you use?",
       "selectSource": "Which tool should be the configuration source?"
     },
@@ -895,7 +895,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
     }
   },
   "errors": {
-    "configNotFound": "Configuration file not found. Run 'vibe-sync init' first.",
+    "configNotFound": "Configuration file not found. Run 'vsync init' first.",
     "invalidConfig": "Invalid configuration: {message}"
   }
 }
@@ -912,7 +912,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
   },
   "commands": {
     "init": {
-      "welcome": "🚀 欢迎使用 vibe-sync！",
+      "welcome": "🚀 欢迎使用 vsync！",
       "selectTools": "您使用哪些 AI 编程工具？",
       "selectSource": "哪个工具应作为配置源？"
     },
@@ -923,7 +923,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
     }
   },
   "errors": {
-    "configNotFound": "未找到配置文件。请先运行 'vibe-sync init'。",
+    "configNotFound": "未找到配置文件。请先运行 'vsync init'。",
     "invalidConfig": "无效的配置：{message}"
   }
 }
@@ -947,7 +947,7 @@ This document tracks all implementation tasks for vibe-sync MVP. Each phase must
 - [x] Update README.md
   - [x] Chinese version already exists (README_cn.md)
   - [x] Document language configuration
-  - [x] Show how to change language (saved in ~/.vibe-sync.json)
+  - [x] Show how to change language (saved in ~/.vsync.json)
 - [ ] Update help text (future enhancement)
   - [ ] Add `--lang` flag to override language (deferred to future version)
 

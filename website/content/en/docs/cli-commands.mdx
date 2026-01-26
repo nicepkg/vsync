@@ -1,16 +1,16 @@
 ---
 title: CLI Commands
-description: Complete CLI reference for vibe-sync. All 7 commands with options and examples - init, sync, plan, status, list, clean, import. Learn safe/prune modes, dry-run, and automation flags.
+description: Complete CLI reference for vsync. All 7 commands with options and examples - init, sync, plan, status, list, clean, import. Learn safe/prune modes, dry-run, and automation flags.
 ---
 
 # CLI Commands
 
-Complete reference for all vibe-sync commands with examples and options.
+Complete reference for all vsync commands with examples and options.
 
 ## Command Overview
 
 ```bash
-vibe-sync <command> [options]
+vsync <command> [options]
 ```
 
 Available commands:
@@ -31,17 +31,17 @@ Global options:
 
 ## init
 
-Initialize vibe-sync configuration for project or user level.
+Initialize vsync configuration for project or user level.
 
 ### Usage
 
 ```bash
-vibe-sync init [options]
+vsync init [options]
 ```
 
 ### Options
 
-- `--user` - Create user-level config (~/.vibe-sync.json)
+- `--user` - Create user-level config (~/.vsync.json)
 
 ### Interactive Prompts
 
@@ -53,9 +53,9 @@ vibe-sync init [options]
 ### Example
 
 ```bash
-$ vibe-sync init
+$ vsync init
 
-🚀 Welcome to vibe-sync!
+🚀 Welcome to vsync!
 
 ✔ Detecting existing tools...
 ✔ Detected: claude-code, cursor
@@ -77,14 +77,14 @@ $ vibe-sync init
 ✔ Cache directory created
 ✔ Manifest initialized
 
-✅ Setup complete! Run vibe-sync sync to start syncing
+✅ Setup complete! Run vsync sync to start syncing
 ```
 
 ### What Gets Created
 
-- `.vibe-sync.json` - Configuration file
-- `.vibe-sync-cache/` - Cache directory
-- `.vibe-sync-cache/manifest.json` - Sync tracking manifest
+- `.vsync.json` - Configuration file
+- `.vsync-cache/` - Cache directory
+- `.vsync-cache/manifest.json` - Sync tracking manifest
 
 ---
 
@@ -95,7 +95,7 @@ Synchronize configurations from source to target tools.
 ### Usage
 
 ```bash
-vibe-sync sync [options]
+vsync sync [options]
 ```
 
 ### Options
@@ -112,7 +112,7 @@ vibe-sync sync [options]
 Only creates and updates—never deletes.
 
 ```bash
-vibe-sync sync
+vsync sync
 ```
 
 **Output Example**:
@@ -144,7 +144,7 @@ cursor:
 Strict mirroring—deletes items not in source.
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **Warning**: Items in targets but not in source will be deleted!
@@ -153,21 +153,21 @@ vibe-sync sync --prune
 
 ```bash
 # Preview changes
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # Sync with strict mirroring
-vibe-sync sync --prune
+vsync sync --prune
 
 # Sync user-level configs
-vibe-sync sync --user
+vsync sync --user
 
 # Skip confirmation (useful for automation)
-vibe-sync sync -y
+vsync sync -y
 ```
 
 ### First-Time Symlink Prompt
 
-On the first sync, vibe-sync will ask about symlink usage for Skills:
+On the first sync, vsync will ask about symlink usage for Skills:
 
 ```
 ? How would you like to sync Skills?
@@ -186,7 +186,7 @@ Preview the sync plan without executing any changes.
 ### Usage
 
 ```bash
-vibe-sync plan [options]
+vsync plan [options]
 ```
 
 ### Options
@@ -196,7 +196,7 @@ vibe-sync plan [options]
 ### Example
 
 ```bash
-$ vibe-sync plan
+$ vsync plan
 
 📖 Reading source (claude-code)...
   ✓ Found 3 skills
@@ -222,7 +222,7 @@ cursor:
     • skill/api-conventions
       Reason: Hash unchanged
 
-Run `vibe-sync sync` to apply this plan
+Run `vsync sync` to apply this plan
 ```
 
 ---
@@ -234,7 +234,7 @@ Check the current sync status and configuration.
 ### Usage
 
 ```bash
-vibe-sync status [options]
+vsync status [options]
 ```
 
 ### Options
@@ -244,7 +244,7 @@ vibe-sync status [options]
 ### Example
 
 ```bash
-$ vibe-sync status
+$ vsync status
 
 Configuration Status (Project)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -252,8 +252,8 @@ Configuration Status (Project)
 Source Tool:       claude-code
 Target Tools:      cursor, opencode
 Last Sync:         2026-01-24 10:30:00 (2 hours ago)
-Configuration:     .vibe-sync.json
-Manifest:          .vibe-sync-cache/manifest.json
+Configuration:     .vsync.json
+Manifest:          .vsync-cache/manifest.json
 
 Synced Items:
   Skills:          3 items
@@ -268,7 +268,7 @@ Health:
   ✓ All targets up-to-date
   ✓ No pending changes
 
-Run `vibe-sync plan` to see sync plan
+Run `vsync plan` to see sync plan
 ```
 
 ---
@@ -280,7 +280,7 @@ List all synced configurations from the source tool.
 ### Usage
 
 ```bash
-vibe-sync list [type] [options]
+vsync list [type] [options]
 ```
 
 ### Arguments
@@ -295,19 +295,19 @@ vibe-sync list [type] [options]
 
 ```bash
 # List all configs
-vibe-sync list
+vsync list
 
 # List only skills
-vibe-sync list skills
+vsync list skills
 
 # List user-level MCP servers
-vibe-sync list mcp --user
+vsync list mcp --user
 ```
 
 ### Output Example
 
 ```bash
-$ vibe-sync list skills
+$ vsync list skills
 
 Skills (3 items) - Source: claude-code
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -330,7 +330,7 @@ Remove configurations from target tools (and optionally from source).
 ### Usage
 
 ```bash
-vibe-sync clean [item] [options]
+vsync clean [item] [options]
 ```
 
 ### Arguments
@@ -350,7 +350,7 @@ vibe-sync clean [item] [options]
 Default behavior—source unchanged.
 
 ```bash
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 ```
 
 **Output**:
@@ -373,7 +373,7 @@ Source (claude-code) will NOT be affected.
 **Warning**: This is destructive and cannot be undone!
 
 ```bash
-vibe-sync clean skill/old-skill --from-source
+vsync clean skill/old-skill --from-source
 ```
 
 **Output**:
@@ -399,7 +399,7 @@ Will delete from:
 Run without arguments for interactive selection:
 
 ```bash
-$ vibe-sync clean
+$ vsync clean
 
 ? What type do you want to clean?
   ❯ Skills
@@ -427,7 +427,7 @@ Import configurations from another project.
 ### Usage
 
 ```bash
-vibe-sync import <path> [options]
+vsync import <path> [options]
 ```
 
 ### Arguments
@@ -441,7 +441,7 @@ vibe-sync import <path> [options]
 ### Example
 
 ```bash
-$ vibe-sync import ../other-project
+$ vsync import ../other-project
 
 Scanning ../other-project...
 
@@ -494,40 +494,40 @@ Processing:
 vim ~/.claude/skills/my-skill/SKILL.md
 
 # 2. Sync to targets
-vibe-sync sync
+vsync sync
 ```
 
 ### Preview Before Applying
 
 ```bash
 # 1. Check what would change
-vibe-sync plan
+vsync plan
 
 # 2. If satisfied, apply
-vibe-sync sync
+vsync sync
 ```
 
 ### Clean Up Old Configs
 
 ```bash
 # Safe cleanup (targets only)
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # Strict mirror mode
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 ### Import from Another Project
 
 ```bash
-vibe-sync import ../other-project
+vsync import ../other-project
 ```
 
 ### Automation with --yes
 
 ```bash
 # In CI/CD pipelines
-vibe-sync sync --yes
+vsync sync --yes
 ```
 
 ---
@@ -541,10 +541,10 @@ vibe-sync sync --yes
 
 ```bash
 # General help
-vibe-sync --help
+vsync --help
 
 # Command-specific help
-vibe-sync sync --help
+vsync sync --help
 ```
 
 ## Next Steps

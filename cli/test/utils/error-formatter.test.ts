@@ -31,10 +31,10 @@ describe("Error Formatter", () => {
     it("should include suggestion when provided", () => {
       const error = new Error("Config invalid");
       const formatted = formatError(error, {
-        suggestion: "Run 'vibe-sync init' first",
+        suggestion: "Run 'vsync init' first",
       });
 
-      expect(formatted).toContain("Run 'vibe-sync init' first");
+      expect(formatted).toContain("Run 'vsync init' first");
     });
 
     it("should format non-Error objects", () => {
@@ -47,20 +47,20 @@ describe("Error Formatter", () => {
   describe("createConfigError", () => {
     it("should create config not found error", () => {
       const error = createConfigError("notFound", {
-        filePath: ".vibe-sync.json",
+        filePath: ".vsync.json",
       });
 
-      expect(error.message).toContain(".vibe-sync.json");
+      expect(error.message).toContain(".vsync.json");
       expect(error.message).toContain("not found");
       expect(error.category).toBe(ErrorCategory.CONFIG);
     });
 
     it("should suggest running init for missing config", () => {
       const error = createConfigError("notFound", {
-        filePath: ".vibe-sync.json",
+        filePath: ".vsync.json",
       });
 
-      expect(error.suggestion).toContain("vibe-sync init");
+      expect(error.suggestion).toContain("vsync init");
     });
 
     it("should create invalid config error", () => {
@@ -185,7 +185,7 @@ describe("Error Formatter", () => {
   describe("FormattedError properties", () => {
     it("should have category property", () => {
       const error = createConfigError("notFound", {
-        filePath: ".vibe-sync.json",
+        filePath: ".vsync.json",
       });
 
       expect(error.category).toBe(ErrorCategory.CONFIG);
@@ -193,7 +193,7 @@ describe("Error Formatter", () => {
 
     it("should have suggestion property", () => {
       const error = createConfigError("notFound", {
-        filePath: ".vibe-sync.json",
+        filePath: ".vsync.json",
       });
 
       expect(error.suggestion).toBeTruthy();

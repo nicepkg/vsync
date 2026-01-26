@@ -1,4 +1,4 @@
-# vibe-sync - AI Coding Tool Config Synchronizer
+# vsync - AI Coding Tool Config Synchronizer
 
 **Single source of truth → Compile to multiple formats → Diff-based sync**
 
@@ -185,7 +185,7 @@ These commands auto-read TASKS.md, PRD, and guide TDD workflow.
 **Architecture**: pnpm monorepo
 
 ```
-vibe-sync/                  # Project root
+vsync/                  # Project root
 ├── pnpm-workspace.yaml     # Workspace config (root level)
 ├── cli/                    # CLI workspace package
 │   ├── package.json        # CLI dependencies
@@ -256,7 +256,7 @@ vibe-sync/                  # Project root
 
 ```bash
 # Project structure
-vibe-sync/
+vsync/
 ├── pnpm-workspace.yaml    # Root level
 └── cli/                   # Work here!
     ├── package.json

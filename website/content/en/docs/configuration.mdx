@@ -1,18 +1,18 @@
 ---
 title: Configuration
-description: Complete configuration guide for vibe-sync. Learn .vibe-sync.json structure, tool-specific formats (JSON, TOML, JSONC), MCP differences, environment variable syntax for Claude Code, Cursor, OpenCode, and Codex.
+description: Complete configuration guide for vsync. Learn .vsync.json structure, tool-specific formats (JSON, TOML, JSONC), MCP differences, environment variable syntax for Claude Code, Cursor, OpenCode, and Codex.
 ---
 
 # Configuration
 
-Learn how to configure vibe-sync and understand the format differences between AI coding tools.
+Learn how to configure vsync and understand the format differences between AI coding tools.
 
 ## Config File Structure
 
-vibe-sync uses `.vibe-sync.json` for configuration:
+vsync uses `.vsync.json` for configuration:
 
-- **Project-level**: `<project>/.vibe-sync.json`
-- **User-level**: `~/.vibe-sync.json`
+- **Project-level**: `<project>/.vsync.json`
+- **User-level**: `~/.vsync.json`
 
 ### Example Configuration
 
@@ -235,18 +235,18 @@ Instructions and prompts for the AI agent...
 
 ## Why Format Conversion Matters
 
-Without vibe-sync, migrating configs between tools requires:
+Without vsync, migrating configs between tools requires:
 
 1. **Manual format conversion**: JSON → TOML → JSONC
 2. **Environment variable rewriting**: `${VAR}` → `${env:VAR}` → `{env:VAR}`
 3. **Structure changes**: `mcpServers` → `mcp` → `mcp_servers`
 4. **Required field additions**: Adding `type` for OpenCode
 
-**With vibe-sync**, all this happens automatically! 🎉
+**With vsync**, all this happens automatically! 🎉
 
 ## Manifest File
 
-vibe-sync maintains a manifest at `.vibe-sync-cache/manifest.json`:
+vsync maintains a manifest at `.vsync-cache/manifest.json`:
 
 ```json
 {
@@ -316,8 +316,8 @@ Always use variable references, never hardcode:
 ### 4. Version Control
 
 **Commit to git**:
-- `.vibe-sync.json` (safe, no secrets)
-- `.vibe-sync-cache/` (optional, helps with performance)
+- `.vsync.json` (safe, no secrets)
+- `.vsync-cache/` (optional, helps with performance)
 
 **Keep out of git**:
 - Tool-specific config files with credentials

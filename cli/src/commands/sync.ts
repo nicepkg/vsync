@@ -1,5 +1,5 @@
 /**
- * vibe-sync sync command
+ * vsync sync command
  * Synchronize configurations across tools
  */
 
@@ -148,7 +148,7 @@ export function detectFirstTimeSkillsSync(manifest: Manifest): boolean {
  * Determine if we should prompt user about symlink usage
  * Only prompt on first sync when use_symlinks_for_skills is undefined
  *
- * @param config - vibe-sync configuration
+ * @param config - vsync configuration
  * @param manifest - Current manifest
  * @param targetTools - Target tools to sync to
  * @returns True if should prompt for symlink preference

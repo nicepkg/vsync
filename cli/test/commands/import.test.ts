@@ -30,7 +30,7 @@ describe("Import Command", () => {
         ".mcp.json": JSON.stringify({
           mcpServers: {},
         }),
-        ".vibe-sync.json": JSON.stringify({
+        ".vsync.json": JSON.stringify({
           version: "1.0.0",
           level: "project",
           source_tool: "claude-code",
@@ -120,7 +120,7 @@ describe("Import Command", () => {
             skills: {},
           },
           ".mcp.json": JSON.stringify({ mcpServers: {} }),
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "claude-code",
@@ -168,7 +168,7 @@ describe("Import Command", () => {
         "/target-project": {
           ".claude": {},
           ".mcp.json": JSON.stringify({ mcpServers: {} }),
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "claude-code",
@@ -233,7 +233,7 @@ describe("Import Command", () => {
           ".mcp.json": JSON.stringify({
             mcpServers: {},
           }),
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "claude-code",
@@ -288,7 +288,7 @@ describe("Import Command", () => {
               },
             },
           },
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "claude-code",
@@ -363,7 +363,7 @@ Skill content`,
             skills: {},
           },
           ".mcp.json": JSON.stringify({ mcpServers: {} }),
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "claude-code",
@@ -426,7 +426,7 @@ Skill content`,
           ".mcp.json": JSON.stringify({
             mcpServers: {},
           }),
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "claude-code",
@@ -477,7 +477,7 @@ Skill content`,
             skills: {},
           },
           "mcp.json": JSON.stringify({ mcpServers: {} }),
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "cursor",
@@ -524,7 +524,7 @@ Skill content`,
             skills: {},
           },
           "opencode.jsonc": JSON.stringify({ mcp: {} }),
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "opencode",
@@ -570,7 +570,7 @@ Skill content`,
           ".claude": {
             skills: {},
           },
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "project",
             source_tool: "claude-code",

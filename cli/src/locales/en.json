@@ -10,8 +10,8 @@
   },
   "commands": {
     "init": {
-      "welcome": "🎯 vibe-sync initialization",
-      "description": "Initialize vibe-sync configuration",
+      "welcome": "🎯 vsync initialization",
+      "description": "Initialize vsync configuration",
       "detectingTools": "Detecting installed tools...",
       "detectedTools": "Detected tools: {tools}",
       "selectTools": "Which tools do you want to sync?",
@@ -24,7 +24,7 @@
       "agentsChoiceInit": "Agents",
       "commandsChoiceInit": "Commands",
       "creatingConfig": "Creating configuration...",
-      "configCreated": "Created .vibe-sync.json",
+      "configCreated": "Created .vsync.json",
       "complete": "Initialization complete! Run {command} to start syncing.",
       "userLevelOption": "Create user-level config instead of project-level"
     },
@@ -96,7 +96,7 @@
       "hash": "Hash",
       "oldHash": "Old",
       "newHash": "New",
-      "applyHint": "Run `vibe-sync sync` to apply this plan"
+      "applyHint": "Run `vsync sync` to apply this plan"
     },
     "status": {
       "description": "Show sync status and configuration info",
@@ -124,7 +124,7 @@
       "pendingChanges": "Pending changes detected",
       "allUpToDate": "All targets up-to-date",
       "noChanges": "No pending changes",
-      "runPlanToSee": "Run `vibe-sync plan` to see sync plan",
+      "runPlanToSee": "Run `vsync plan` to see sync plan",
       "timeJustNow": "just now",
       "timeMinutesAgo": "{minutes} minute{plural} ago",
       "timeHoursAgo": "{hours} hour{plural} ago",
@@ -229,13 +229,13 @@
       "agentsImported": "Agents: {imported} imported, {skipped} skipped",
       "commandsImported": "Commands: {imported} imported, {skipped} skipped",
       "syncNowPrompt": "Sync to target tools now?",
-      "syncHint": "Run 'vibe-sync sync' to sync configurations",
+      "syncHint": "Run 'vsync sync' to sync configurations",
       "failed": "Import failed",
       "errors": "Errors:"
     }
   },
   "errors": {
-    "configNotFound": "Configuration file not found. Run 'vibe-sync init' first.",
+    "configNotFound": "Configuration file not found. Run 'vsync init' first.",
     "invalidConfig": "Invalid configuration: {message}",
     "readFailed": "Failed to read {item}: {error}",
     "writeFailed": "Failed to write {item}: {error}",

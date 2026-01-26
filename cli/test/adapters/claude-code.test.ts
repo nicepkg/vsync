@@ -5,7 +5,7 @@ import { ClaudeCodeAdapter } from "@src/adapters/claude-code.js";
 import type { MCPServer } from "@src/types/models.js";
 import * as fileOps from "@src/utils/file-ops.js";
 
-const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const testRoot = path.join(path.parse(process.cwd()).root, "vsync-test");
 const homeDir = path.join(testRoot, "home", "user");
 
 describe("ClaudeCodeAdapter", () => {

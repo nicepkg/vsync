@@ -1,5 +1,5 @@
 /**
- * vibe-sync status command
+ * vsync status command
  * Display sync status and configuration info
  */
 
@@ -115,7 +115,7 @@ export function formatStatus(data: StatusData): string {
 
   lines.push(
     chalk.cyan(`${t("commands.status.configuration")}:     `) +
-      (data.config.level === "user" ? "~/.vibe-sync.json" : ".vibe-sync.json"),
+      (data.config.level === "user" ? "~/.vsync.json" : ".vsync.json"),
   );
 
   // Show manifest path relative to home directory

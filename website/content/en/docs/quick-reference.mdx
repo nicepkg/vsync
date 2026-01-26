@@ -1,11 +1,11 @@
 ---
 title: Quick Reference
-description: Quick reference guide and cheat sheet for vibe-sync commands, options, and common usage patterns. Copy-paste ready examples for daily workflows.
+description: Quick reference guide and cheat sheet for vsync commands, options, and common usage patterns. Copy-paste ready examples for daily workflows.
 ---
 
 # Quick Reference
 
-Quick reference guide and cheat sheet for vibe-sync commands and common patterns.
+Quick reference guide and cheat sheet for vsync commands and common patterns.
 
 ## Commands Overview
 
@@ -25,12 +25,12 @@ Quick reference guide and cheat sheet for vibe-sync commands and common patterns
 
 ```bash
 # Project-level setup
-vibe-sync init
-vibe-sync sync
+vsync init
+vsync sync
 
 # User-level setup
-vibe-sync init --user
-vibe-sync sync --user
+vsync init --user
+vsync sync --user
 ```
 
 **[Learn more →](../getting-started)**
@@ -42,30 +42,30 @@ vibe-sync sync --user
 vim ~/.claude/skills/my-skill/SKILL.md
 
 # 2. Sync to targets
-vibe-sync sync
+vsync sync
 ```
 
 ### Preview Before Sync
 
 ```bash
 # Check what will change
-vibe-sync plan
+vsync plan
 
 # Or use dry-run
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # If satisfied, apply
-vibe-sync sync
+vsync sync
 ```
 
 ### Cleanup Old Configs
 
 ```bash
 # Safe: Remove from targets only
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # Strict mirroring (deletes extras)
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **[Learn more →](../cli-commands#clean)**
@@ -75,7 +75,7 @@ vibe-sync sync --prune
 ### Safe Mode (Default)
 
 ```bash
-vibe-sync sync
+vsync sync
 ```
 
 - ✅ Creates new items
@@ -87,7 +87,7 @@ vibe-sync sync
 ### Prune Mode
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 - ✅ Creates new items
@@ -102,8 +102,8 @@ vibe-sync sync --prune
 
 ```bash
 # Default behavior
-vibe-sync init       # Creates .vibe-sync.json
-vibe-sync sync       # Syncs project configs
+vsync init       # Creates .vsync.json
+vsync sync       # Syncs project configs
 ```
 
 **Use for**: Team configs, project-specific integrations
@@ -112,8 +112,8 @@ vibe-sync sync       # Syncs project configs
 
 ```bash
 # Add --user flag
-vibe-sync init --user    # Creates ~/.vibe-sync.json
-vibe-sync sync --user    # Syncs global configs
+vsync init --user    # Creates ~/.vsync.json
+vsync sync --user    # Syncs global configs
 ```
 
 **Use for**: Personal preferences, global skills
@@ -126,84 +126,84 @@ vibe-sync sync --user    # Syncs global configs
 
 ```bash
 # Project config
-vibe-sync init
+vsync init
 
 # User config
-vibe-sync init --user
+vsync init --user
 ```
 
 ### sync
 
 ```bash
 # Safe sync
-vibe-sync sync
+vsync sync
 
 # Prune mode
-vibe-sync sync --prune
+vsync sync --prune
 
 # Dry run
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # User-level
-vibe-sync sync --user
+vsync sync --user
 
 # Skip confirmation
-vibe-sync sync -y
+vsync sync -y
 ```
 
 ### plan
 
 ```bash
 # Preview changes
-vibe-sync plan
+vsync plan
 
 # User-level plan
-vibe-sync plan --user
+vsync plan --user
 ```
 
 ### status
 
 ```bash
 # Check sync status
-vibe-sync status
+vsync status
 
 # User-level status
-vibe-sync status --user
+vsync status --user
 ```
 
 ### list
 
 ```bash
 # List all
-vibe-sync list
+vsync list
 
 # List skills
-vibe-sync list skills
+vsync list skills
 
 # List MCP servers
-vibe-sync list mcp
+vsync list mcp
 
 # User-level
-vibe-sync list --user
+vsync list --user
 ```
 
 ### clean
 
 ```bash
 # Remove single item from targets
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # Interactive selection
-vibe-sync clean
+vsync clean
 
 # Delete from source too (DANGEROUS!)
-vibe-sync clean skill/old-skill --from-source
+vsync clean skill/old-skill --from-source
 
 # User-level
-vibe-sync clean --user
+vsync clean --user
 
 # Skip confirmation
-vibe-sync clean skill/old-skill -y
+vsync clean skill/old-skill -y
 ```
 
 **[Learn more →](../cli-commands#clean)**
@@ -212,15 +212,15 @@ vibe-sync clean skill/old-skill -y
 
 ```bash
 # Import from another project
-vibe-sync import ../other-project
+vsync import ../other-project
 
 # Import to user-level
-vibe-sync import ../other-project --user
+vsync import ../other-project --user
 ```
 
 ## Config File Quick Reference
 
-### .vibe-sync.json
+### .vsync.json
 
 ```json
 {
@@ -280,13 +280,13 @@ vibe-sync import ../other-project --user
 
 ```bash
 # 1. Commit config to git
-git add .vibe-sync.json
-git commit -m "feat: add vibe-sync config"
+git add .vsync.json
+git commit -m "feat: add vsync config"
 
 # 2. Team members clone and sync
 git clone <repo>
 cd <repo>
-vibe-sync sync
+vsync sync
 ```
 
 ### CI/CD Integration
@@ -294,7 +294,7 @@ vibe-sync sync
 ```bash
 # GitHub Actions
 - name: Sync configs
-  run: npx vibe-sync sync --yes
+  run: npx vsync sync --yes
 ```
 
 **[Learn more →](../advanced-features#cicd-integration)**
@@ -303,13 +303,13 @@ vibe-sync sync
 
 ```bash
 # 1. Import from old project
-vibe-sync import ../old-project
+vsync import ../old-project
 
 # 2. Review plan
-vibe-sync plan
+vsync plan
 
 # 3. Sync to targets
-vibe-sync sync
+vsync sync
 ```
 
 **[Learn more →](../faq#migration-questions)**
@@ -325,13 +325,13 @@ vibe-sync sync
 
 ```bash
 # General help
-vibe-sync --help
+vsync --help
 
 # Command help
-vibe-sync sync --help
+vsync sync --help
 
 # Version
-vibe-sync --version
+vsync --version
 ```
 
 ## Common Issues
@@ -349,7 +349,7 @@ ls -la ~/.cursor/
 
 ```bash
 # Solution: Initialize first
-vibe-sync init
+vsync init
 ```
 
 ### Tool Not Detected
@@ -357,7 +357,7 @@ vibe-sync init
 ```bash
 # Solution: Create tool directory
 mkdir -p ~/.cursor
-vibe-sync init
+vsync init
 ```
 
 **[More troubleshooting →](../faq#troubleshooting)**
@@ -365,7 +365,7 @@ vibe-sync init
 ## Related Resources
 
 - **[Getting Started](../getting-started)** - Detailed installation guide
-- **[Core Concepts](../core-concepts)** - Understanding vibe-sync
+- **[Core Concepts](../core-concepts)** - Understanding vsync
 - **[CLI Commands](../cli-commands)** - Full command reference
 - **[Configuration](../configuration)** - Config file details
 - **[Advanced Features](../advanced-features)** - Symlinks, performance

@@ -13,14 +13,14 @@ import {
 import type { VibeConfig } from "@src/types/config.js";
 import { isSamePath } from "../utils/path.js";
 
-const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const testRoot = path.join(path.parse(process.cwd()).root, "vsync-test");
 const homeDir = path.join(testRoot, "home", "user");
 
 describe("Config Manager", () => {
   beforeEach(() => {
     mockFs({
       "/project": {
-        ".vibe-sync.json": JSON.stringify({
+        ".vsync.json": JSON.stringify({
           version: "3.0.0",
           level: "project",
           source_tool: "claude-code",
@@ -32,7 +32,7 @@ describe("Config Manager", () => {
         }),
       },
       [homeDir]: {
-        ".vibe-sync.json": JSON.stringify({
+        ".vsync.json": JSON.stringify({
           version: "3.0.0",
           level: "user",
           source_tool: "cursor",
@@ -54,16 +54,16 @@ describe("Config Manager", () => {
   describe("getConfigPath", () => {
     it("should return project config path", () => {
       const configPath = getConfigPath("project", "/project");
-      expect(
-        isSamePath(configPath, path.join("/project", ".vibe-sync.json")),
-      ).toBe(true);
+      expect(isSamePath(configPath, path.join("/project", ".vsync.json"))).toBe(
+        true,
+      );
     });
 
     it("should return user config path", () => {
       const configPath = getConfigPath("user", undefined, homeDir);
-      expect(
-        isSamePath(configPath, path.join(homeDir, ".vibe-sync.json")),
-      ).toBe(true);
+      expect(isSamePath(configPath, path.join(homeDir, ".vsync.json"))).toBe(
+        true,
+      );
     });
   });
 
@@ -91,7 +91,7 @@ describe("Config Manager", () => {
     it("should throw error for invalid JSON", async () => {
       mockFs({
         "/bad": {
-          ".vibe-sync.json": "{ invalid json",
+          ".vsync.json": "{ invalid json",
         },
       });
 
@@ -114,7 +114,7 @@ describe("Config Manager", () => {
 
       await saveConfig(config, "project", "/empty");
 
-      const saved = await readFile("/empty/.vibe-sync.json", "utf-8");
+      const saved = await readFile("/empty/.vsync.json", "utf-8");
       const parsed = JSON.parse(saved);
 
       expect(parsed.version).toBe("3.0.0");
@@ -135,10 +135,7 @@ describe("Config Manager", () => {
 
       await saveConfig(config, "user", "/empty", homeDir);
 
-      const saved = await readFile(
-        path.join(homeDir, ".vibe-sync.json"),
-        "utf-8",
-      );
+      const saved = await readFile(path.join(homeDir, ".vsync.json"), "utf-8");
       const parsed = JSON.parse(saved);
 
       expect(parsed.level).toBe("user");
@@ -158,7 +155,7 @@ describe("Config Manager", () => {
 
       await saveConfig(config, "project", "/empty");
 
-      const saved = await readFile("/empty/.vibe-sync.json", "utf-8");
+      const saved = await readFile("/empty/.vsync.json", "utf-8");
       expect(saved).toContain("\n");
       expect(saved).toContain("  ");
     });

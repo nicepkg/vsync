@@ -67,7 +67,7 @@ describe("Manifest Manager", () => {
   beforeEach(() => {
     const mockFsConfig: any = {
       [TEST_HOME]: {
-        ".vibe-sync": {
+        ".vsync": {
           cache: {
             [PROJECT_HASH]: {
               "manifest.json": JSON.stringify(sampleManifest),
@@ -92,7 +92,7 @@ describe("Manifest Manager", () => {
       const path = getManifestPath(TEST_PROJECT);
       const expected = join(
         TEST_HOME,
-        ".vibe-sync",
+        ".vsync",
         "cache",
         PROJECT_HASH,
         "manifest.json",
@@ -129,7 +129,7 @@ describe("Manifest Manager", () => {
     it("should handle corrupted manifest gracefully", async () => {
       mockFs({
         "/bad": {
-          ".vibe-sync-cache": {
+          ".vsync-cache": {
             "manifest.json": "{ invalid json",
           },
         },
@@ -152,7 +152,7 @@ describe("Manifest Manager", () => {
 
       const savedPath = join(
         TEST_HOME,
-        ".vibe-sync",
+        ".vsync",
         "cache",
         EMPTY_HASH,
         "manifest.json",
@@ -169,7 +169,7 @@ describe("Manifest Manager", () => {
 
       const savedPath = join(
         TEST_HOME,
-        ".vibe-sync",
+        ".vsync",
         "cache",
         EMPTY_HASH,
         "manifest.json",

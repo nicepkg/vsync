@@ -1,16 +1,16 @@
 ---
 title: CLI 命令
-description: vibe-sync 完整 CLI 参考。所有 7 个命令及选项和示例 - init、sync、plan、status、list、clean、import。学习 safe/prune 模式、dry-run 和自动化标志。
+description: vsync 完整 CLI 参考。所有 7 个命令及选项和示例 - init、sync、plan、status、list、clean、import。学习 safe/prune 模式、dry-run 和自动化标志。
 ---
 
 # CLI 命令
 
-所有 vibe-sync 命令的完整参考，包含示例和选项。
+所有 vsync 命令的完整参考，包含示例和选项。
 
 ## 命令概览
 
 ```bash
-vibe-sync <command> [options]
+vsync <command> [options]
 ```
 
 可用命令：
@@ -31,17 +31,17 @@ vibe-sync <command> [options]
 
 ## init
 
-为 project 或 user 层级初始化 vibe-sync 配置。
+为 project 或 user 层级初始化 vsync 配置。
 
 ### 用法
 
 ```bash
-vibe-sync init [options]
+vsync init [options]
 ```
 
 ### 选项
 
-- `--user` - 创建用户级配置 (~/.vibe-sync.json)
+- `--user` - 创建用户级配置 (~/.vsync.json)
 
 ### 交互式提示
 
@@ -53,9 +53,9 @@ vibe-sync init [options]
 ### 示例
 
 ```bash
-$ vibe-sync init
+$ vsync init
 
-🚀 欢迎使用 vibe-sync！
+🚀 欢迎使用 vsync！
 
 ✔ 检测现有工具...
 ✔ 已检测到: claude-code, cursor
@@ -77,14 +77,14 @@ $ vibe-sync init
 ✔ 缓存目录已创建
 ✔ Manifest 已初始化
 
-✅ 设置完成！运行 vibe-sync sync 开始同步
+✅ 设置完成！运行 vsync sync 开始同步
 ```
 
 ### 创建的内容
 
-- `.vibe-sync.json` - 配置文件
-- `.vibe-sync-cache/` - 缓存目录
-- `.vibe-sync-cache/manifest.json` - 同步跟踪 manifest
+- `.vsync.json` - 配置文件
+- `.vsync-cache/` - 缓存目录
+- `.vsync-cache/manifest.json` - 同步跟踪 manifest
 
 ---
 
@@ -95,7 +95,7 @@ $ vibe-sync init
 ### 用法
 
 ```bash
-vibe-sync sync [options]
+vsync sync [options]
 ```
 
 ### 选项
@@ -112,7 +112,7 @@ vibe-sync sync [options]
 只创建和更新——从不删除。
 
 ```bash
-vibe-sync sync
+vsync sync
 ```
 
 **输出示例**：
@@ -144,7 +144,7 @@ cursor:
 严格镜像——删除源中不存在的项。
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **警告**：目标中存在但源中不存在的项将被删除！
@@ -153,21 +153,21 @@ vibe-sync sync --prune
 
 ```bash
 # 预览更改
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # 使用严格镜像同步
-vibe-sync sync --prune
+vsync sync --prune
 
 # 同步用户级配置
-vibe-sync sync --user
+vsync sync --user
 
 # 跳过确认（用于自动化）
-vibe-sync sync -y
+vsync sync -y
 ```
 
 ### 首次 Symlink 提示
 
-在首次同步时，vibe-sync 会询问关于 Skills 的 symlink 使用：
+在首次同步时，vsync 会询问关于 Skills 的 symlink 使用：
 
 ```
 ? 您想如何同步 Skills？
@@ -186,7 +186,7 @@ vibe-sync sync -y
 ### 用法
 
 ```bash
-vibe-sync plan [options]
+vsync plan [options]
 ```
 
 ### 选项
@@ -196,7 +196,7 @@ vibe-sync plan [options]
 ### 示例
 
 ```bash
-$ vibe-sync plan
+$ vsync plan
 
 📖 正在读取源配置 (claude-code)...
   ✓ 找到 3 个技能
@@ -222,7 +222,7 @@ cursor:
     • skill/api-conventions
       原因: 哈希值未更改
 
-运行 `vibe-sync sync` 应用此计划
+运行 `vsync sync` 应用此计划
 ```
 
 ---
@@ -234,7 +234,7 @@ cursor:
 ### 用法
 
 ```bash
-vibe-sync status [options]
+vsync status [options]
 ```
 
 ### 选项
@@ -244,7 +244,7 @@ vibe-sync status [options]
 ### 示例
 
 ```bash
-$ vibe-sync status
+$ vsync status
 
 配置状态 (Project)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -252,8 +252,8 @@ $ vibe-sync status
 源工具:          claude-code
 目标工具:        cursor, opencode
 最后同步:        2026-01-24 10:30:00 (2小时前)
-配置文件:        .vibe-sync.json
-Manifest:       .vibe-sync-cache/manifest.json
+配置文件:        .vsync.json
+Manifest:       .vsync-cache/manifest.json
 
 已同步项:
   Skills:       3 项
@@ -268,7 +268,7 @@ Manifest:       .vibe-sync-cache/manifest.json
   ✓ 所有目标都是最新的
   ✓ 没有待处理的更改
 
-运行 `vibe-sync plan` 查看同步计划
+运行 `vsync plan` 查看同步计划
 ```
 
 ---
@@ -280,7 +280,7 @@ Manifest:       .vibe-sync-cache/manifest.json
 ### 用法
 
 ```bash
-vibe-sync list [type] [options]
+vsync list [type] [options]
 ```
 
 ### 参数
@@ -295,19 +295,19 @@ vibe-sync list [type] [options]
 
 ```bash
 # 列出所有配置
-vibe-sync list
+vsync list
 
 # 仅列出 skills
-vibe-sync list skills
+vsync list skills
 
 # 列出用户级 MCP 服务器
-vibe-sync list mcp --user
+vsync list mcp --user
 ```
 
 ### 输出示例
 
 ```bash
-$ vibe-sync list skills
+$ vsync list skills
 
 Skills (3 项) - 源: claude-code
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -330,7 +330,7 @@ Skills (3 项) - 源: claude-code
 ### 用法
 
 ```bash
-vibe-sync clean [item] [options]
+vsync clean [item] [options]
 ```
 
 ### 参数
@@ -350,7 +350,7 @@ vibe-sync clean [item] [options]
 默认行为——源不变。
 
 ```bash
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 ```
 
 **输出**：
@@ -373,7 +373,7 @@ vibe-sync clean skill/old-skill
 **警告**：这是破坏性操作，无法撤销！
 
 ```bash
-vibe-sync clean skill/old-skill --from-source
+vsync clean skill/old-skill --from-source
 ```
 
 **输出**：
@@ -399,7 +399,7 @@ vibe-sync clean skill/old-skill --from-source
 不带参数运行以交互式选择：
 
 ```bash
-$ vibe-sync clean
+$ vsync clean
 
 ? 您想清理什么类型？
   ❯ Skills
@@ -427,7 +427,7 @@ $ vibe-sync clean
 ### 用法
 
 ```bash
-vibe-sync import <path> [options]
+vsync import <path> [options]
 ```
 
 ### 参数
@@ -441,7 +441,7 @@ vibe-sync import <path> [options]
 ### 示例
 
 ```bash
-$ vibe-sync import ../other-project
+$ vsync import ../other-project
 
 扫描 ../other-project...
 
@@ -494,40 +494,40 @@ $ vibe-sync import ../other-project
 vim ~/.claude/skills/my-skill/SKILL.md
 
 # 2. 同步到目标
-vibe-sync sync
+vsync sync
 ```
 
 ### 应用前预览
 
 ```bash
 # 1. 检查将要更改什么
-vibe-sync plan
+vsync plan
 
 # 2. 如果满意，应用
-vibe-sync sync
+vsync sync
 ```
 
 ### 清理旧配置
 
 ```bash
 # 安全清理（仅目标）
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # 严格镜像模式
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 ### 从另一个项目导入
 
 ```bash
-vibe-sync import ../other-project
+vsync import ../other-project
 ```
 
 ### 使用 --yes 自动化
 
 ```bash
 # 在 CI/CD 管道中
-vibe-sync sync --yes
+vsync sync --yes
 ```
 
 ---
@@ -541,10 +541,10 @@ vibe-sync sync --yes
 
 ```bash
 # 一般帮助
-vibe-sync --help
+vsync --help
 
 # 特定命令帮助
-vibe-sync sync --help
+vsync sync --help
 ```
 
 ## 下一步

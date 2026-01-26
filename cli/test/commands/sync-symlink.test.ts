@@ -7,7 +7,7 @@ import type { SyncPlan } from "@src/types/plan.js";
 describe("Sync Command - Symlink Support", () => {
   beforeEach(() => {
     mockFs({
-      "/project/.vibe-sync.json": JSON.stringify({
+      "/project/.vsync.json": JSON.stringify({
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",

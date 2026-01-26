@@ -149,7 +149,7 @@ describe("Status Command", () => {
       });
 
       expect(output).toContain("Pending changes detected");
-      expect(output).toContain("vibe-sync plan");
+      expect(output).toContain("vsync plan");
     });
 
     it("should handle never-synced state", () => {
@@ -180,9 +180,9 @@ describe("Status Command", () => {
       });
 
       expect(output).toContain("Configuration:");
-      expect(output).toContain(".vibe-sync.json");
+      expect(output).toContain(".vsync.json");
       expect(output).toContain("Manifest:");
-      expect(output).toContain(".vibe-sync");
+      expect(output).toContain(".vsync");
       expect(output).toContain("cache");
       expect(output).toContain("manifest.json");
     });
@@ -211,7 +211,7 @@ describe("Status Command", () => {
       });
 
       expect(userOutput).toContain("(User)");
-      expect(userOutput).toContain("~/.vibe-sync.json");
+      expect(userOutput).toContain("~/.vsync.json");
     });
 
     it("should display multiple target tools correctly", () => {

@@ -1,5 +1,5 @@
 ---
-"vibe-sync": patch
+"vsync": patch
 ---
 
 release first version 07

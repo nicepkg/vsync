@@ -32,7 +32,7 @@ export function createCLI(): Command {
   const program = new Command();
 
   program
-    .name("vibe-sync")
+    .name("vsync")
     .description(
       "AI Coding Tool Config Synchronizer\n" +
         "Single source of truth → Compile to multiple formats → Diff-based sync",
@@ -57,7 +57,7 @@ export function createCLI(): Command {
     }
     if (err.code === "commander.unknownCommand") {
       console.error(`\nError: Unknown command '${err.message}'`);
-      console.error("Run 'vibe-sync --help' to see available commands\n");
+      console.error("Run 'vsync --help' to see available commands\n");
       process.exit(1);
     }
     throw err;

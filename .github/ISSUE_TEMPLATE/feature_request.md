@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea for vibe-sync
+about: Suggest an idea for vsync
 title: "[Feature] "
 labels: enhancement
 assignees: ""

@@ -1,5 +1,5 @@
 /**
- * Configuration manager for .vibe-sync.json
+ * Configuration manager for .vsync.json
  * Pure config operations (no UI logic)
  *
  * Separation of Concerns:
@@ -40,10 +40,10 @@ export function getConfigPath(
 ): string {
   if (level === "project") {
     const dir = projectDir ?? cwd();
-    return join(dir, ".vibe-sync.json");
+    return join(dir, ".vsync.json");
   } else {
     const dir = userDir ?? homedir();
-    return join(dir, ".vibe-sync.json");
+    return join(dir, ".vsync.json");
   }
 }
 
@@ -78,7 +78,7 @@ export async function loadConfig(
     if (error instanceof Error) {
       if ("code" in error && error.code === "ENOENT") {
         throw new Error(
-          `Configuration file not found: ${configPath}. Run 'vibe-sync init' first.`,
+          `Configuration file not found: ${configPath}. Run 'vsync init' first.`,
         );
       }
       throw error;
@@ -229,9 +229,7 @@ export async function loadMergedConfig(
 
   // If neither exists, throw error
   if (!userConfig && !projectConfig) {
-    throw new Error(
-      "No configuration found. Run 'vibe-sync init' to create one.",
-    );
+    throw new Error("No configuration found. Run 'vsync init' to create one.");
   }
 
   return mergeConfigs(userConfig, projectConfig);

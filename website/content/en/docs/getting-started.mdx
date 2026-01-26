@@ -1,34 +1,34 @@
 ---
 title: Getting Started
-description: Install vibe-sync in 2 minutes. Learn how to initialize configuration, sync AI coding tools (Claude Code, Cursor, OpenCode, Codex), and handle common setup scenarios.
+description: Install vsync in 2 minutes. Learn how to initialize configuration, sync AI coding tools (Claude Code, Cursor, OpenCode, Codex), and handle common setup scenarios.
 ---
 
 # Getting Started
 
-Get up and running with vibe-sync in just a few minutes.
+Get up and running with vsync in just a few minutes.
 
 ## Installation
 
-vibe-sync can be used without installation via `npx`, or installed globally for convenience.
+vsync can be used without installation via `npx`, or installed globally for convenience.
 
 ### Option 1: Run with npx (Recommended)
 
 No installation needed—just run:
 
 ```bash
-npx vibe-sync
+npx vsync
 ```
 
 ### Option 2: Global Installation
 
 ```bash
-npm install -g vibe-sync
+npm install -g vsync
 ```
 
 Verify the installation:
 
 ```bash
-vibe-sync --version
+vsync --version
 ```
 
 ## Quick Start
@@ -38,13 +38,13 @@ vibe-sync --version
 Navigate to your project directory and run:
 
 ```bash
-vibe-sync init
+vsync init
 ```
 
 For global user-level configuration:
 
 ```bash
-vibe-sync init --user
+vsync init --user
 ```
 
 > 💡 **Tip**: Learn more about [project vs user levels](../core-concepts#configuration-layers) in Core Concepts.
@@ -54,7 +54,7 @@ vibe-sync init --user
 The CLI will guide you through the setup process:
 
 ```
-🚀 Welcome to vibe-sync!
+🚀 Welcome to vsync!
 
 ✔ Detecting existing tools...
 ✔ Detected: claude-code, cursor
@@ -76,7 +76,7 @@ The CLI will guide you through the setup process:
 ✔ Cache directory created
 ✔ Manifest initialized
 
-✅ Setup complete! Run vibe-sync sync to start syncing
+✅ Setup complete! Run vsync sync to start syncing
 ```
 
 > 📚 **Learn more**: See [Configuration](../configuration) for detailed config options.
@@ -87,20 +87,20 @@ Once initialized, sync your configurations:
 
 ```bash
 # Safe mode (default: no deletions)
-vibe-sync sync
+vsync sync
 
 # Preview changes without applying
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # Strict mirroring (deletes extra items in targets)
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 > 🔍 **Details**: Understand [sync modes](../core-concepts#sync-modes) in Core Concepts.
 
 ## Understanding the Output
 
-When you run `vibe-sync sync`, you'll see a detailed plan:
+When you run `vsync sync`, you'll see a detailed plan:
 
 ```
 📖 Reading source (claude-code)...
@@ -128,7 +128,7 @@ cursor:
 
 ## Next Steps
 
-Now that you've installed and initialized vibe-sync:
+Now that you've installed and initialized vsync:
 
 1. **Learn the Concepts**: Understand [Core Concepts](../core-concepts) like sync modes and layers
 2. **Configure Tools**: Explore [Configuration](../configuration) options for each tool
@@ -144,8 +144,8 @@ New team member joins with Claude Code already set up:
 
 ```bash
 cd my-project
-vibe-sync init  # Choose Claude Code as source, Cursor & OpenCode as targets
-vibe-sync sync  # All tools configured instantly!
+vsync init  # Choose Claude Code as source, Cursor & OpenCode as targets
+vsync sync  # All tools configured instantly!
 ```
 
 ### User-Level Config Sync
@@ -153,8 +153,8 @@ vibe-sync sync  # All tools configured instantly!
 Set up global personal configs once, use everywhere:
 
 ```bash
-vibe-sync init --user  # Configure which tools to sync
-vibe-sync sync --user  # Sync personal Skills, MCP servers globally
+vsync init --user  # Configure which tools to sync
+vsync sync --user  # Sync personal Skills, MCP servers globally
 ```
 
 > 💡 **Related**: Learn about [configuration layers](../core-concepts#configuration-layers).
@@ -164,9 +164,9 @@ vibe-sync sync --user  # Sync personal Skills, MCP servers globally
 Moving from Cursor to Claude Code:
 
 ```bash
-vibe-sync init  # Choose Cursor as SOURCE (reference standard)
+vsync init  # Choose Cursor as SOURCE (reference standard)
                 # Choose Claude Code as TARGET (will pull from source)
-vibe-sync sync  # All configs migrated instantly!
+vsync sync  # All configs migrated instantly!
 ```
 
 > 📖 **More info**: See [FAQ - Migration Questions](../faq#migration-questions).
@@ -175,7 +175,7 @@ vibe-sync sync  # All configs migrated instantly!
 
 ### Config File Not Found
 
-If you see "Config file not found", run `vibe-sync init` first to create the configuration.
+If you see "Config file not found", run `vsync init` first to create the configuration.
 
 ### Tool Not Detected
 
@@ -189,8 +189,8 @@ On macOS/Linux, you may need to grant permissions for file operations. Check tha
 
 ## Getting Help
 
-- Run `vibe-sync --help` for command overview
-- Run `vibe-sync <command> --help` for specific command help
+- Run `vsync --help` for command overview
+- Run `vsync <command> --help` for specific command help
 - Check the [FAQ](../faq) for common questions
 - Use the [Quick Reference](../quick-reference) for command examples
-- Open an issue on [GitHub](https://github.com/nicepkg/vibe-sync/issues)
+- Open an issue on [GitHub](https://github.com/nicepkg/vsync/issues)

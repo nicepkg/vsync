@@ -1,6 +1,6 @@
 /**
- * vibe-sync init command
- * Initialize vibe-sync configuration
+ * vsync init command
+ * Initialize vsync configuration
  */
 
 import { access } from "node:fs/promises";
@@ -50,7 +50,7 @@ export async function detectTools(projectDir: string): Promise<ToolName[]> {
 }
 
 /**
- * Generate vibe-sync configuration from user selections
+ * Generate vsync configuration from user selections
  *
  * @param options - User selections
  * @returns Generated config
@@ -209,7 +209,7 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
 
     console.log(
       chalk.green(
-        `\n✅ ${t("commands.init.complete", { command: chalk.bold("vibe-sync sync") })}\n`,
+        `\n✅ ${t("commands.init.complete", { command: chalk.bold("vsync sync") })}\n`,
       ),
     );
   } catch (error) {

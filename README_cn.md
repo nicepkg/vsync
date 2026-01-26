@@ -2,14 +2,14 @@
 
 <img src="website/public/icon.svg" width="120" height="120" />
 
-# vibe-sync
+# vsync
 
 ### **一处配置,多个 AI 工具同步,不再折腾**
 
-[![GitHub stars](https://img.shields.io/github/stars/nicepkg/vibe-sync?style=social)](https://github.com/nicepkg/vibe-sync)
+[![GitHub stars](https://img.shields.io/github/stars/nicepkg/vsync?style=social)](https://github.com/nicepkg/vsync)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/nicepkg/vibe-sync/pulls)
-[![Tests](https://img.shields.io/badge/测试-612%20通过-brightgreen)](https://github.com/nicepkg/vibe-sync)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/nicepkg/vsync/pulls)
+[![Tests](https://img.shields.io/badge/测试-612%20通过-brightgreen)](https://github.com/nicepkg/vsync)
 
 简体中文 | [English](./README.md)
 
@@ -23,15 +23,15 @@
 **AI 氛围编程工具配置一键同步**
 
 在多个 AI 编程工具间管理 Skills、MCP servers、Agents 和 Commands 是噩梦。
-每个工具都有自己的目录和格式。vibe-sync 用一条命令解决这个问题。
+每个工具都有自己的目录和格式。vsync 用一条命令解决这个问题。
 
-[立即开始](#-快速开始) · [功能特性](#-功能特性) · [文档](https://vibe-sync.xiaominglab.com)
+[立即开始](#-快速开始) · [功能特性](#-功能特性) · [文档](https://vsync.xiaominglab.com)
 
 </div>
 
 ---
 
-## ✨ 为什么选择 vibe-sync?
+## ✨ 为什么选择 vsync?
 
 **问题所在**: 你喜欢使用多个 AI 氛围编程工具 (Claude Code、Cursor、OpenCode、Codex...),但每个工具都有:
 
@@ -41,11 +41,11 @@
 
 跨工具管理配置变成了噩梦,对团队来说更是如此。
 
-**解决方案**: vibe-sync 给你一条命令同步一切。选择一个工具作为标准参考,其他工具完美保持同步。
+**解决方案**: vsync 给你一条命令同步一切。选择一个工具作为标准参考,其他工具完美保持同步。
 
 ### 我们解决的痛点
 
-| 😫 没有 vibe-sync                                     | 🎉 有了 vibe-sync                               |
+| 😫 没有 vsync                                         | 🎉 有了 vsync                                   |
 | :---------------------------------------------------- | :---------------------------------------------- |
 | 📋 在多个氛围编程工具之间手动复制配置                 | ⚡ 一条命令自动同步所有内容                     |
 | 📂 不同工具的 Skills/Agents/Commands/MCP 目录各不相同 | 🎯 一条命令映射到所有正确路径                   |
@@ -71,7 +71,7 @@
 
 ```mermaid
 flowchart TD
-    A[选择源工具<br/>你的标准参考] --> B[vibe-sync 读取配置<br/>Skills, MCP, Agents, Commands]
+    A[选择源工具<br/>你的标准参考] --> B[vsync 读取配置<br/>Skills, MCP, Agents, Commands]
     B --> C[与目标工具对比<br/>计算差异]
     C --> D[显示同步计划<br/>将要发生什么变更]
     D --> E{需要你的批准}
@@ -85,29 +85,29 @@ flowchart TD
     style E fill:#fff9c4
 ```
 
-**魔法之处**: 在一个工具中编辑 → 运行 `vibe-sync sync` → 所有工具保持同步
+**魔法之处**: 在一个工具中编辑 → 运行 `vsync sync` → 所有工具保持同步
 
 ---
 
 ## 🎯 功能特性
 
-| 功能              | 说明                         | 状态    |
-| :---------------- | :--------------------------- | :------ |
-| **Skills 同步**   | 跨工具同步 Agent Skills      | ✅ v1.0 |
-| **MCP 同步**      | 带安全检查的 MCP 服务器同步  | ✅ v1.0 |
-| **差异计划**      | 应用前预览变更               | ✅ v1.0 |
-| **Safe 模式**     | 仅添加和更新,不删除          | ✅ v1.0 |
-| **Prune 模式**    | 严格镜像,包含删除            | ✅ v1.0 |
-| **原子写入**      | 全有或全无的文件操作         | ✅ v1.0 |
-| **Manifest 追踪** | 基于哈希的变更检测           | ✅ v1.0 |
-| **User 层**       | 全局配置 (~/.vibe-sync.json) | ✅ v1.1 |
-| **Agents 同步**   | 自定义 AI 代理               | ✅ v1.1 |
-| **Commands 同步** | 快捷命令                     | ✅ v1.1 |
-| **Codex 支持**    | 完整 Codex 集成 (TOML 格式)  | ✅ v1.1 |
-| **多语言支持**    | 中文和英文 CLI 输出          | ✅ v1.2 |
-| **性能优化**      | 并行操作、智能缓存           | ✅ v1.2 |
-| **符号链接**      | 符号链接支持                 | ✅ v1.2 |
-| **导入/导出**     | 项目间共享配置               | ✅ v1.1 |
+| 功能              | 说明                        | 状态    |
+| :---------------- | :-------------------------- | :------ |
+| **Skills 同步**   | 跨工具同步 Agent Skills     | ✅ v1.0 |
+| **MCP 同步**      | 带安全检查的 MCP 服务器同步 | ✅ v1.0 |
+| **差异计划**      | 应用前预览变更              | ✅ v1.0 |
+| **Safe 模式**     | 仅添加和更新,不删除         | ✅ v1.0 |
+| **Prune 模式**    | 严格镜像,包含删除           | ✅ v1.0 |
+| **原子写入**      | 全有或全无的文件操作        | ✅ v1.0 |
+| **Manifest 追踪** | 基于哈希的变更检测          | ✅ v1.0 |
+| **User 层**       | 全局配置 (~/.vsync.json)    | ✅ v1.1 |
+| **Agents 同步**   | 自定义 AI 代理              | ✅ v1.1 |
+| **Commands 同步** | 快捷命令                    | ✅ v1.1 |
+| **Codex 支持**    | 完整 Codex 集成 (TOML 格式) | ✅ v1.1 |
+| **多语言支持**    | 中文和英文 CLI 输出         | ✅ v1.2 |
+| **性能优化**      | 并行操作、智能缓存          | ✅ v1.2 |
+| **符号链接**      | 符号链接支持                | ✅ v1.2 |
+| **导入/导出**     | 项目间共享配置              | ✅ v1.1 |
 
 ---
 
@@ -117,29 +117,29 @@ flowchart TD
 
 ```bash
 # 方式 1: 使用 npx 直接运行 (无需安装)
-npx vibe-sync
+npx vsync
 
 # 方式 2: 使用 npm 全局安装
-npm install -g vibe-sync
+npm install -g vsync
 
 # 验证安装
-vibe-sync --version
+vsync --version
 ```
 
 ### 初始化
 
 ```bash
 # 项目级配置
-vibe-sync init
+vsync init
 
 # 用户级(全局)配置
-vibe-sync init --user
+vsync init --user
 ```
 
 **交互式提示:**
 
 ```
-🚀 欢迎使用 vibe-sync!
+🚀 欢迎使用 vsync!
 
 ✔ 正在检测现有工具...
 ✔ 检测到: claude-code, cursor
@@ -161,20 +161,20 @@ vibe-sync init --user
 ✔ 缓存目录已创建
 ✔ Manifest 已初始化
 
-✅ 设置完成! 运行 vibe-sync sync 开始同步
+✅ 设置完成! 运行 vsync sync 开始同步
 ```
 
 ### 同步配置
 
 ```bash
 # Safe 模式 (默认: 不删除)
-vibe-sync sync
+vsync sync
 
 # 预览变更但不应用
-vibe-sync sync --dry-run
+vsync sync --dry-run
 
 # 严格镜像 (删除目标中的多余项)
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **示例输出:**
@@ -207,8 +207,8 @@ cursor:
 ```bash
 # 新团队成员加入,已经设置好 Claude Code
 cd my-project
-vibe-sync init  # 选择 Claude Code 作为源,Cursor 和 OpenCode 作为目标
-vibe-sync sync  # 瞬间完成! 所有工具在几秒内配置完成
+vsync init  # 选择 Claude Code 作为源,Cursor 和 OpenCode 作为目标
+vsync sync  # 瞬间完成! 所有工具在几秒内配置完成
 
 # 他们的整个 AI 编程环境现在与团队同步
 ```
@@ -217,8 +217,8 @@ vibe-sync sync  # 瞬间完成! 所有工具在几秒内配置完成
 
 ```bash
 # 一次性设置你的全局个人配置
-vibe-sync init --user  # 配置要同步哪些工具
-vibe-sync sync --user  # 全局同步你的个人 Skills、MCP servers、Agents
+vsync init --user  # 配置要同步哪些工具
+vsync sync --user  # 全局同步你的个人 Skills、MCP servers、Agents
 
 # 现在所有工具共享相同的用户级别配置
 # 在你所有项目中自动生效
@@ -228,9 +228,9 @@ vibe-sync sync --user  # 全局同步你的个人 Skills、MCP servers、Agents
 
 ```bash
 # 从 Cursor 迁移到 Claude Code?
-vibe-sync init  # 选择 Cursor 作为 SOURCE (源/参考标准)
+vsync init  # 选择 Cursor 作为 SOURCE (源/参考标准)
                 # 选择 Claude Code 作为 TARGET (目标会从源拉取配置)
-vibe-sync sync  # 所有 skills、MCP servers、agents 瞬间迁移完成
+vsync sync  # 所有 skills、MCP servers、agents 瞬间迁移完成
 
 # SOURCE (源) = 你的标准参考 (所有内容从这里同步)
 # TARGET (目标) = 会匹配源的内容 (所有内容同步到这里)
@@ -244,25 +244,25 @@ vibe-sync sync  # 所有 skills、MCP servers、agents 瞬间迁移完成
 
 ```bash
 # 初始化配置
-vibe-sync init [--user]
+vsync init [--user]
 
 # 同步配置
-vibe-sync sync [--user] [--dry-run] [--prune]
+vsync sync [--user] [--dry-run] [--prune]
 
 # 查看同步计划但不执行
-vibe-sync plan [--user]
+vsync plan [--user]
 
 # 检查同步状态
-vibe-sync status [--user]
+vsync status [--user]
 
 # 列出配置
-vibe-sync list [skills|mcp] [--user]
+vsync list [skills|mcp] [--user]
 
 # 从目标清理配置
-vibe-sync clean [name] [--user] [--from-source]
+vsync clean [name] [--user] [--from-source]
 
 # 从其他项目导入
-vibe-sync import <path> [--user]
+vsync import <path> [--user]
 ```
 
 ### 示例工作流
@@ -274,47 +274,47 @@ vibe-sync import <path> [--user]
 vim ~/.claude/skills/my-skill/SKILL.md
 
 # 同步到所有目标工具
-vibe-sync sync
+vsync sync
 ```
 
 **2. 应用前预览变更:**
 
 ```bash
-vibe-sync plan
+vsync plan
 # 查看计划
-vibe-sync sync
+vsync sync
 ```
 
 **3. 严格镜像模式 (删除过期配置):**
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **4. 清理一个 skill:**
 
 ```bash
 # 仅从目标清理 (源不变)
-vibe-sync clean skill/old-skill
+vsync clean skill/old-skill
 
 # 从源和所有目标删除 (危险!)
-vibe-sync clean skill/old-skill --from-source
+vsync clean skill/old-skill --from-source
 ```
 
 **5. 从其他项目导入配置:**
 
 ```bash
-vibe-sync import ../other-project
+vsync import ../other-project
 ```
 
 ---
 
 ## 📋 配置文件
 
-### .vibe-sync.json
+### .vsync.json
 
-**项目级:** `<project>/.vibe-sync.json`
-**用户级:** `~/.vibe-sync.json`
+**项目级:** `<project>/.vsync.json`
+**用户级:** `~/.vsync.json`
 
 ```json
 {
@@ -339,9 +339,9 @@ vibe-sync import ../other-project
 - `use_symlinks_for_skills`: 使用符号链接而非复制 (节省磁盘空间)
 - `language`: CLI 语言 - `"en"` 或 `"zh"` (仅用户级)
 
-### 配置格式差异 (为什么需要 vibe-sync)
+### 配置格式差异 (为什么需要 vsync)
 
-每个氛围编程工具使用不同的格式和目录结构。vibe-sync 处理所有复杂性:
+每个氛围编程工具使用不同的格式和目录结构。vsync 处理所有复杂性:
 
 **目录结构差异**:
 | 配置类型 | Claude Code | Cursor | OpenCode | Codex |
@@ -359,14 +359,14 @@ vibe-sync import ../other-project
 | **环境变量语法** | `${VAR}` | `${env:VAR}` | `{env:VAR}` | 不支持插值 |
 | **Type 字段** | 不需要 | 不需要 | **必需** (`local`/`remote`) | 必需 |
 
-**没有 vibe-sync**:
+**没有 vsync**:
 
 - ❌ 手动在不同目录之间复制文件
 - ❌ 记住哪个工具使用哪个路径
 - ❌ 手动转换环境变量语法
 - ❌ 经常破坏配置或忘记必需字段
 
-**有了 vibe-sync**:
+**有了 vsync**:
 
 - ✅ 一条命令 → 自动同步到所有工具
 - ✅ 自动格式转换
@@ -399,7 +399,7 @@ vibe-sync import ../other-project
 - ❌ **从不删除**
 
 ```bash
-vibe-sync sync
+vsync sync
 ```
 
 ### Prune 模式
@@ -411,7 +411,7 @@ vibe-sync sync
 - ⚠️ **删除源中没有的项**
 
 ```bash
-vibe-sync sync --prune
+vsync sync --prune
 ```
 
 **使用场景:** 需要严格镜像时 (例如清理旧配置)
@@ -421,29 +421,29 @@ vibe-sync sync --prune
 **问: 应该使用哪个工具作为源?**
 答: 我们推荐使用 **Claude Code**,因为它的功能最完整。不过,你可以使用任何工具作为源。
 
-**问: vibe-sync 会覆盖我现有的配置吗?**
+**问: vsync 会覆盖我现有的配置吗?**
 答: 默认情况下,**Safe 模式**只创建和更新——从不删除。如果需要严格镜像,使用 `--prune`。
 
 **问: 如果我直接在目标工具中编辑配置会怎样?**
 答: 目标工具中的更改会在下次同步时被覆盖。SOURCE (源) 是你的参考标准——所有内容都从源同步。请始终在源工具中编辑,或使用 `import` 从其他项目拉取更改。
 
 **问: 如何切换源工具?**
-答: 重新运行 `vibe-sync init` 并选择不同的源。然后同步以更新所有目标。
+答: 重新运行 `vsync init` 并选择不同的源。然后同步以更新所有目标。
 
 **问: 支持 monorepo 吗?**
-答: 是的! 每个项目可以有自己的 `.vibe-sync.json`。用户层配置 (`~/.vibe-sync.json`) 全局生效。
+答: 是的! 每个项目可以有自己的 `.vsync.json`。用户层配置 (`~/.vsync.json`) 全局生效。
 
-**问: 可以将 `.vibe-sync.json` 提交到 git 吗?**
+**问: 可以将 `.vsync.json` 提交到 git 吗?**
 答: 可以! 配置文件不包含机密——只有工具名称和同步偏好。包含机密的 MCP 配置应使用环境变量。
 
 **问: 可以双向同步吗?**
-答: vibe-sync 是单向的 (源 → 目标)。要切换方向,重新运行 `init` 并选择不同的源工具。
+答: vsync 是单向的 (源 → 目标)。要切换方向,重新运行 `init` 并选择不同的源工具。
 
 **问: 项目层和用户层有什么区别?**
 答:
 
-- **项目层** (`.vibe-sync.json`): 团队配置,提交到 git
-- **用户层** (`~/.vibe-sync.json`): 个人全局配置,不共享
+- **项目层** (`.vsync.json`): 团队配置,提交到 git
+- **用户层** (`~/.vsync.json`): 个人全局配置,不共享
 
 ---
 
@@ -464,8 +464,8 @@ vibe-sync sync --prune
 
 ### 贡献者
 
-<a href="https://github.com/nicepkg/vibe-sync/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=nicepkg/vibe-sync" />
+<a href="https://github.com/nicepkg/vsync/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=nicepkg/vsync" />
 </a>
 
 ---
@@ -484,7 +484,7 @@ vibe-sync sync --prune
 
 ### v1.1 ✅ 已发布
 
-- [x] User 层配置 (~/.vibe-sync.json)
+- [x] User 层配置 (~/.vsync.json)
 - [x] Agents 同步 (自定义 AI 代理)
 - [x] Commands 同步 (快捷命令)
 - [x] 完整 Codex 支持 (TOML 格式)
@@ -525,8 +525,8 @@ MIT © [nicepkg](https://github.com/nicepkg)
 
 **如果这个项目对你有帮助,请考虑给它一个 ⭐**
 
-<a href="https://github.com/nicepkg/vibe-sync">
-  <img src="https://img.shields.io/github/stars/nicepkg/vibe-sync?style=for-the-badge&logo=github&color=yellow" alt="GitHub stars" />
+<a href="https://github.com/nicepkg/vsync">
+  <img src="https://img.shields.io/github/stars/nicepkg/vsync?style=for-the-badge&logo=github&color=yellow" alt="GitHub stars" />
 </a>
 
 用 ❤️ 制作 by [nicepkg](https://github.com/nicepkg)

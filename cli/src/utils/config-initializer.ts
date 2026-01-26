@@ -70,9 +70,7 @@ export async function ensureLanguageConfig(): Promise<Language> {
       language,
     };
     await saveConfig(minimalConfig, "user", homedir());
-    console.log(
-      chalk.gray(`\n✓ Language preference saved to ~/.vibe-sync.json\n`),
-    );
+    console.log(chalk.gray(`\n✓ Language preference saved to ~/.vsync.json\n`));
   }
 
   await setLanguage(language);
@@ -130,7 +128,7 @@ export async function ensureConfig(
     ]);
 
     if (!shouldInit) {
-      console.log(chalk.gray("\n💡 Run 'vibe-sync init' later.\n"));
+      console.log(chalk.gray("\n💡 Run 'vsync init' later.\n"));
       process.exit(0);
     }
 
@@ -154,7 +152,7 @@ export async function ensureConfig(
       ]);
 
       if (!shouldInit) {
-        console.log(chalk.gray("\n💡 Run 'vibe-sync init' later.\n"));
+        console.log(chalk.gray("\n💡 Run 'vsync init' later.\n"));
         process.exit(0);
       }
 
@@ -169,7 +167,7 @@ async function runInitFlow(
   projectDir: string,
   isUserLevel: boolean,
 ): Promise<VibeConfig> {
-  console.log(chalk.bold("\n🚀 Let's set up vibe-sync!\n"));
+  console.log(chalk.bold("\n🚀 Let's set up vsync!\n"));
 
   const {
     detectTools,

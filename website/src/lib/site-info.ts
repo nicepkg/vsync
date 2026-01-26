@@ -28,16 +28,16 @@
 
 // ---------- Basic Site Config ----------
 export const siteConfig = {
-  name: "vibe-sync",
+  name: "vsync",
   description: "One config. Many AI tools. Zero pain.",
-  url: "https://vibe-sync.xiaominglab.com",
+  url: "https://vsync.xiaominglab.com",
   locale: "en_US",
 };
 
 // ---------- GitHub Config ----------
 export const githubConfig = {
   username: "nicepkg",
-  repo: "vibe-sync",
+  repo: "vsync",
   get url() {
     return `https://github.com/${this.username}/${this.repo}`;
   },

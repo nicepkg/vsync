@@ -1,11 +1,11 @@
 ---
 title: FAQ
-description: Frequently asked questions about vibe-sync. Get answers on choosing source tools, config overwriting, monorepo support, environment variables, migration, troubleshooting, and performance.
+description: Frequently asked questions about vsync. Get answers on choosing source tools, config overwriting, monorepo support, environment variables, migration, troubleshooting, and performance.
 ---
 
 # Frequently Asked Questions
 
-Common questions and answers about using vibe-sync.
+Common questions and answers about using vsync.
 
 ## General Questions
 
@@ -23,7 +23,7 @@ However, you can use any supported tool as your source. The choice depends on:
 - Which tool has the most complete setup currently
 - Team preferences and workflow
 
-### Will vibe-sync overwrite my existing configs?
+### Will vsync overwrite my existing configs?
 
 By default, **Safe Mode** only creates and updates—it never deletes. Your existing configs in target tools will be updated to match the source, but nothing is removed unless you use `--prune` mode.
 
@@ -31,7 +31,7 @@ By default, **Safe Mode** only creates and updates—it never deletes. Your exis
 
 ### What happens if I edit configs directly in target tools?
 
-Changes in target tools will be **overwritten** on the next sync. vibe-sync uses a unidirectional sync model:
+Changes in target tools will be **overwritten** on the next sync. vsync uses a unidirectional sync model:
 
 ```
 Source (Your edits) → Targets (Auto-updated)
@@ -44,7 +44,7 @@ Source (Your edits) → Targets (Auto-updated)
 Simply re-run the init command:
 
 ```bash
-vibe-sync init
+vsync init
 # Choose a different source tool
 ```
 
@@ -52,20 +52,20 @@ Then sync to update all targets with the new source.
 
 ### Does it work with monorepos?
 
-**Yes!** Each project can have its own `.vibe-sync.json`. User-level configs (`~/.vibe-sync.json`) work globally across all projects.
+**Yes!** Each project can have its own `.vsync.json`. User-level configs (`~/.vsync.json`) work globally across all projects.
 
 Example structure:
 ```
 monorepo/
 ├── packages/
 │   ├── frontend/
-│   │   └── .vibe-sync.json  # Frontend-specific config
+│   │   └── .vsync.json  # Frontend-specific config
 │   └── backend/
-│       └── .vibe-sync.json  # Backend-specific config
-└── .vibe-sync.json          # Monorepo root config
+│       └── .vsync.json  # Backend-specific config
+└── .vsync.json          # Monorepo root config
 ```
 
-### Is it safe to commit `.vibe-sync.json` to git?
+### Is it safe to commit `.vsync.json` to git?
 
 **Yes!** The config file contains:
 - Tool names
@@ -76,10 +76,10 @@ MCP configs with secrets should use environment variables like `${API_KEY}`, whi
 
 ### Can I sync in both directions?
 
-No, vibe-sync is **unidirectional** (source → targets). This is intentional to maintain a clear source of truth.
+No, vsync is **unidirectional** (source → targets). This is intentional to maintain a clear source of truth.
 
 To switch directions:
-1. Run `vibe-sync init`
+1. Run `vsync init`
 2. Choose a different source tool
 3. Sync to update targets
 
@@ -89,12 +89,12 @@ To switch directions:
 
 ### What's the difference between project-level and user-level?
 
-**Project-Level** (`.vibe-sync.json`):
+**Project-Level** (`.vsync.json`):
 - Team configs shared via git
 - Project-specific Skills and integrations
 - Scoped to one project directory
 
-**User-Level** (`~/.vibe-sync.json`):
+**User-Level** (`~/.vsync.json`):
 - Personal global configs
 - Works across all projects
 - Not shared with team
@@ -106,10 +106,10 @@ Yes! They operate independently:
 
 ```bash
 # Sync project configs
-vibe-sync sync
+vsync sync
 
 # Sync user configs
-vibe-sync sync --user
+vsync sync --user
 ```
 
 Project configs don't override user configs—they're separate layers.
@@ -150,20 +150,20 @@ Result: A, B, C  (D is deleted)
 Use the `plan` command to see a detailed preview:
 
 ```bash
-vibe-sync plan
+vsync plan
 ```
 
 Or use `--dry-run` with sync:
 
 ```bash
-vibe-sync sync --dry-run
+vsync sync --dry-run
 ```
 
 Both show exactly what will be created, updated, deleted, or skipped.
 
 ### Can I review changes before they're applied?
 
-Yes! By default, `vibe-sync sync` shows a plan and asks for confirmation:
+Yes! By default, `vsync sync` shows a plan and asks for confirmation:
 
 ```
 📋 Sync Plan (Safe Mode)
@@ -192,11 +192,11 @@ Each tool has its own variable interpolation syntax:
 | OpenCode | `{env:VAR}` | `{env:API_KEY}` |
 | Codex | No interpolation | Direct values only |
 
-vibe-sync automatically converts between these formats.
+vsync automatically converts between these formats.
 
-### Will vibe-sync expose my secrets?
+### Will vsync expose my secrets?
 
-**No!** vibe-sync:
+**No!** vsync:
 - Never expands environment variables
 - Preserves variable references as-is
 - Only converts syntax between formats
@@ -263,7 +263,7 @@ Both are synced similarly, but Agents have limited tool support.
 
 ### Can I sync Cursor Rules?
 
-Cursor Rules (`.cursorrules` files) are currently **not supported**. vibe-sync focuses on:
+Cursor Rules (`.cursorrules` files) are currently **not supported**. vsync focuses on:
 - Skills
 - MCP servers
 - Agents
@@ -277,10 +277,10 @@ Future versions may add Rules support based on demand.
 
 ### "Config file not found" Error
 
-**Solution**: Run `vibe-sync init` to create configuration.
+**Solution**: Run `vsync init` to create configuration.
 
 ```bash
-vibe-sync init
+vsync init
 ```
 
 ### "Permission denied" Errors
@@ -302,7 +302,7 @@ vibe-sync init
 
 ```bash
 mkdir -p ~/.cursor
-vibe-sync init
+vsync init
 ```
 
 ### Sync Hangs or Times Out
@@ -342,8 +342,8 @@ cat .codex/config.toml
 ### How do I migrate from manual config management?
 
 1. Choose your most complete tool as source
-2. Run `vibe-sync init` and select that tool
-3. Run `vibe-sync sync` to populate targets
+2. Run `vsync init` and select that tool
+3. Run `vsync sync` to populate targets
 4. Verify configs in target tools
 5. Start editing only in source tool going forward
 
@@ -353,25 +353,25 @@ Yes, use the `import` command:
 
 ```bash
 cd new-project
-vibe-sync import ../old-project
+vsync import ../old-project
 ```
 
 This copies configs from the old project to your source tool, then you can sync to targets.
 
 ### What about migrating from other sync tools?
 
-vibe-sync doesn't directly import from other sync tools, but you can:
+vsync doesn't directly import from other sync tools, but you can:
 
 1. Manually copy configs to one of the supported tools
 2. Use that tool as source
-3. Initialize vibe-sync
+3. Initialize vsync
 4. Sync to other tools
 
 ---
 
 ## Performance Questions
 
-### How fast is vibe-sync?
+### How fast is vsync?
 
 Typical sync times:
 - First sync: 1-3 seconds (copying files)
@@ -384,9 +384,9 @@ Performance depends on:
 - Disk speed
 - Number of target tools
 
-### Does vibe-sync cache anything?
+### Does vsync cache anything?
 
-Yes! The manifest (`.vibe-sync-cache/manifest.json`) acts as a cache:
+Yes! The manifest (`.vsync-cache/manifest.json`) acts as a cache:
 - Stores SHA256 hashes of all items
 - Enables fast change detection
 - Allows incremental syncs
@@ -394,7 +394,7 @@ Yes! The manifest (`.vibe-sync-cache/manifest.json`) acts as a cache:
 ### Can I speed up syncs?
 
 1. **Enable symlinks**: `"use_symlinks_for_skills": true`
-2. **Commit manifest**: Include `.vibe-sync-cache/` in git
+2. **Commit manifest**: Include `.vsync-cache/` in git
 3. **Use selective sync**: Only sync what you need
 4. **Use --yes flag**: Skip confirmation prompts
 
@@ -402,6 +402,6 @@ Yes! The manifest (`.vibe-sync-cache/manifest.json`) acts as a cache:
 
 ## Still Have Questions?
 
-- **GitHub Issues**: [Ask a question](https://github.com/nicepkg/vibe-sync/issues/new)
+- **GitHub Issues**: [Ask a question](https://github.com/nicepkg/vsync/issues/new)
 - **Documentation**: Browse other docs sections
-- **CLI Help**: Run `vibe-sync --help`
+- **CLI Help**: Run `vsync --help`

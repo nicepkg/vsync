@@ -45,7 +45,7 @@ describe("Rollback Mechanism", () => {
       const backup = await createBackup(filePath);
 
       expect(isSamePath(backup.originalPath, filePath)).toBe(true);
-      expect(backup.backupPath).toContain(".vibe-sync-backup");
+      expect(backup.backupPath).toContain(".vsync-backup");
       expect(backup.timestamp).toBeTruthy();
 
       // Verify backup file exists and has correct content
@@ -62,7 +62,7 @@ describe("Rollback Mechanism", () => {
       expect(
         isSamePath(path.dirname(backup.backupPath), path.dirname(filePath)),
       ).toBe(true);
-      expect(backup.backupPath).toContain(".vibe-sync-backup");
+      expect(backup.backupPath).toContain(".vsync-backup");
     });
 
     it("should handle non-existent file gracefully", async () => {
@@ -159,7 +159,7 @@ describe("Rollback Mechanism", () => {
 
       const backup: BackupInfo = {
         originalPath: filePath,
-        backupPath: "/project/.cursor/.vibe-sync-backup-deleted.md",
+        backupPath: "/project/.cursor/.vsync-backup-deleted.md",
         existed: true,
         timestamp: new Date().toISOString(),
       };
@@ -218,7 +218,7 @@ describe("Rollback Mechanism", () => {
     it("should handle non-existent backup gracefully", async () => {
       const backup: BackupInfo = {
         originalPath: "/project/file.txt",
-        backupPath: "/project/.vibe-sync-backup-nonexistent",
+        backupPath: "/project/.vsync-backup-nonexistent",
         existed: false,
         timestamp: new Date().toISOString(),
       };
