@@ -597,7 +597,286 @@ async function promptForSymlinkUsage(
 }
 
 /**
+ * Sync context containing all necessary data for sync operation
+ */
+interface SyncContext {
+  projectDir: string;
+  mode: SyncMode;
+  config: VibeConfig;
+  sourceData: SourceData;
+  manifest: Manifest;
+}
+
+/**
+ * Validated sync plan with user interaction results
+ */
+interface ValidatedPlan {
+  plan: SyncPlan;
+  hasOperations: boolean;
+  shouldExecute: boolean;
+}
+
+/**
+ * Phase 1: Prepare sync context
+ * - Load configuration
+ * - Read source data
+ * - Load manifest
+ * - Handle symlink prompts
+ *
+ * Single Responsibility: Context initialization
+ */
+async function prepareSyncContext(options: {
+  user?: boolean;
+  prune?: boolean;
+}): Promise<SyncContext> {
+  const projectDir = options.user ? process.env.HOME || cwd() : cwd();
+  const mode: SyncMode = options.prune ? "prune" : "safe";
+
+  debug("Sync command started", { projectDir, mode, options });
+
+  // Load configuration (with auto-init if needed)
+  const spinner = SyncUI.showLoadingConfig();
+  const config = await ensureConfig(projectDir, options.user || false, {
+    spinner,
+    requireFields: ["source_tool", "target_tools", "sync_config"],
+  });
+  debugObject("Loaded config", config);
+  SyncUI.configLoaded(spinner);
+
+  // Read source configuration
+  const readSpinner = SyncUI.showReadingSource(config.source_tool!);
+  const sourceData = await readSourceConfig(
+    config.source_tool!,
+    projectDir,
+    config.level,
+  );
+  SyncUI.readComplete(readSpinner, {
+    skills: sourceData.skills.length,
+    mcp: sourceData.mcpServers.length,
+    agents: sourceData.agents.length,
+    commands: sourceData.commands.length,
+  });
+
+  // Load manifest
+  const manifest = await loadManifest(projectDir);
+
+  // Check if we should prompt for symlink usage (only on first skills sync)
+  // Config fields are guaranteed by ensureConfig validation
+  if (shouldPromptForSymlinks(config, manifest, config.target_tools!)) {
+    await promptForSymlinkUsage(config, projectDir);
+  }
+
+  return { projectDir, mode, config, sourceData, manifest };
+}
+
+/**
+ * Phase 2: Build and validate sync plan
+ * - Calculate diff
+ * - Display plan
+ * - Validate plan
+ * - Check for operations
+ *
+ * Single Responsibility: Plan generation and validation
+ */
+async function buildAndValidatePlan(
+  context: SyncContext,
+): Promise<ValidatedPlan> {
+  const { config, sourceData, manifest, mode, projectDir } = context;
+
+  // Debug: Show manifest state before calculating diff
+  debug("Manifest items count:", Object.keys(manifest.items).length);
+  if (Object.keys(manifest.items).length > 0) {
+    debug(
+      "Sample manifest items:",
+      Object.keys(manifest.items).slice(0, 5).join(", "),
+    );
+  }
+
+  const planSpinner = SyncUI.showCalculating();
+  const plan = await calculateSyncDiff(
+    sourceData,
+    config.source_tool!,
+    config.target_tools!,
+    manifest,
+    mode,
+    config.sync_config!,
+    projectDir,
+    config.level,
+  );
+  SyncUI.planGenerated(planSpinner);
+
+  // Display plan
+  SyncUI.displayPlan(plan);
+
+  // Validate plan
+  const validation = validatePlan(plan);
+  if (!validation.valid) {
+    SyncUI.displayValidationErrors(validation);
+  }
+
+  SyncUI.displayValidationWarnings(validation);
+
+  // Check if there are any operations
+  const hasOperations = Object.values(plan.diffs).some(
+    (diff) =>
+      diff &&
+      (diff.toCreate.length > 0 ||
+        diff.toUpdate.length > 0 ||
+        diff.toDelete.length > 0),
+  );
+
+  return {
+    plan,
+    hasOperations,
+    shouldExecute: true, // Will be determined in next phase
+  };
+}
+
+/**
+ * Phase 3: Confirm execution with user
+ * - Check for operations
+ * - Handle dry-run
+ * - Prompt for confirmation
+ *
+ * Single Responsibility: User interaction and confirmation
+ */
+async function confirmExecution(
+  validatedPlan: ValidatedPlan,
+  context: SyncContext,
+  options: { dryRun?: boolean; yes?: boolean },
+): Promise<boolean> {
+  // No operations - nothing to do
+  if (!validatedPlan.hasOperations) {
+    SyncUI.showNoChanges();
+    return false;
+  }
+
+  // Dry run - skip execution
+  if (options.dryRun) {
+    SyncUI.showDryRun();
+    return false;
+  }
+
+  // Prompt for confirmation (skip if --yes flag is provided)
+  if (!options.yes) {
+    const isDestructive = context.mode === "prune";
+    const confirm = await SyncUI.confirmSync(isDestructive);
+
+    if (!confirm) {
+      SyncUI.showCancelled();
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Phase 4: Execute sync with symlinks
+ * - Setup symlinks if enabled
+ * - Execute sync plan
+ *
+ * Single Responsibility: Sync execution
+ */
+async function executeSyncWithSymlinks(
+  plan: SyncPlan,
+  context: SyncContext,
+): Promise<SyncResults> {
+  const { config, sourceData, projectDir } = context;
+
+  // Setup symlinks if enabled
+  if (shouldUseSymlinks(config)) {
+    const symlinkSpinner = SyncUI.showSettingUpSymlinks();
+    try {
+      await syncWithSymlinks(config, plan, projectDir);
+      SyncUI.symlinksConfigured(symlinkSpinner);
+    } catch (error) {
+      SyncUI.symlinksFailed(symlinkSpinner);
+      throw error;
+    }
+  }
+
+  // Execute sync
+  const execSpinner = SyncUI.showSyncing();
+  const results = await executeSyncPlan(
+    plan,
+    sourceData,
+    projectDir,
+    config.level,
+  );
+  SyncUI.syncCompleted(execSpinner);
+
+  return results;
+}
+
+/**
+ * Phase 5: Finalize sync results
+ * - Update manifest
+ * - Display summary
+ * - Handle errors
+ *
+ * Single Responsibility: Post-sync finalization
+ */
+async function finalizeSyncResults(
+  results: SyncResults,
+  plan: SyncPlan,
+  context: SyncContext,
+): Promise<boolean> {
+  const { sourceData, projectDir } = context;
+
+  // Update manifest for each successful target
+  for (const [toolName, result] of Object.entries(results)) {
+    if (!result || !result.success) continue;
+
+    const tool = toolName as ToolName;
+    const diff = plan.diffs[tool];
+    if (!diff) continue;
+
+    // Use SourceData class method instead of inline if-else chain (DRY principle)
+    const sourceDataObj = new SourceDataClass(
+      sourceData.skills,
+      sourceData.mcpServers,
+      sourceData.agents,
+      sourceData.commands,
+    );
+
+    const operations: SyncOperations = {
+      created: diff.toCreate.map((op) => ({
+        type: op.itemType,
+        name: op.name,
+        hash: sourceDataObj.getHash(op.itemType, op.name),
+      })),
+      updated: diff.toUpdate.map((op) => ({
+        type: op.itemType,
+        name: op.name,
+        hash: sourceDataObj.getHash(op.itemType, op.name),
+      })),
+      deleted: diff.toDelete.map((op) => ({
+        type: op.itemType,
+        name: op.name,
+      })),
+    };
+
+    await updateManifestAfterSync(operations, tool, projectDir);
+  }
+
+  // Display summary
+  SyncUI.displaySyncSummary(results);
+
+  // Check if all succeeded
+  const allSuccess = Object.values(results).every((r) => r?.success);
+
+  if (!allSuccess) {
+    debugObject("Sync results with errors", results);
+  }
+
+  return allSuccess;
+}
+
+/**
  * Run sync command
+ * Refactored to follow Single Responsibility Principle
+ * Each phase is handled by a dedicated function
  *
  * @param options - Command options
  */
@@ -610,174 +889,37 @@ export async function syncCommand(options: {
   const endTiming = debugTiming("sync command");
 
   try {
-    const projectDir = options.user ? process.env.HOME || cwd() : cwd();
-    const mode: SyncMode = options.prune ? "prune" : "safe";
+    // Phase 1: Prepare sync context (config, source data, manifest)
+    const context = await prepareSyncContext(options);
 
-    debug("Sync command started", { projectDir, mode, options });
+    // Phase 2: Build and validate sync plan
+    const validatedPlan = await buildAndValidatePlan(context);
 
-    // Load configuration (with auto-init if needed)
-    const spinner = SyncUI.showLoadingConfig();
-    const config = await ensureConfig(projectDir, options.user || false, {
-      spinner,
-      requireFields: ["source_tool", "target_tools", "sync_config"],
-    });
-    debugObject("Loaded config", config);
-    SyncUI.configLoaded(spinner);
-
-    // Read source configuration
-    const readSpinner = SyncUI.showReadingSource(config.source_tool!);
-    const sourceData = await readSourceConfig(
-      config.source_tool!,
-      projectDir,
-      config.level,
-    );
-    SyncUI.readComplete(readSpinner, {
-      skills: sourceData.skills.length,
-      mcp: sourceData.mcpServers.length,
-      agents: sourceData.agents.length,
-      commands: sourceData.commands.length,
-    });
-
-    // Load manifest
-    const manifest = await loadManifest(projectDir);
-
-    // Check if we should prompt for symlink usage (only on first skills sync)
-    // Config fields are guaranteed by ensureConfig validation
-    if (shouldPromptForSymlinks(config, manifest, config.target_tools!)) {
-      await promptForSymlinkUsage(config, projectDir);
-    }
-
-    // Calculate diff and generate plan
-    // Debug: Show manifest state before calculating diff
-    debug("Manifest items count:", Object.keys(manifest.items).length);
-    if (Object.keys(manifest.items).length > 0) {
-      debug(
-        "Sample manifest items:",
-        Object.keys(manifest.items).slice(0, 5).join(", "),
-      );
-    }
-
-    const planSpinner = SyncUI.showCalculating();
-    const plan = await calculateSyncDiff(
-      sourceData,
-      config.source_tool!,
-      config.target_tools!,
-      manifest,
-      mode,
-      config.sync_config!,
-      projectDir,
-      config.level,
-    );
-    SyncUI.planGenerated(planSpinner);
-
-    // Display plan
-    SyncUI.displayPlan(plan);
-
-    // Validate plan
-    const validation = validatePlan(plan);
-    if (!validation.valid) {
-      SyncUI.displayValidationErrors(validation);
-    }
-
-    SyncUI.displayValidationWarnings(validation);
-
-    // Check if there are any operations
-    const hasOperations = Object.values(plan.diffs).some(
-      (diff) =>
-        diff &&
-        (diff.toCreate.length > 0 ||
-          diff.toUpdate.length > 0 ||
-          diff.toDelete.length > 0),
+    // Phase 3: Confirm execution with user
+    const shouldExecute = await confirmExecution(
+      validatedPlan,
+      context,
+      options,
     );
 
-    if (!hasOperations) {
-      SyncUI.showNoChanges();
+    if (!shouldExecute) {
+      endTiming();
       return;
     }
 
-    // Dry run - skip execution
-    if (options.dryRun) {
-      SyncUI.showDryRun();
-      return;
-    }
+    // Phase 4: Execute sync with symlinks
+    const results = await executeSyncWithSymlinks(validatedPlan.plan, context);
 
-    // Prompt for confirmation (skip if --yes flag is provided)
-    if (!options.yes) {
-      const isDestructive = mode === "prune";
-      const confirm = await SyncUI.confirmSync(isDestructive);
-
-      if (!confirm) {
-        SyncUI.showCancelled();
-        return;
-      }
-    }
-
-    // Setup symlinks if enabled
-    if (shouldUseSymlinks(config)) {
-      const symlinkSpinner = SyncUI.showSettingUpSymlinks();
-      try {
-        await syncWithSymlinks(config, plan, projectDir);
-        SyncUI.symlinksConfigured(symlinkSpinner);
-      } catch (error) {
-        SyncUI.symlinksFailed(symlinkSpinner);
-        throw error;
-      }
-    }
-
-    // Execute sync
-    const execSpinner = SyncUI.showSyncing();
-    const results = await executeSyncPlan(
-      plan,
-      sourceData,
-      projectDir,
-      config.level,
+    // Phase 5: Finalize results (manifest update, summary)
+    const allSuccess = await finalizeSyncResults(
+      results,
+      validatedPlan.plan,
+      context,
     );
-    SyncUI.syncCompleted(execSpinner);
 
-    // Update manifest
-    for (const [toolName, result] of Object.entries(results)) {
-      if (!result || !result.success) continue;
-
-      const tool = toolName as ToolName;
-      const diff = plan.diffs[tool];
-      if (!diff) continue;
-
-      // Use SourceData class method instead of inline if-else chain (DRY principle)
-      const sourceDataObj = new SourceDataClass(
-        sourceData.skills,
-        sourceData.mcpServers,
-        sourceData.agents,
-        sourceData.commands,
-      );
-
-      const operations: SyncOperations = {
-        created: diff.toCreate.map((op) => ({
-          type: op.itemType,
-          name: op.name,
-          hash: sourceDataObj.getHash(op.itemType, op.name),
-        })),
-        updated: diff.toUpdate.map((op) => ({
-          type: op.itemType,
-          name: op.name,
-          hash: sourceDataObj.getHash(op.itemType, op.name),
-        })),
-        deleted: diff.toDelete.map((op) => ({
-          type: op.itemType,
-          name: op.name,
-        })),
-      };
-
-      await updateManifestAfterSync(operations, tool, projectDir);
-    }
-
-    // Display summary
-    SyncUI.displaySyncSummary(results);
-
-    const allSuccess = Object.values(results).every((r) => r?.success);
     endTiming();
 
     if (!allSuccess) {
-      debugObject("Sync results with errors", results);
       process.exit(1);
     }
   } catch (error) {
