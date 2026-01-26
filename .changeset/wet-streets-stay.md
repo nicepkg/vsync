@@ -2,4 +2,4 @@
 "@nicepkg/vsync": patch
 ---
 
-fix cli not working
+release v1.0.9
