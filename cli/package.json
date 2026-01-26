@@ -3,6 +3,51 @@
   "version": "1.0.5",
   "description": "CLI for vsync - AI coding tool config synchronizer",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicepkg/vsync.git"
+  },
+  "homepage": "https://github.com/nicepkg/vsync#readme",
+  "bugs": {
+    "url": "https://github.com/nicepkg/vsync/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ai",
+    "ai-coding",
+    "ai-tools",
+    "ai-assistant",
+    "claude",
+    "claude-code",
+    "cursor",
+    "opencode",
+    "codex",
+    "mcp",
+    "mcp-server",
+    "mcp-servers",
+    "config",
+    "config-sync",
+    "configuration",
+    "sync",
+    "synchronize",
+    "cli",
+    "devtools",
+    "developer-tools",
+    "productivity",
+    "skills",
+    "agents",
+    "commands",
+    "ide",
+    "vscode",
+    "copilot",
+    "coding-assistant",
+    "automation"
+  ],
+  "author": {
+    "name": "Jinming Yang",
+    "email": "2214962083@qq.com",
+    "url": "https://github.com/2214962083"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -49,9 +94,5 @@
     "typescript-eslint": "^8.53.1",
     "vitest": "^4.0.18",
     "zod": "^4.3.6"
-  },
-  "engines": {
-    "node": ">=24.0.0",
-    "pnpm": ">=10.0.0"
   }
 }
