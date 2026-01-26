@@ -2,4 +2,4 @@
 "@nicepkg/vsync": patch
 ---
 
-release first version 09
+release first version 10
