@@ -197,6 +197,7 @@ async function statusCommand(options: { user?: boolean }): Promise<void> {
     );
     const plan = await calculateSyncDiff(
       sourceData,
+      config.source_tool!,
       config.target_tools!,
       manifest,
       "safe",

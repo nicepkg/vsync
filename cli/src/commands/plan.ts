@@ -161,6 +161,7 @@ async function planCommand(options: {
     const planSpinner = ora(t("commands.plan.calculating")).start();
     const plan = await calculateSyncDiff(
       sourceData,
+      config.source_tool!,
       config.target_tools!,
       manifest,
       mode,

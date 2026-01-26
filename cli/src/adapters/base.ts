@@ -388,8 +388,11 @@ export abstract class BaseAdapter implements ToolAdapter {
 
           item.hash = hashFn(item);
           items.push(item);
-        } catch {
-          // Silently skip invalid items
+        } catch (error) {
+          // Log parsing errors - silent skip could hide data corruption
+          console.warn(
+            `⚠️  Warning: Failed to parse ${dirName}/${entry.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
         }
       }
 

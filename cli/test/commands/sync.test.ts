@@ -162,6 +162,7 @@ describe("Sync Command", () => {
           agents: [],
           commands: [],
         },
+        "claude-code",
         ["cursor"],
         {
           version: "1.0.0",
@@ -269,6 +270,7 @@ describe("Sync Command", () => {
           agents: [],
           commands: [],
         },
+        "claude-code",
         ["cursor"],
         manifest,
         "prune",

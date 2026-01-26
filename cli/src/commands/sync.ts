@@ -221,7 +221,18 @@ async function readTargetConfigs(
       if (capabilities.skills) {
         try {
           skills = await adapter.readSkills();
-        } catch {
+        } catch (error) {
+          // Log error but continue - file might not exist yet (first sync)
+          // CRITICAL: In prune mode, parsing errors could lead to data loss!
+          if (
+            error instanceof Error &&
+            !error.message.includes("ENOENT") &&
+            !error.message.includes("not found")
+          ) {
+            console.warn(
+              `⚠️  Warning: Failed to read skills from ${tool}: ${error.message}`,
+            );
+          }
           skills = [];
         }
       }
@@ -229,7 +240,16 @@ async function readTargetConfigs(
       if (capabilities.mcp) {
         try {
           mcpServers = await adapter.readMCPServers();
-        } catch {
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            !error.message.includes("ENOENT") &&
+            !error.message.includes("not found")
+          ) {
+            console.warn(
+              `⚠️  Warning: Failed to read MCP servers from ${tool}: ${error.message}`,
+            );
+          }
           mcpServers = [];
         }
       }
@@ -237,7 +257,16 @@ async function readTargetConfigs(
       if (capabilities.agents) {
         try {
           agents = await adapter.readAgents();
-        } catch {
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            !error.message.includes("ENOENT") &&
+            !error.message.includes("not found")
+          ) {
+            console.warn(
+              `⚠️  Warning: Failed to read agents from ${tool}: ${error.message}`,
+            );
+          }
           agents = [];
         }
       }
@@ -245,7 +274,16 @@ async function readTargetConfigs(
       if (capabilities.commands) {
         try {
           commands = await adapter.readCommands();
-        } catch {
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            !error.message.includes("ENOENT") &&
+            !error.message.includes("not found")
+          ) {
+            console.warn(
+              `⚠️  Warning: Failed to read commands from ${tool}: ${error.message}`,
+            );
+          }
           commands = [];
         }
       }
@@ -282,6 +320,7 @@ async function readTargetConfigs(
  * Calculate sync diff for all targets
  *
  * @param sourceData - Source configuration
+ * @param sourceTool - Source tool name
  * @param targetTools - Target tool names
  * @param manifest - Current manifest
  * @param mode - Sync mode
@@ -292,6 +331,7 @@ async function readTargetConfigs(
  */
 export async function calculateSyncDiff(
   sourceData: SourceData,
+  sourceTool: ToolName,
   targetTools: ToolName[],
   manifest: Manifest,
   mode: SyncMode,
@@ -328,7 +368,7 @@ export async function calculateSyncDiff(
     ),
     manifest,
     mode,
-    sourceTool: "claude-code", // Will be passed from config
+    sourceTool,
     targetTools,
   });
 
@@ -640,6 +680,7 @@ export async function syncCommand(options: {
     const planSpinner = SyncUI.showCalculating();
     const plan = await calculateSyncDiff(
       sourceData,
+      config.source_tool!,
       config.target_tools!,
       manifest,
       mode,
