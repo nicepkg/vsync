@@ -184,7 +184,86 @@ interface TargetConfig {
 }
 
 /**
- * Read target tool configurations
+ * Read items with fallback to empty array on error
+ * Single responsibility: handle one type of read operation
+ */
+async function readItemsWithFallback<T>(
+  reader: () => Promise<T[]>,
+  itemType: string,
+  tool: ToolName,
+): Promise<T[]> {
+  try {
+    return await reader();
+  } catch (error) {
+    // File not found is expected on first sync - don't warn
+    if (
+      error instanceof Error &&
+      !error.message.includes("ENOENT") &&
+      !error.message.includes("not found")
+    ) {
+      // CRITICAL: Parsing errors in prune mode could cause data loss!
+      console.warn(
+        `⚠️  Warning: Failed to read ${itemType} from ${tool}: ${error.message}`,
+      );
+    }
+    return [];
+  }
+}
+
+/**
+ * Read configuration from a single tool
+ * Single responsibility: coordinate reading all item types for one tool
+ */
+async function readToolConfig(
+  tool: ToolName,
+  projectDir: string,
+  level: ConfigLevel,
+): Promise<TargetConfig> {
+  try {
+    const adapter = getAdapter({ tool, baseDir: projectDir, level });
+    const capabilities = adapter.getCapabilities();
+
+    // Read each type in parallel if supported
+    const [skills, mcpServers, agents, commands] = await Promise.all([
+      capabilities.skills
+        ? readItemsWithFallback(() => adapter.readSkills(), "skills", tool)
+        : Promise.resolve([]),
+      capabilities.mcp
+        ? readItemsWithFallback(
+            () => adapter.readMCPServers(),
+            "MCP servers",
+            tool,
+          )
+        : Promise.resolve([]),
+      capabilities.agents
+        ? readItemsWithFallback(() => adapter.readAgents(), "agents", tool)
+        : Promise.resolve([]),
+      capabilities.commands
+        ? readItemsWithFallback(() => adapter.readCommands(), "commands", tool)
+        : Promise.resolve([]),
+    ]);
+
+    return { skills, mcpServers, agents, commands, capabilities };
+  } catch (error) {
+    // Adapter creation failed - return empty config
+    debug(`Failed to create adapter for ${tool}: ${error}`);
+    return {
+      skills: [],
+      mcpServers: [],
+      agents: [],
+      commands: [],
+      capabilities: {
+        skills: false,
+        mcp: false,
+        agents: false,
+        commands: false,
+      },
+    };
+  }
+}
+
+/**
+ * Read configurations from all target tools in parallel
  *
  * @param targetTools - Target tool names
  * @param projectDir - Project directory
@@ -196,124 +275,15 @@ async function readTargetConfigs(
   projectDir: string,
   level: ConfigLevel,
 ): Promise<Record<ToolName, TargetConfig>> {
-  const targetData = {} as Record<ToolName, TargetConfig>;
+  // Parallel read for performance
+  const configs = await Promise.all(
+    targetTools.map((tool) => readToolConfig(tool, projectDir, level)),
+  );
 
-  // Read actual configuration from target tools
-  // This allows us to detect manually deleted files
-  for (const tool of targetTools) {
-    try {
-      const adapter = getAdapter({
-        tool,
-        baseDir: projectDir,
-        level,
-      });
-
-      // Get adapter capabilities
-      const capabilities = adapter.getCapabilities();
-
-      // Try to read each type, use empty array if unsupported
-      let skills: Skill[] = [];
-      let mcpServers: MCPServer[] = [];
-      let agents: Agent[] = [];
-      let commands: VibeCommand[] = [];
-
-      // Only read if supported
-      if (capabilities.skills) {
-        try {
-          skills = await adapter.readSkills();
-        } catch (error) {
-          // Log error but continue - file might not exist yet (first sync)
-          // CRITICAL: In prune mode, parsing errors could lead to data loss!
-          if (
-            error instanceof Error &&
-            !error.message.includes("ENOENT") &&
-            !error.message.includes("not found")
-          ) {
-            console.warn(
-              `⚠️  Warning: Failed to read skills from ${tool}: ${error.message}`,
-            );
-          }
-          skills = [];
-        }
-      }
-
-      if (capabilities.mcp) {
-        try {
-          mcpServers = await adapter.readMCPServers();
-        } catch (error) {
-          if (
-            error instanceof Error &&
-            !error.message.includes("ENOENT") &&
-            !error.message.includes("not found")
-          ) {
-            console.warn(
-              `⚠️  Warning: Failed to read MCP servers from ${tool}: ${error.message}`,
-            );
-          }
-          mcpServers = [];
-        }
-      }
-
-      if (capabilities.agents) {
-        try {
-          agents = await adapter.readAgents();
-        } catch (error) {
-          if (
-            error instanceof Error &&
-            !error.message.includes("ENOENT") &&
-            !error.message.includes("not found")
-          ) {
-            console.warn(
-              `⚠️  Warning: Failed to read agents from ${tool}: ${error.message}`,
-            );
-          }
-          agents = [];
-        }
-      }
-
-      if (capabilities.commands) {
-        try {
-          commands = await adapter.readCommands();
-        } catch (error) {
-          if (
-            error instanceof Error &&
-            !error.message.includes("ENOENT") &&
-            !error.message.includes("not found")
-          ) {
-            console.warn(
-              `⚠️  Warning: Failed to read commands from ${tool}: ${error.message}`,
-            );
-          }
-          commands = [];
-        }
-      }
-
-      targetData[tool] = {
-        skills,
-        mcpServers,
-        agents,
-        commands,
-        capabilities,
-      };
-    } catch (error) {
-      // If adapter creation fails, use empty data
-      debug(`Failed to read target config for ${tool}: ${error}`);
-      targetData[tool] = {
-        skills: [],
-        mcpServers: [],
-        agents: [],
-        commands: [],
-        capabilities: {
-          skills: false,
-          mcp: false,
-          agents: false,
-          commands: false,
-        },
-      };
-    }
-  }
-
-  return targetData;
+  // Convert array to record
+  return Object.fromEntries(
+    targetTools.map((tool, i) => [tool, configs[i]]),
+  ) as Record<ToolName, TargetConfig>;
 }
 
 /**

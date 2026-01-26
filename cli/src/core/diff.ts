@@ -4,7 +4,7 @@
  */
 
 import type { SyncMode, ToolName } from "@src/types/config.js";
-import type { Manifest } from "@src/types/manifest.js";
+import type { Manifest, ItemType } from "@src/types/manifest.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { DiffResult, Operation, OperationType } from "@src/types/plan.js";
 
@@ -135,6 +135,7 @@ export function calculateDiff(input: DiffInput): DiffResult {
     targetTool,
   } = input;
 
+  // Arrays to collect operations (will be populated by pure functions)
   const toCreate: Operation[] = [];
   const toUpdate: Operation[] = [];
   const toDelete: Operation[] = [];
@@ -151,14 +152,24 @@ export function calculateDiff(input: DiffInput): DiffResult {
   const sourceCommandMap = new Map(sourceCommands.map((c) => [c.name, c]));
 
   /**
-   * Generic function to process source items
-   * Eliminates 4x duplication of 41 lines (164 lines total)
+   * Pure function to process source items
+   * Returns operations instead of modifying external state
    */
   function processSourceItems<T extends { name: string; hash: string }>(
     sourceItems: T[],
     targetMap: Map<string, T>,
-    itemType: "skill" | "mcp" | "agent" | "command",
-  ): void {
+    itemType: ItemType,
+  ): {
+    toCreate: Operation[];
+    toUpdate: Operation[];
+    toSkip: Operation[];
+  } {
+    const result = {
+      toCreate: [] as Operation[],
+      toUpdate: [] as Operation[],
+      toSkip: [] as Operation[],
+    };
+
     for (const sourceItem of sourceItems) {
       const targetItem = targetMap.get(sourceItem.name);
       const manifestItem = manifest.items[`${itemType}/${sourceItem.name}`];
@@ -178,12 +189,10 @@ export function calculateDiff(input: DiffInput): DiffResult {
         reason: comparison.reason,
       };
 
-      // Add newHash if exists
       if (sourceItem.hash) {
         operation.newHash = sourceItem.hash;
       }
 
-      // Add oldHash if exists
       if (targetItem?.hash) {
         operation.oldHash = targetItem.hash;
       }
@@ -191,27 +200,31 @@ export function calculateDiff(input: DiffInput): DiffResult {
       // Dispatch to appropriate array
       switch (comparison.operation) {
         case "create":
-          toCreate.push(operation);
+          result.toCreate.push(operation);
           break;
         case "update":
-          toUpdate.push(operation);
+          result.toUpdate.push(operation);
           break;
         case "skip":
-          toSkip.push(operation);
+          result.toSkip.push(operation);
           break;
       }
     }
+
+    return result;
   }
 
   /**
-   * Generic function to process target items for deletion
-   * Eliminates 4x duplication of 24 lines (96 lines total)
+   * Pure function to process target items for deletion
+   * Returns operations instead of modifying external state
    */
   function processTargetItems<T extends { name: string; hash: string }>(
     targetItems: T[],
     sourceMap: Map<string, T>,
-    itemType: "skill" | "mcp" | "agent" | "command",
-  ): void {
+    itemType: ItemType,
+  ): Operation[] {
+    const toDelete: Operation[] = [];
+
     for (const targetItem of targetItems) {
       if (!sourceMap.has(targetItem.name)) {
         const manifestItem = manifest.items[`${itemType}/${targetItem.name}`];
@@ -235,20 +248,48 @@ export function calculateDiff(input: DiffInput): DiffResult {
         }
       }
     }
+
+    return toDelete;
   }
 
-  // Process all item types using unified logic (DRY principle)
-  processSourceItems(sourceSkills, targetSkillMap, "skill");
-  processTargetItems(targetSkills, sourceSkillMap, "skill");
+  // Process all item types using pure functions (returns results)
+  const skillsResult = processSourceItems(
+    sourceSkills,
+    targetSkillMap,
+    "skill",
+  );
+  toCreate.push(...skillsResult.toCreate);
+  toUpdate.push(...skillsResult.toUpdate);
+  toSkip.push(...skillsResult.toSkip);
+  toDelete.push(...processTargetItems(targetSkills, sourceSkillMap, "skill"));
 
-  processSourceItems(sourceMCPServers, targetMCPMap, "mcp");
-  processTargetItems(targetMCPServers, sourceMCPMap, "mcp");
+  const mcpResult = processSourceItems(sourceMCPServers, targetMCPMap, "mcp");
+  toCreate.push(...mcpResult.toCreate);
+  toUpdate.push(...mcpResult.toUpdate);
+  toSkip.push(...mcpResult.toSkip);
+  toDelete.push(...processTargetItems(targetMCPServers, sourceMCPMap, "mcp"));
 
-  processSourceItems(sourceAgents, targetAgentMap, "agent");
-  processTargetItems(targetAgents, sourceAgentMap, "agent");
+  const agentsResult = processSourceItems(
+    sourceAgents,
+    targetAgentMap,
+    "agent",
+  );
+  toCreate.push(...agentsResult.toCreate);
+  toUpdate.push(...agentsResult.toUpdate);
+  toSkip.push(...agentsResult.toSkip);
+  toDelete.push(...processTargetItems(targetAgents, sourceAgentMap, "agent"));
 
-  processSourceItems(sourceCommands, targetCommandMap, "command");
-  processTargetItems(targetCommands, sourceCommandMap, "command");
+  const commandsResult = processSourceItems(
+    sourceCommands,
+    targetCommandMap,
+    "command",
+  );
+  toCreate.push(...commandsResult.toCreate);
+  toUpdate.push(...commandsResult.toUpdate);
+  toSkip.push(...commandsResult.toSkip);
+  toDelete.push(
+    ...processTargetItems(targetCommands, sourceCommandMap, "command"),
+  );
 
   // Process manifest items for this target that are not in source or target
   // This handles delete detection for write-only targets where we can't read

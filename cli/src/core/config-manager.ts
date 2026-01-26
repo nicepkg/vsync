@@ -230,65 +230,58 @@ export async function loadMergedConfig(
 }
 
 /**
+ * Format a single Zod issue into error message
+ * Pure function - no side effects
+ */
+function formatZodIssue(issue: ZodIssue): string {
+  const path = issue.path?.join(".") || "";
+  let message = issue.message;
+  let includePath = true;
+
+  // Custom messages for specific fields
+  if (path === "use_symlinks_for_skills" && issue.code === "invalid_type") {
+    message = "use_symlinks_for_skills must be a boolean";
+    includePath = false;
+  } else if (path === "language") {
+    if (issue.code === "invalid_type" || issue.code === "invalid_value") {
+      message = "language must be 'en' or 'zh'";
+      includePath = false;
+    }
+  }
+
+  return path && includePath ? `${path}: ${message}` : message;
+}
+
+/**
+ * Flatten nested union errors recursively
+ * Pure function - returns new array without modifying input
+ */
+function flattenZodIssues(issues: ZodIssue[]): ZodIssue[] {
+  return issues.flatMap((issue) => {
+    // Handle invalid_union - recursively flatten nested errors
+    if (issue.code === "invalid_union" && issue.errors) {
+      return issue.errors.flatMap((errorGroup) =>
+        Array.isArray(errorGroup) ? flattenZodIssues(errorGroup) : [],
+      );
+    }
+    // Regular issue - return as is
+    return [issue];
+  });
+}
+
+/**
  * Extract and format errors from Zod issues, handling nested union errors
+ * Pure function - no external state mutation
  */
 function extractZodErrors(issues: ZodIssue[]): string[] {
-  const errorMessages: string[] = [];
-  const seenPaths = new Set<string>();
+  // 1. Flatten nested union errors
+  const flatIssues = flattenZodIssues(issues);
 
-  function processIssue(issue: ZodIssue): void {
-    // Handle invalid_union - extract nested errors
-    if (issue.code === "invalid_union" && issue.errors) {
-      // Flatten all nested error arrays
-      for (const errorGroup of issue.errors) {
-        if (Array.isArray(errorGroup)) {
-          for (const nestedIssue of errorGroup) {
-            processIssue(nestedIssue);
-          }
-        }
-      }
-      return;
-    }
+  // 2. Format each issue
+  const messages = flatIssues.map(formatZodIssue);
 
-    // Process regular errors
-    const path = issue.path?.join(".") || "";
-    const pathKey = `${path}:${issue.code}`;
-
-    // Skip if we've already seen this path/error combination
-    if (seenPaths.has(pathKey)) {
-      return;
-    }
-    seenPaths.add(pathKey);
-
-    // Apply custom error messages for specific fields
-    let message = issue.message;
-    let includePath = true; // Whether to include path in output
-
-    if (path === "use_symlinks_for_skills" && issue.code === "invalid_type") {
-      message = "use_symlinks_for_skills must be a boolean";
-      includePath = false; // Don't duplicate path in message
-    } else if (path === "language") {
-      if (issue.code === "invalid_type" || issue.code === "invalid_value") {
-        message = "language must be 'en' or 'zh'";
-        includePath = false; // Don't duplicate path in message
-      }
-    }
-
-    // Format error with or without path
-    if (path && includePath) {
-      errorMessages.push(`${path}: ${message}`);
-    } else {
-      errorMessages.push(message);
-    }
-  }
-
-  // Process all issues
-  for (const issue of issues) {
-    processIssue(issue);
-  }
-
-  // Return unique error messages
-  return Array.from(new Set(errorMessages));
+  // 3. Deduplicate
+  return Array.from(new Set(messages));
 }
 
 /**

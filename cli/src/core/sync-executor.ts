@@ -13,7 +13,8 @@
  * - Low Coupling: Depends on adapter interface, not concrete implementations
  */
 
-import type { ToolAdapter } from "@src/adapters/base.js";
+import type { ToolAdapter, WriteResult } from "@src/adapters/base.js";
+import type { ItemType } from "@src/types/manifest.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { DiffResult } from "@src/types/plan.js";
 import { isUnsupportedFeature } from "@src/utils/errors.js";
@@ -84,11 +85,6 @@ export interface SyncResult {
 }
 
 /**
- * Item type identifier
- */
-type ItemType = "skill" | "mcp" | "agent" | "command";
-
-/**
  * Generic item collector - DRY principle
  * Collects items of a specific type from source data based on operation names
  */
@@ -126,37 +122,53 @@ export class SyncExecutor {
   ) {}
 
   /**
-   * Item type configuration for unified processing (Strategy pattern)
-   * Maps item types to their corresponding data sources and adapter methods
+   * Get type-safe handler for specific item type
+   * No unknown casts - each branch returns properly typed functions
    */
-  private readonly itemTypeConfig = {
-    skill: {
-      displayName: "skills",
-      getSource: () => this.sourceData.skills,
-      write: (items: unknown[]) => this.adapter.writeSkills(items as Skill[]),
-      delete: (name: string) => this.adapter.deleteSkill(name),
-    },
-    mcp: {
-      displayName: "MCP servers",
-      getSource: () => this.sourceData.mcpServers,
-      write: (items: unknown[]) =>
-        this.adapter.writeMCPServers(items as MCPServer[]),
-      delete: (name: string) => this.adapter.deleteMCPServer(name),
-    },
-    agent: {
-      displayName: "agents",
-      getSource: () => this.sourceData.agents,
-      write: (items: unknown[]) => this.adapter.writeAgents(items as Agent[]),
-      delete: (name: string) => this.adapter.deleteAgent(name),
-    },
-    command: {
-      displayName: "commands",
-      getSource: () => this.sourceData.commands,
-      write: (items: unknown[]) =>
-        this.adapter.writeCommands(items as Command[]),
-      delete: (name: string) => this.adapter.deleteCommand(name),
-    },
-  } as const;
+  private getItemHandler(itemType: ItemType): {
+    displayName: string;
+    getSource: () => Skill[] | MCPServer[] | Agent[] | Command[];
+    write: (
+      items: Skill[] | MCPServer[] | Agent[] | Command[],
+    ) => Promise<WriteResult>;
+    delete: (name: string) => Promise<void>;
+  } {
+    // Type-safe dispatch using discriminated union
+    switch (itemType) {
+      case "skill":
+        return {
+          displayName: "skills",
+          getSource: (): Skill[] => this.sourceData.skills,
+          write: (items: Skill[] | MCPServer[] | Agent[] | Command[]) =>
+            this.adapter.writeSkills(items as Skill[]),
+          delete: (name: string) => this.adapter.deleteSkill(name),
+        };
+      case "mcp":
+        return {
+          displayName: "MCP servers",
+          getSource: (): MCPServer[] => this.sourceData.mcpServers,
+          write: (items: Skill[] | MCPServer[] | Agent[] | Command[]) =>
+            this.adapter.writeMCPServers(items as MCPServer[]),
+          delete: (name: string) => this.adapter.deleteMCPServer(name),
+        };
+      case "agent":
+        return {
+          displayName: "agents",
+          getSource: (): Agent[] => this.sourceData.agents,
+          write: (items: Skill[] | MCPServer[] | Agent[] | Command[]) =>
+            this.adapter.writeAgents(items as Agent[]),
+          delete: (name: string) => this.adapter.deleteAgent(name),
+        };
+      case "command":
+        return {
+          displayName: "commands",
+          getSource: (): Command[] => this.sourceData.commands,
+          write: (items: Skill[] | MCPServer[] | Agent[] | Command[]) =>
+            this.adapter.writeCommands(items as Command[]),
+          delete: (name: string) => this.adapter.deleteCommand(name),
+        };
+    }
+  }
 
   /**
    * Execute sync operations for this target
@@ -209,8 +221,8 @@ export class SyncExecutor {
     result: SyncResult,
     itemType: ItemType,
   ): Promise<void> {
-    const config = this.itemTypeConfig[itemType];
-    const sourceItems = config.getSource() as Array<{ name: string }>;
+    const handler = this.getItemHandler(itemType);
+    const sourceItems = handler.getSource() as Array<{ name: string }>;
 
     const toCreate = this.collectItemsByType(
       diff.toCreate,
@@ -226,8 +238,13 @@ export class SyncExecutor {
 
     if (allItems.length > 0) {
       await this.writeItems(
-        config.displayName,
-        () => config.write(allItems as unknown[]),
+        handler.displayName,
+        // Type assertion needed due to union type limitation
+        // Safe because handler is matched by itemType in switch
+        () =>
+          handler.write(
+            allItems as Skill[] & MCPServer[] & Agent[] & Command[],
+          ),
         toCreate.length,
         toUpdate.length,
         result,
@@ -307,12 +324,12 @@ export class SyncExecutor {
     if (toDelete.length === 0) return;
 
     const names = toDelete.map((op) => op.name);
-    const config = this.itemTypeConfig[itemType];
+    const handler = this.getItemHandler(itemType);
 
     try {
-      // Delete all items sequentially using config-driven delete function
+      // Delete all items sequentially
       for (const name of names) {
-        await config.delete(name);
+        await handler.delete(name);
       }
 
       // All deletes successful
