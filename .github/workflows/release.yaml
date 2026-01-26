@@ -37,7 +37,7 @@ jobs:
           # use git-cli so symlinks in the repo don't break GitHub API commits
           commitMode: git-cli
           setupGitUser: true
-          commitMessage: "chore: version packages"
+          commit: "chore: version packages"
           title: "chore: version packages"
   
           # calculate version + generate changelog + update lockfile (very important)
