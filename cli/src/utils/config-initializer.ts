@@ -47,11 +47,11 @@ export async function ensureLanguageConfig(): Promise<Language> {
       message: "Choose your preferred language / 选择你的语言偏好:",
       choices: [
         {
-          name: `English (detected: ${systemLang === "en" ? "✓" : "×"})`,
+          name: `English`,
           value: "en",
         },
         {
-          name: `中文 (detected: ${systemLang === "zh" ? "✓" : "×"})`,
+          name: `中文`,
           value: "zh",
         },
       ],
