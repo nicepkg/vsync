@@ -10,6 +10,7 @@ import type { MCPServer, MCPOAuth } from "@src/types/models.js";
 import { EnvVarTransformer } from "@src/utils/env-var-transformer.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
+import { inferMCPType, populateCommonMCPFields } from "@src/utils/mcp-utils.js";
 import type { WriteResult } from "./base.js";
 import { BaseAdapter } from "./base.js";
 
@@ -56,19 +57,8 @@ export class CursorAdapter extends BaseAdapter {
       for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
         const rawConfig = serverConfig as Record<string, unknown>;
 
-        const hasCommand = typeof rawConfig.command === "string";
-        const hasAuth =
-          rawConfig.auth !== undefined && typeof rawConfig.auth === "object";
-        const hasUrl = typeof rawConfig.url === "string";
-
-        let type: MCPServer["type"] = "stdio";
-        if (hasCommand) {
-          type = "stdio";
-        } else if (hasAuth) {
-          type = "oauth";
-        } else if (hasUrl) {
-          type = "http";
-        }
+        // DRY: Use shared type inference
+        const type = inferMCPType(rawConfig);
 
         const server: MCPServer = {
           name,
@@ -76,12 +66,10 @@ export class CursorAdapter extends BaseAdapter {
           hash: "",
         };
 
-        if (rawConfig.command) server.command = rawConfig.command as string;
-        if (rawConfig.args) server.args = rawConfig.args as string[];
-        if (rawConfig.env) server.env = rawConfig.env as Record<string, string>;
-        if (rawConfig.url) server.url = rawConfig.url as string;
-        if (rawConfig.headers)
-          server.headers = rawConfig.headers as Record<string, string>;
+        // DRY: Use shared field population
+        populateCommonMCPFields(server, rawConfig);
+
+        // Handle Cursor-specific auth format
         if (rawConfig.auth && typeof rawConfig.auth === "object") {
           const normalized = this.fromCursorAuth(
             rawConfig.auth as Record<string, unknown>,

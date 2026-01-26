@@ -4,7 +4,13 @@
  */
 
 import { createHash } from "node:crypto";
-import type { Skill, Agent, MCPServer, Command } from "@src/types/models.js";
+import type {
+  Skill,
+  Agent,
+  MCPServer,
+  Command,
+  BaseItem,
+} from "@src/types/models.js";
 
 /**
  * Generate SHA256 hash of string content
@@ -16,93 +22,55 @@ export function hashContent(content: string): string {
 }
 
 /**
- * Generate hash for a skill
+ * Generic hash function for content-based items (Skill, Agent, Command)
  * Includes content, metadata, and support files
  * Normalizes whitespace for consistent hashing
  *
+ * DRY: Single implementation for all BaseItem types
+ *
+ * @param item - Item to hash (Skill, Agent, or Command)
+ * @returns SHA256 hash
+ */
+function hashBaseItem<T extends BaseItem>(item: T): string {
+  // Normalize content (trim trailing whitespace)
+  const normalizedContent = item.content.trim();
+
+  // Sort and stringify metadata for consistent hashing
+  const metadataStr = item.metadata
+    ? JSON.stringify(item.metadata, Object.keys(item.metadata).sort())
+    : "";
+
+  // Sort and stringify support files
+  const supportFilesStr = item.supportFiles
+    ? JSON.stringify(item.supportFiles, Object.keys(item.supportFiles).sort())
+    : "";
+
+  // Combine all parts
+  const combined = `${normalizedContent}\n${metadataStr}\n${supportFilesStr}`;
+
+  return hashContent(combined);
+}
+
+/**
+ * Generate hash for a skill
  * @param skill - Skill to hash
  * @returns SHA256 hash
  */
-export function hashSkill(skill: Skill): string {
-  // Normalize content (trim trailing whitespace)
-  const normalizedContent = skill.content.trim();
-
-  // Sort and stringify metadata for consistent hashing
-  const metadataStr = skill.metadata
-    ? JSON.stringify(skill.metadata, Object.keys(skill.metadata).sort())
-    : "";
-
-  // Sort and stringify support files
-  const supportFilesStr = skill.supportFiles
-    ? JSON.stringify(skill.supportFiles, Object.keys(skill.supportFiles).sort())
-    : "";
-
-  // Combine all parts
-  const combined = `${normalizedContent}\n${metadataStr}\n${supportFilesStr}`;
-
-  return hashContent(combined);
-}
+export const hashSkill = (skill: Skill): string => hashBaseItem(skill);
 
 /**
  * Generate hash for an agent
- * Includes content, metadata, and support files
- * Normalizes whitespace for consistent hashing
- * Uses the same algorithm as hashSkill since Agent and Skill have identical structure
- *
  * @param agent - Agent to hash
  * @returns SHA256 hash
  */
-export function hashAgent(agent: Agent): string {
-  // Normalize content (trim trailing whitespace)
-  const normalizedContent = agent.content.trim();
-
-  // Sort and stringify metadata for consistent hashing
-  const metadataStr = agent.metadata
-    ? JSON.stringify(agent.metadata, Object.keys(agent.metadata).sort())
-    : "";
-
-  // Sort and stringify support files
-  const supportFilesStr = agent.supportFiles
-    ? JSON.stringify(agent.supportFiles, Object.keys(agent.supportFiles).sort())
-    : "";
-
-  // Combine all parts
-  const combined = `${normalizedContent}\n${metadataStr}\n${supportFilesStr}`;
-
-  return hashContent(combined);
-}
+export const hashAgent = (agent: Agent): string => hashBaseItem(agent);
 
 /**
  * Generate hash for a command
- * Includes content, metadata, and support files
- * Normalizes whitespace for consistent hashing
- * Uses the same algorithm as hashSkill and hashAgent
- *
  * @param command - Command to hash
  * @returns SHA256 hash
  */
-export function hashCommand(command: Command): string {
-  // Normalize content (trim trailing whitespace)
-  const normalizedContent = command.content.trim();
-
-  // Sort and stringify metadata for consistent hashing
-  const metadataStr = command.metadata
-    ? JSON.stringify(command.metadata, Object.keys(command.metadata).sort())
-    : "";
-
-  // Sort and stringify support files
-  const supportFilesStr = command.supportFiles
-    ? JSON.stringify(
-        command.supportFiles,
-        Object.keys(command.supportFiles).sort(),
-      )
-    : "";
-
-  // Combine all parts
-  const combined = `${normalizedContent}\n${metadataStr}\n${supportFilesStr}`;
-
-  return hashContent(combined);
-}
+export const hashCommand = (command: Command): string => hashBaseItem(command);
 
 /**
  * Generate hash for an MCP server configuration

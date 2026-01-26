@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * File operation utilities
  * Provides robust, DRY file operations for all adapters
@@ -48,8 +47,13 @@ export async function ensureDir(path: string): Promise<void> {
  * Read JSON file
  * Returns null if file doesn't exist
  * Throws on invalid JSON
+ *
+ * Type parameter T allows callers to specify expected shape.
+ * Uses 'object' constraint instead of strict JsonValue for flexibility.
  */
-export async function readJSON<T = any>(path: string): Promise<T | null> {
+export async function readJSON<T extends object>(
+  path: string,
+): Promise<T | null> {
   try {
     const content = await readFile(path, "utf-8");
     return JSON.parse(content) as T;
@@ -64,7 +68,10 @@ export async function readJSON<T = any>(path: string): Promise<T | null> {
 /**
  * Write JSON file atomically
  */
-export async function writeJSON(path: string, data: any): Promise<void> {
+export async function writeJSON<T extends object>(
+  path: string,
+  data: T,
+): Promise<void> {
   await atomicWrite(path, JSON.stringify(data, null, 2));
 }
 
@@ -72,7 +79,7 @@ export async function writeJSON(path: string, data: any): Promise<void> {
  * Read JSONC file
  * Returns { data, text } where text is the original formatting
  */
-export async function readJSONC<T = any>(
+export async function readJSONC<T extends object>(
   path: string,
 ): Promise<{ data: T | null; text: string }> {
   try {
@@ -90,9 +97,9 @@ export async function readJSONC<T = any>(
 /**
  * Write JSONC file atomically (preserves formatting if existingText provided)
  */
-export async function writeJSONC(
+export async function writeJSONC<T extends object>(
   path: string,
-  data: any,
+  data: T,
   existingText?: string,
 ): Promise<void> {
   let output: string;
@@ -110,7 +117,9 @@ export async function writeJSONC(
 /**
  * Read TOML file
  */
-export async function readTOML<T = any>(path: string): Promise<T | null> {
+export async function readTOML<T extends object>(
+  path: string,
+): Promise<T | null> {
   try {
     const content = await readFile(path, "utf-8");
     return toml.parse(content) as T;
@@ -125,7 +134,10 @@ export async function readTOML<T = any>(path: string): Promise<T | null> {
 /**
  * Write TOML file atomically
  */
-export async function writeTOML(path: string, data: any): Promise<void> {
+export async function writeTOML<T extends object>(
+  path: string,
+  data: T,
+): Promise<void> {
   const content = toml.stringify(data as toml.JsonMap);
   await atomicWrite(path, content);
 }
@@ -149,15 +161,18 @@ export async function remove(path: string): Promise<void> {
  */
 export async function readdir(
   path: string,
-  options?: { withFileTypes: true },
+  options: { withFileTypes: true },
 ): Promise<Dirent[]>;
 export async function readdir(path: string): Promise<string[]>;
 export async function readdir(
   path: string,
-  options?: any,
+  options?: { withFileTypes: true },
 ): Promise<string[] | Dirent[]> {
   try {
-    return (await fsReaddir(path, options)) as any;
+    if (options?.withFileTypes) {
+      return await fsReaddir(path, { withFileTypes: true });
+    }
+    return await fsReaddir(path);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return [];

@@ -4,23 +4,44 @@
  */
 
 /**
- * Command configuration
- * Represents a reusable command/script
+ * Base interface for content-based configuration items
+ * DRY: Shared structure for Skill, Agent, and Command
  */
-export interface Command {
-  /** Command name (directory or file name) */
+export interface BaseItem {
+  /** Item name (directory or file name) */
   name: string;
   /** Short description (optional, from frontmatter) */
   description?: string;
-  /** Main content from command markdown file */
+  /** Main content from markdown file */
   content: string;
   /** Frontmatter metadata */
   metadata?: Record<string, unknown>;
   /** Support files (relative path -> content) */
   supportFiles?: Record<string, string>;
-  /** SHA256 hash of command content + metadata */
+  /** SHA256 hash of content + metadata */
   hash: string;
 }
+
+/**
+ * Skill configuration
+ * Represents a reusable instruction template
+ * Type alias to BaseItem - add specific fields here when needed
+ */
+export type Skill = BaseItem;
+
+/**
+ * Agent configuration
+ * Represents a custom AI agent with specific behaviors and instructions
+ * Type alias to BaseItem - add specific fields here when needed
+ */
+export type Agent = BaseItem;
+
+/**
+ * Command configuration
+ * Represents a reusable command/script
+ * Type alias to BaseItem - add specific fields here when needed
+ */
+export type Command = BaseItem;
 
 /**
  * MCP server transport type
@@ -29,44 +50,6 @@ export interface Command {
  * - oauth: OAuth-authenticated remote server
  */
 export type MCPType = "stdio" | "http" | "oauth";
-
-/**
- * Skill configuration
- * Represents a reusable instruction template
- */
-export interface Skill {
-  /** Skill name (directory name) */
-  name: string;
-  /** Short description (optional, from frontmatter) */
-  description?: string;
-  /** Main content from SKILL.md */
-  content: string;
-  /** Frontmatter metadata */
-  metadata?: Record<string, unknown>;
-  /** Support files (relative path -> content) */
-  supportFiles?: Record<string, string>;
-  /** SHA256 hash of skill content + metadata */
-  hash: string;
-}
-
-/**
- * Agent configuration
- * Represents a custom AI agent with specific behaviors and instructions
- */
-export interface Agent {
-  /** Agent name (directory name) */
-  name: string;
-  /** Short description (optional, from frontmatter) */
-  description?: string;
-  /** Main content from agent markdown file */
-  content: string;
-  /** Frontmatter metadata */
-  metadata?: Record<string, unknown>;
-  /** Support files (relative path -> content) */
-  supportFiles?: Record<string, string>;
-  /** SHA256 hash of agent content + metadata */
-  hash: string;
-}
 
 /**
  * OAuth configuration for OAuth MCP servers

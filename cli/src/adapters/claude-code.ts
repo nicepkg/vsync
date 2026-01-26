@@ -8,6 +8,7 @@ import { join } from "node:path";
 import type { MCPServer } from "@src/types/models.js";
 import * as fileOps from "@src/utils/file-ops.js";
 import { hashMCPServer } from "@src/utils/hash.js";
+import { inferMCPType, populateCommonMCPFields } from "@src/utils/mcp-utils.js";
 import type { WriteResult } from "./base.js";
 import { BaseAdapter } from "./base.js";
 
@@ -66,20 +67,8 @@ export class ClaudeCodeAdapter extends BaseAdapter {
       for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
         const rawConfig = serverConfig as Record<string, unknown>;
 
-        // Infer server type from configuration fields
-        const hasCommand = typeof rawConfig.command === "string";
-        const hasUrl = typeof rawConfig.url === "string";
-        const hasAuth =
-          rawConfig.auth !== undefined && typeof rawConfig.auth === "object";
-
-        let type: MCPServer["type"] = "stdio";
-        if (hasCommand) {
-          type = "stdio";
-        } else if (hasAuth) {
-          type = "oauth";
-        } else if (hasUrl) {
-          type = "http";
-        }
+        // DRY: Use shared type inference
+        const type = inferMCPType(rawConfig);
 
         // Create MCP server object (omit undefined optional fields)
         const server: MCPServer = {
@@ -88,23 +77,11 @@ export class ClaudeCodeAdapter extends BaseAdapter {
           hash: "", // Will be computed
         };
 
-        // Add optional fields only if they have values
-        if (rawConfig.command) {
-          server.command = rawConfig.command as string;
-        }
-        if (rawConfig.args) {
-          server.args = rawConfig.args as string[];
-        }
-        if (rawConfig.env) {
-          server.env = rawConfig.env as Record<string, string>;
-        }
-        if (rawConfig.url) {
-          server.url = rawConfig.url as string;
-        }
-        if (rawConfig.headers) {
-          server.headers = rawConfig.headers as Record<string, string>;
-        }
-        if (hasAuth) {
+        // DRY: Use shared field population
+        populateCommonMCPFields(server, rawConfig);
+
+        // Handle OAuth-specific auth field
+        if (rawConfig.auth && typeof rawConfig.auth === "object") {
           const rawAuth = rawConfig.auth as Record<string, unknown>;
           const auth: MCPServer["auth"] = {
             client_id: (rawAuth.client_id as string) || "",

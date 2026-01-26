@@ -235,70 +235,32 @@ export function formatPlan(plan: SyncPlan): string {
     processOperations(diff.toDelete, "DELETE", toolName);
   }
 
-  // Format grouped operations
-  const createOps = Array.from(itemOperations.values()).filter(
-    (op) => op.operation === "CREATE",
-  );
-  const updateOps = Array.from(itemOperations.values()).filter(
-    (op) => op.operation === "UPDATE",
-  );
-  const deleteOps = Array.from(itemOperations.values()).filter(
-    (op) => op.operation === "DELETE",
-  );
+  // Format grouped operations - DRY: data-driven approach eliminates 3x duplication
+  const operationConfigs = [
+    { type: "CREATE" as const, emoji: "✨", prefix: "+" },
+    { type: "UPDATE" as const, emoji: "🔄", prefix: "~" },
+    { type: "DELETE" as const, emoji: "🗑️ ", prefix: "-" },
+  ];
 
-  if (createOps.length > 0) {
+  for (const { type, emoji, prefix } of operationConfigs) {
+    const ops = Array.from(itemOperations.values()).filter(
+      (op) => op.operation === type,
+    );
+
+    if (ops.length === 0) continue;
+
     // Calculate actual operation count (items × targets for each item)
-    const createOpCount = createOps.reduce(
-      (sum, op) => sum + op.targets.length,
-      0,
-    );
+    const opCount = ops.reduce((sum, op) => sum + op.targets.length, 0);
     lines.push(
-      `✨ CREATE (${createOpCount} ${createOpCount === 1 ? "operation" : "operations"}):`,
+      `${emoji} ${type} (${opCount} ${opCount === 1 ? "operation" : "operations"}):`,
     );
-    for (const op of createOps) {
+
+    for (const op of ops) {
       const targetStr =
         op.targets.length === targetTools.length
           ? t("planner.allTargets")
           : op.targets.join(", ");
-      lines.push(`   + [${op.type}] ${op.name} → ${targetStr}`);
-    }
-    lines.push("");
-  }
-
-  if (updateOps.length > 0) {
-    // Calculate actual operation count (items × targets for each item)
-    const updateOpCount = updateOps.reduce(
-      (sum, op) => sum + op.targets.length,
-      0,
-    );
-    lines.push(
-      `🔄 UPDATE (${updateOpCount} ${updateOpCount === 1 ? "operation" : "operations"}):`,
-    );
-    for (const op of updateOps) {
-      const targetStr =
-        op.targets.length === targetTools.length
-          ? t("planner.allTargets")
-          : op.targets.join(", ");
-      lines.push(`   ~ [${op.type}] ${op.name} → ${targetStr}`);
-    }
-    lines.push("");
-  }
-
-  if (deleteOps.length > 0) {
-    // Calculate actual operation count (items × targets for each item)
-    const deleteOpCount = deleteOps.reduce(
-      (sum, op) => sum + op.targets.length,
-      0,
-    );
-    lines.push(
-      `🗑️  DELETE (${deleteOpCount} ${deleteOpCount === 1 ? "operation" : "operations"}):`,
-    );
-    for (const op of deleteOps) {
-      const targetStr =
-        op.targets.length === targetTools.length
-          ? t("planner.allTargets")
-          : op.targets.join(", ");
-      lines.push(`   - [${op.type}] ${op.name} → ${targetStr}`);
+      lines.push(`   ${prefix} [${op.type}] ${op.name} → ${targetStr}`);
     }
     lines.push("");
   }

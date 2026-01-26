@@ -11,8 +11,8 @@ import { Command } from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
 import { getAllConfigDirs, getToolChoices } from "@src/adapters/registry.js";
+import { saveConfig as saveConfigToFile } from "@src/core/config-manager.js";
 import type { ToolName, VibeConfig, ConfigLevel } from "@src/types/config.js";
-import { atomicWrite } from "@src/utils/atomic-write.js";
 import { t } from "@src/utils/i18n.js";
 
 /**
@@ -92,18 +92,20 @@ export async function generateConfig(
 
 /**
  * Save config to disk
+ * DRY: Delegates to config-manager's saveConfig to avoid duplication
  *
  * @param config - Config to save
- * @param projectDir - Project directory
+ * @param dir - Directory to save config in (project dir or user home dir based on config.level)
  */
 export async function saveConfig(
   config: VibeConfig,
-  projectDir: string,
+  dir: string,
 ): Promise<void> {
-  const configPath = join(projectDir, ".vibe-sync.json");
-  const content = JSON.stringify(config, null, 2);
-
-  await atomicWrite(configPath, content);
+  // Pass dir as both projectDir and userDir since this function doesn't
+  // distinguish between them - the caller is expected to pass the correct dir
+  const projectDir = config.level === "project" ? dir : undefined;
+  const userDir = config.level === "user" ? dir : undefined;
+  await saveConfigToFile(config, config.level, projectDir, userDir);
 }
 
 /**
