@@ -69,8 +69,7 @@ describe("Adapter Registry", () => {
     it("should throw error for unsupported tool", () => {
       expect(() =>
         getAdapter({
-          // @ts-expect-error - Testing invalid tool name
-          tool: "invalid-tool",
+          tool: "invalid-tool" as any, // Testing invalid tool name
           baseDir: "/test",
           level: "project",
         }),

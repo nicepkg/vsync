@@ -4,7 +4,6 @@
  */
 
 import { z } from "zod";
-import type { ADAPTERS } from "@src/adapters/registry.js";
 
 /**
  * Sync mode
@@ -14,15 +13,14 @@ import type { ADAPTERS } from "@src/adapters/registry.js";
 export type SyncMode = "safe" | "prune";
 
 /**
- * Infer adapter instance type from ADAPTERS array
- */
-type AdapterInstance = InstanceType<(typeof ADAPTERS)[number]>;
-
-/**
  * Supported AI coding tools
- * Auto-inferred from adapter registry - no manual maintenance needed!
+ * These are the core adapters included with vibe-sync.
+ * Third-party adapters can register dynamically via registerAdapter()
+ *
+ * Note: This list must be kept in sync with registered core adapters.
+ * Consider using getAvailableTools() at runtime for dynamic discovery.
  */
-export type ToolName = AdapterInstance["toolName"];
+export type ToolName = "claude-code" | "cursor" | "opencode" | "codex";
 
 /**
  * Configuration level
