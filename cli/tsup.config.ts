@@ -9,7 +9,7 @@ export default defineConfig({
   banner: {
     js: 'import { createRequire } from "module";\nconst require = createRequire(import.meta.url);\n',
   },
-  minify: false,
+  minify: true,
   sourcemap: true,
   treeshake: true,
   splitting: false,

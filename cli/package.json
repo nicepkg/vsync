@@ -10,7 +10,8 @@
     "vsync": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/*.map"
   ],
   "scripts": {
     "dev": "tsx src/index.ts",
