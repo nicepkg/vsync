@@ -159,7 +159,7 @@ export class CodexAdapter extends BaseAdapter {
 
     try {
       // Ensure .codex directory exists
-      await fileOps.ensureDir(join(this.config.baseDir, this.getConfigDir()));
+      await fileOps.ensureDir(this.pathResolver.configDirAbsolute());
 
       // Read existing config or create new one
       const existingMCPConfig =

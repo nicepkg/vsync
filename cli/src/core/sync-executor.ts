@@ -17,7 +17,23 @@ import type { ToolAdapter, WriteResult } from "@src/adapters/base.js";
 import type { ItemType } from "@src/types/manifest.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { DiffResult } from "@src/types/plan.js";
-import { isUnsupportedFeature } from "@src/utils/errors.js";
+import {
+  isUnsupportedFeature,
+  SyncError,
+  FileOperationError,
+  ErrorSeverity,
+} from "@src/utils/errors.js";
+
+/**
+ * Type mapping for ItemType to concrete types
+ * Enables type-safe generic operations without type assertions
+ */
+type ItemTypeMap = {
+  skill: Skill;
+  mcp: MCPServer;
+  agent: Agent;
+  command: Command;
+};
 
 /**
  * Source data containing all items from the source tool
@@ -106,6 +122,17 @@ class ItemCollector {
 }
 
 /**
+ * Generic item handler interface
+ * Uses type mapping to ensure type safety without assertions
+ */
+interface ItemHandler<T extends ItemType> {
+  displayName: string;
+  getSource: () => ItemTypeMap[T][];
+  write: (items: ItemTypeMap[T][]) => Promise<WriteResult>;
+  delete: (name: string) => Promise<void>;
+}
+
+/**
  * Sync Executor - Executes sync operations for a single target
  *
  * This class encapsulates all sync execution logic, making it:
@@ -116,58 +143,60 @@ class ItemCollector {
 export class SyncExecutor {
   private collector = new ItemCollector();
 
+  /**
+   * Handler configuration map - fully type-safe without assertions
+   * Initialized in constructor to access instance members
+   * Each handler is properly typed to its corresponding ItemType
+   */
+  private readonly handlers: {
+    readonly [K in ItemType]: ItemHandler<K>;
+  };
+
   constructor(
     private readonly adapter: ToolAdapter,
     private readonly sourceData: SourceData,
-  ) {}
+  ) {
+    // Initialize handlers with explicit types - no assertions needed
+    this.handlers = {
+      skill: {
+        displayName: "skills",
+        getSource: (): Skill[] => this.sourceData.skills,
+        write: (items: Skill[]): Promise<WriteResult> =>
+          this.adapter.writeSkills(items),
+        delete: (name: string): Promise<void> => this.adapter.deleteSkill(name),
+      },
+      mcp: {
+        displayName: "MCP servers",
+        getSource: (): MCPServer[] => this.sourceData.mcpServers,
+        write: (items: MCPServer[]): Promise<WriteResult> =>
+          this.adapter.writeMCPServers(items),
+        delete: (name: string): Promise<void> =>
+          this.adapter.deleteMCPServer(name),
+      },
+      agent: {
+        displayName: "agents",
+        getSource: (): Agent[] => this.sourceData.agents,
+        write: (items: Agent[]): Promise<WriteResult> =>
+          this.adapter.writeAgents(items),
+        delete: (name: string): Promise<void> => this.adapter.deleteAgent(name),
+      },
+      command: {
+        displayName: "commands",
+        getSource: (): Command[] => this.sourceData.commands,
+        write: (items: Command[]): Promise<WriteResult> =>
+          this.adapter.writeCommands(items),
+        delete: (name: string): Promise<void> =>
+          this.adapter.deleteCommand(name),
+      },
+    };
+  }
 
   /**
    * Get type-safe handler for specific item type
-   * No unknown casts - each branch returns properly typed functions
+   * Returns from configuration map - no type assertions needed
    */
-  private getItemHandler(itemType: ItemType): {
-    displayName: string;
-    getSource: () => Skill[] | MCPServer[] | Agent[] | Command[];
-    write: (
-      items: Skill[] | MCPServer[] | Agent[] | Command[],
-    ) => Promise<WriteResult>;
-    delete: (name: string) => Promise<void>;
-  } {
-    // Type-safe dispatch using discriminated union
-    switch (itemType) {
-      case "skill":
-        return {
-          displayName: "skills",
-          getSource: (): Skill[] => this.sourceData.skills,
-          write: (items: Skill[] | MCPServer[] | Agent[] | Command[]) =>
-            this.adapter.writeSkills(items as Skill[]),
-          delete: (name: string) => this.adapter.deleteSkill(name),
-        };
-      case "mcp":
-        return {
-          displayName: "MCP servers",
-          getSource: (): MCPServer[] => this.sourceData.mcpServers,
-          write: (items: Skill[] | MCPServer[] | Agent[] | Command[]) =>
-            this.adapter.writeMCPServers(items as MCPServer[]),
-          delete: (name: string) => this.adapter.deleteMCPServer(name),
-        };
-      case "agent":
-        return {
-          displayName: "agents",
-          getSource: (): Agent[] => this.sourceData.agents,
-          write: (items: Skill[] | MCPServer[] | Agent[] | Command[]) =>
-            this.adapter.writeAgents(items as Agent[]),
-          delete: (name: string) => this.adapter.deleteAgent(name),
-        };
-      case "command":
-        return {
-          displayName: "commands",
-          getSource: (): Command[] => this.sourceData.commands,
-          write: (items: Skill[] | MCPServer[] | Agent[] | Command[]) =>
-            this.adapter.writeCommands(items as Command[]),
-          delete: (name: string) => this.adapter.deleteCommand(name),
-        };
-    }
+  private getItemHandler<T extends ItemType>(itemType: T): ItemHandler<T> {
+    return this.handlers[itemType];
   }
 
   /**
@@ -215,14 +244,15 @@ export class SyncExecutor {
   /**
    * Unified write handler for any item type (Strategy pattern)
    * Eliminates 4x duplication of write methods
+   * Uses generic type parameter to maintain type safety
    */
-  private async writeItemType(
+  private async writeItemType<T extends ItemType>(
     diff: DiffResult,
     result: SyncResult,
-    itemType: ItemType,
+    itemType: T,
   ): Promise<void> {
     const handler = this.getItemHandler(itemType);
-    const sourceItems = handler.getSource() as Array<{ name: string }>;
+    const sourceItems = handler.getSource();
 
     const toCreate = this.collectItemsByType(
       diff.toCreate,
@@ -239,12 +269,7 @@ export class SyncExecutor {
     if (allItems.length > 0) {
       await this.writeItems(
         handler.displayName,
-        // Type assertion needed due to union type limitation
-        // Safe because handler is matched by itemType in switch
-        () =>
-          handler.write(
-            allItems as Skill[] & MCPServer[] & Agent[] & Command[],
-          ),
+        () => handler.write(allItems),
         toCreate.length,
         toUpdate.length,
         result,
@@ -254,7 +279,7 @@ export class SyncExecutor {
 
   /**
    * Generic write handler - DRY principle
-   * Handles write operation with consistent error handling
+   * Handles write operation with unified error handling strategy
    */
   private async writeItems(
     itemTypeName: string,
@@ -273,28 +298,41 @@ export class SyncExecutor {
           result.updated += updateCount;
         }
       } else {
-        // Skip gracefully if the tool doesn't support this feature
+        // Skip gracefully if the tool doesn't support this feature (WARNING level)
         if (isUnsupportedFeature(writeResult)) {
           // Tool doesn't support this feature - skip silently
           return;
         }
 
+        // Write failed - create FATAL error for rollback
         const errorMsg = writeResult.error || `Failed to write ${itemTypeName}`;
-        result.errors.push(errorMsg);
+        const writeError = SyncError.fatal(errorMsg, {
+          itemType: itemTypeName,
+          tool: result.tool,
+        });
+
+        result.errors.push(writeError.message);
         result.success = false;
-        throw new Error(`${itemTypeName} write failed - initiating rollback`);
+        throw writeError;
       }
     } catch (error) {
-      const errorMsg = `Failed to write ${itemTypeName}: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
+      // Convert to SyncError if not already
+      const syncError =
+        error instanceof SyncError
+          ? error
+          : new FileOperationError(
+              "write",
+              itemTypeName,
+              error instanceof Error ? error : new Error(String(error)),
+              ErrorSeverity.FATAL,
+            );
 
       // Avoid duplicate error messages
-      if (!result.errors.includes(errorMsg)) {
-        result.errors.push(errorMsg);
+      if (!result.errors.includes(syncError.message)) {
+        result.errors.push(syncError.message);
       }
       result.success = false;
-      throw error;
+      throw syncError;
     }
   }
 
@@ -314,6 +352,7 @@ export class SyncExecutor {
   /**
    * Delete items of a specific type (Strategy pattern - config-driven)
    * Eliminates switch statement duplication
+   * Uses unified error handling strategy
    */
   private async deleteItems(
     diff: DiffResult,
@@ -335,15 +374,22 @@ export class SyncExecutor {
       // All deletes successful
       result.deleted += names.length;
     } catch (error) {
-      const errorMsg = `Failed to delete ${itemType}(s): ${
-        error instanceof Error ? error.message : String(error)
-      }`;
+      // Convert to SyncError if not already
+      const syncError =
+        error instanceof SyncError
+          ? error
+          : new FileOperationError(
+              "delete",
+              `${itemType}/${names.join(", ")}`,
+              error instanceof Error ? error : new Error(String(error)),
+              ErrorSeverity.FATAL,
+            );
 
-      if (!result.errors.includes(errorMsg)) {
-        result.errors.push(errorMsg);
+      if (!result.errors.includes(syncError.message)) {
+        result.errors.push(syncError.message);
       }
       result.success = false;
-      throw error;
+      throw syncError;
     }
   }
 }

@@ -12,6 +12,16 @@ import { t } from "@src/utils/i18n.js";
 import { calculateDiff, type DiffInput } from "./diff.js";
 
 /**
+ * Validation thresholds
+ */
+const VALIDATION_THRESHOLDS = {
+  /** Warn when total operations exceed this threshold */
+  LARGE_OPERATION_COUNT: 50,
+  /** Warn when delete operations exceed this threshold in prune mode */
+  MAX_DELETES_WITHOUT_WARNING: 10,
+} as const;
+
+/**
  * Input for plan generation
  */
 export interface PlanInput {
@@ -303,16 +313,6 @@ export function formatPlan(plan: SyncPlan): string {
     }),
   );
 
-  // Old detailed format (commented out, can be enabled with --verbose flag)
-  /*
-  for (const [toolName, diff] of Object.entries(plan.diffs)) {
-    if (!diff) continue;
-    lines.push(`Target: ${toolName}`);
-    lines.push("-".repeat(60));
-    // ... rest of old format
-  }
-  */
-
   return lines.join("\n");
 }
 
@@ -358,7 +358,7 @@ export function validatePlan(plan: SyncPlan): PlanValidation {
       diff.toCreate.length + diff.toUpdate.length + diff.toDelete.length;
   }
 
-  if (totalOps > 50) {
+  if (totalOps > VALIDATION_THRESHOLDS.LARGE_OPERATION_COUNT) {
     warnings.push(
       t("planner.validation.largeOperations", { count: totalOps.toString() }),
     );

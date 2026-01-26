@@ -37,6 +37,8 @@ jobs:
           # use git-cli so symlinks in the repo don't break GitHub API commits
           commitMode: git-cli
           setupGitUser: true
+          commit: "chore: version packages"
+          title: "chore: version packages"
   
           # calculate version + generate changelog + update lockfile (very important)
           version: pnpm version-packages
@@ -53,3 +55,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
+          HUSKY: 0

@@ -218,7 +218,7 @@ describe("SyncExecutor", () => {
 
       const executor = new SyncExecutor(mockAdapter, sourceData);
 
-      await expect(executor.execute(diff)).rejects.toThrow("write failed");
+      await expect(executor.execute(diff)).rejects.toThrow("Write failed");
     });
 
     it("should skip writing when no operations", async () => {
