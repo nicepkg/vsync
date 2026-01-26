@@ -28,7 +28,7 @@ describe("CLI Framework", () => {
     it("should set correct program name", () => {
       const program = createCLI();
 
-      expect(program.name()).toBe("vibe-sync");
+      expect(program.name()).toBe("vsync");
     });
 
     it("should set program description", () => {
@@ -103,7 +103,7 @@ describe("CLI Framework", () => {
       const program = createCLI();
       const helpText = program.helpInformation();
 
-      expect(helpText).toContain("vibe-sync");
+      expect(helpText).toContain("vsync");
       expect(helpText).toContain("Commands:");
     });
   });
@@ -114,7 +114,7 @@ describe("CLI Framework", () => {
 
       // Simulate error by parsing invalid args
       try {
-        await program.parseAsync(["node", "vibe-sync", "nonexistent"], {
+        await program.parseAsync(["node", "vsync", "nonexistent"], {
           from: "user",
         });
       } catch (error) {

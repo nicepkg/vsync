@@ -1,16 +1,17 @@
 {
-  "name": "vibe-sync",
+  "name": "vsync",
   "version": "1.0.4",
-  "description": "CLI for vibe-sync - AI coding tool config synchronizer",
+  "description": "CLI for vsync - AI coding tool config synchronizer",
   "type": "module",
   "publishConfig": {
     "access": "public"
   },
   "bin": {
-    "vibe-sync": "./dist/index.js"
+    "vsync": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/*.map"
   ],
   "scripts": {
     "dev": "tsx src/index.ts",

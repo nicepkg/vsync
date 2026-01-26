@@ -1,18 +1,18 @@
 ---
 title: 配置指南
-description: vibe-sync 完整配置指南。学习 .vibe-sync.json 结构、工具特定格式（JSON、TOML、JSONC）、MCP 差异、Claude Code、Cursor、OpenCode 和 Codex 的环境变量语法。
+description: vsync 完整配置指南。学习 .vsync.json 结构、工具特定格式（JSON、TOML、JSONC）、MCP 差异、Claude Code、Cursor、OpenCode 和 Codex 的环境变量语法。
 ---
 
 # 配置指南
 
-了解如何配置 vibe-sync 以及 AI 氛围编程工具之间的格式差异。
+了解如何配置 vsync 以及 AI 氛围编程工具之间的格式差异。
 
 ## 配置文件结构
 
-vibe-sync 使用 `.vibe-sync.json` 进行配置：
+vsync 使用 `.vsync.json` 进行配置：
 
-- **Project 层**：`<project>/.vibe-sync.json`
-- **User 层**：`~/.vibe-sync.json`
+- **Project 层**：`<project>/.vsync.json`
+- **User 层**：`~/.vsync.json`
 
 ### 配置示例
 
@@ -235,18 +235,18 @@ AI 代理的指令和提示...
 
 ## 为什么格式转换很重要
 
-如果没有 vibe-sync，在工具之间迁移配置需要：
+如果没有 vsync，在工具之间迁移配置需要：
 
 1. **手动格式转换**：JSON → TOML → JSONC
 2. **环境变量重写**：`${VAR}` → `${env:VAR}` → `{env:VAR}`
 3. **结构更改**：`mcpServers` → `mcp` → `mcp_servers`
 4. **必需字段添加**：为 OpenCode 添加 `type`
 
-**使用 vibe-sync**，这一切都会自动发生！🎉
+**使用 vsync**，这一切都会自动发生！🎉
 
 ## Manifest 文件
 
-vibe-sync 在 `.vibe-sync-cache/manifest.json` 维护 manifest：
+vsync 在 `.vsync-cache/manifest.json` 维护 manifest：
 
 ```json
 {
@@ -316,8 +316,8 @@ vibe-sync 在 `.vibe-sync-cache/manifest.json` 维护 manifest：
 ### 4. 版本控制
 
 **提交到 git**：
-- `.vibe-sync.json`（安全，无密钥）
-- `.vibe-sync-cache/`（可选，有助于性能）
+- `.vsync.json`（安全，无密钥）
+- `.vsync-cache/`（可选，有助于性能）
 
 **不要提交到 git**：
 - 带凭证的工具特定配置文件

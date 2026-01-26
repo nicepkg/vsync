@@ -1,5 +1,5 @@
 /**
- * vibe-sync status command
+ * vsync status command
  * Display sync status and configuration info
  */
 
@@ -10,7 +10,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
 import { loadManifest, getManifestPath } from "@src/core/manifest-manager.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 import { ensureConfig } from "@src/utils/config-initializer.js";
 import { t } from "@src/utils/i18n.js";
@@ -30,7 +30,7 @@ const TIME_THRESHOLDS = {
  * Status display data
  */
 export interface StatusData {
-  config: VibeConfig;
+  config: VSyncConfig;
   manifest: Manifest;
   skillCount: number;
   mcpCount: number;
@@ -115,7 +115,7 @@ export function formatStatus(data: StatusData): string {
 
   lines.push(
     chalk.cyan(`${t("commands.status.configuration")}:     `) +
-      (data.config.level === "user" ? "~/.vibe-sync.json" : ".vibe-sync.json"),
+      (data.config.level === "user" ? "~/.vsync.json" : ".vsync.json"),
   );
 
   // Show manifest path relative to home directory

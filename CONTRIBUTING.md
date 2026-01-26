@@ -1,4 +1,4 @@
-# Contributing to vibe-sync
+# Contributing to vsync
 
 Thank you for your interest in contributing! This document provides guidelines and instructions for contributing.
 
@@ -10,13 +10,13 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/nicepkg/vibe-sync/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/nicepkg/vsync/issues)
 2. If not, create a new issue using the bug report template
 3. Provide as much detail as possible
 
 ### Suggesting Features
 
-1. Check if the feature has already been suggested in [Issues](https://github.com/nicepkg/vibe-sync/issues)
+1. Check if the feature has already been suggested in [Issues](https://github.com/nicepkg/vsync/issues)
 2. If not, create a new issue using the feature request template
 3. Explain the use case and benefits
 
@@ -34,8 +34,8 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ```bash
 # Clone the repository
-git clone https://github.com/nicepkg/vibe-sync.git
-cd vibe-sync
+git clone https://github.com/nicepkg/vsync.git
+cd vsync
 
 # Install dependencies
 pnpm install
@@ -60,19 +60,19 @@ We follow the [Angular Commit Convention](https://github.com/angular/angular/blo
 
 ### Types
 
-| Type | Description |
-|------|-------------|
-| `feat` | A new feature |
-| `fix` | A bug fix |
-| `docs` | Documentation only changes |
-| `style` | Changes that do not affect the meaning of the code |
-| `refactor` | A code change that neither fixes a bug nor adds a feature |
-| `perf` | A code change that improves performance |
-| `test` | Adding missing tests or correcting existing tests |
-| `build` | Changes that affect the build system or external dependencies |
-| `ci` | Changes to CI configuration files and scripts |
-| `chore` | Other changes that don't modify src or test files |
-| `revert` | Reverts a previous commit |
+| Type       | Description                                                   |
+| ---------- | ------------------------------------------------------------- |
+| `feat`     | A new feature                                                 |
+| `fix`      | A bug fix                                                     |
+| `docs`     | Documentation only changes                                    |
+| `style`    | Changes that do not affect the meaning of the code            |
+| `refactor` | A code change that neither fixes a bug nor adds a feature     |
+| `perf`     | A code change that improves performance                       |
+| `test`     | Adding missing tests or correcting existing tests             |
+| `build`    | Changes that affect the build system or external dependencies |
+| `ci`       | Changes to CI configuration files and scripts                 |
+| `chore`    | Other changes that don't modify src or test files             |
+| `revert`   | Reverts a previous commit                                     |
 
 ### Scopes (optional)
 
@@ -104,4 +104,4 @@ refactor: simplify authentication logic
 
 ## Questions?
 
-Feel free to open a [Discussion](https://github.com/nicepkg/vibe-sync/discussions) if you have any questions.
+Feel free to open a [Discussion](https://github.com/nicepkg/vsync/discussions) if you have any questions.

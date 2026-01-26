@@ -1,5 +1,5 @@
 /**
- * Custom error types for vibe-sync
+ * Custom error types for vsync
  *
  * Error Handling Strategy:
  * - WARNING: Log and continue (e.g., invalid config entry)
@@ -21,7 +21,7 @@ export enum ErrorSeverity {
 }
 
 /**
- * Base error class for vibe-sync
+ * Base error class for vsync
  * Provides consistent error handling with severity classification
  */
 export class SyncError extends Error {

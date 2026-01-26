@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { formatStatus } from "@src/commands/status.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 
 // Cross-platform test home
@@ -13,7 +13,7 @@ vi.mock("node:os", () => ({
 }));
 
 describe("Status Command", () => {
-  const sampleConfig: VibeConfig = {
+  const sampleConfig: VSyncConfig = {
     version: "1.0.0",
     level: "project",
     source_tool: "claude-code",
@@ -149,7 +149,7 @@ describe("Status Command", () => {
       });
 
       expect(output).toContain("Pending changes detected");
-      expect(output).toContain("vibe-sync plan");
+      expect(output).toContain("vsync plan");
     });
 
     it("should handle never-synced state", () => {
@@ -180,9 +180,9 @@ describe("Status Command", () => {
       });
 
       expect(output).toContain("Configuration:");
-      expect(output).toContain(".vibe-sync.json");
+      expect(output).toContain(".vsync.json");
       expect(output).toContain("Manifest:");
-      expect(output).toContain(".vibe-sync");
+      expect(output).toContain(".vsync");
       expect(output).toContain("cache");
       expect(output).toContain("manifest.json");
     });
@@ -198,7 +198,7 @@ describe("Status Command", () => {
 
       expect(projectOutput).toContain("(Project)");
 
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         ...sampleConfig,
         level: "user",
       };
@@ -211,11 +211,11 @@ describe("Status Command", () => {
       });
 
       expect(userOutput).toContain("(User)");
-      expect(userOutput).toContain("~/.vibe-sync.json");
+      expect(userOutput).toContain("~/.vsync.json");
     });
 
     it("should display multiple target tools correctly", () => {
-      const multiTargetConfig: VibeConfig = {
+      const multiTargetConfig: VSyncConfig = {
         ...sampleConfig,
         target_tools: ["cursor", "opencode"],
       };

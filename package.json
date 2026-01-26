@@ -1,12 +1,12 @@
 {
-  "name": "vibe-sync-repo",
+  "name": "vsync-repo",
   "version": "1.0.1",
   "private": true,
   "type": "module",
-  "description": "vibe-sync - One config. Many AI tools. Zero pain.",
+  "description": "vsync - One config. Many AI tools. Zero pain.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nicepkg/vibe-sync.git"
+    "url": "https://github.com/nicepkg/vsync.git"
   },
   "license": "MIT",
   "scripts": {
@@ -14,14 +14,14 @@
     "build:website": "pnpm --filter website build",
     "start:website": "pnpm --filter website start",
     "start:static-website": "pnpm --filter website start:static",
-    "dev:cli": "pnpm --filter vibe-sync dev",
-    "build:cli": "pnpm --filter vibe-sync build",
+    "dev:cli": "pnpm --filter vsync dev",
+    "build:cli": "pnpm --filter vsync build",
     "test": "pnpm -r run test",
     "test:coverage": "pnpm -r run test:coverage",
     "lint": "pnpm -r run lint",
     "lint:fix": "pnpm -r run lint:fix",
     "typecheck": "pnpm -r run typecheck",
-    "clean": "rm -rf node_modules vibe-sync/node_modules website/node_modules website/.next",
+    "clean": "rm -rf node_modules vsync/node_modules website/node_modules website/.next",
     "prepare": "husky",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",

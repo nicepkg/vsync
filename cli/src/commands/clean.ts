@@ -1,5 +1,5 @@
 /**
- * vibe-sync clean command
+ * vsync clean command
  * Remove items from target tools (and optionally from source)
  */
 

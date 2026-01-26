@@ -36,7 +36,7 @@ describe("Plan Command", () => {
       expect(output).toContain("skill/test-skill");
       expect(output).toContain("Does not exist in target");
       expect(output).toContain("abc123def456");
-      expect(output).toContain("vibe-sync sync");
+      expect(output).toContain("vsync sync");
     });
 
     it("should format plan with UPDATE operations showing hash changes", () => {
@@ -159,7 +159,7 @@ describe("Plan Command", () => {
 
       const output = formatDetailedPlan(plan);
 
-      expect(output).toContain("vibe-sync sync");
+      expect(output).toContain("vsync sync");
     });
 
     it("should handle multiple targets in plan", () => {

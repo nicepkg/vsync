@@ -8,7 +8,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import ora, { type Ora } from "ora";
 import { formatPlan } from "@src/core/planner.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import type { SyncPlan } from "@src/types/plan.js";
 import { t } from "@src/utils/i18n.js";
 
@@ -236,7 +236,7 @@ export class SyncUI {
    * Prompt for symlink usage (first-time setup)
    * Returns the user's choice and updates config
    */
-  static async promptForSymlinkUsage(config: VibeConfig): Promise<boolean> {
+  static async promptForSymlinkUsage(config: VSyncConfig): Promise<boolean> {
     // Display info
     console.log(chalk.cyan(t("commands.sync.symlinkPromptTitle")));
     console.log(

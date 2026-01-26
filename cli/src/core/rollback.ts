@@ -56,7 +56,7 @@ export async function createBackup(filePath: string): Promise<BackupInfo> {
   // Create backup file in same directory
   const dir = dirname(filePath);
   const file = basename(filePath);
-  const backupFileName = `.vibe-sync-backup-${Date.now()}-${file}`;
+  const backupFileName = `.vsync-backup-${Date.now()}-${file}`;
   const backupPath = join(dir, backupFileName);
 
   // Ensure backup directory exists

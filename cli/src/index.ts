@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * vibe-sync CLI Entry Point
+ * vsync CLI Entry Point
  *
  * AI Coding Tool Config Synchronizer
  * Single source of truth → Compile to multiple formats → Diff-based sync

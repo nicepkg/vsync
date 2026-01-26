@@ -22,8 +22,8 @@ concurrency:
 
 env:
   # Project Configuration - Update these values for your project
-  PROJECT_NAME: 'vibe-sync'
-  SITE_DOMAIN: 'vibe-sync.xiaominglab.com'
+  PROJECT_NAME: 'vsync'
+  SITE_DOMAIN: 'vsync.xiaominglab.com'
   WEBSITE_DIR: 'website'
   BUILD_OUTPUT_DIR: 'website/out'
   BUILD_COMMAND: 'pnpm build:website'

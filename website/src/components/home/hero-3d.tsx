@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/purity */
 /**
  * =============================================================================
- * vibe-sync 3D Hero - "The Pulse of Truth"
+ * vsync 3D Hero - "The Pulse of Truth"
  * =============================================================================
  * Visualizing the synchronization process:
  * 1. Source pulses (The Truth)

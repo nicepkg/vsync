@@ -1,13 +1,13 @@
 import mockFs from "mock-fs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { executeSyncPlan, syncWithSymlinks } from "@src/commands/sync.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import type { SyncPlan } from "@src/types/plan.js";
 
 describe("Sync Command - Symlink Support", () => {
   beforeEach(() => {
     mockFs({
-      "/project/.vibe-sync.json": JSON.stringify({
+      "/project/.vsync.json": JSON.stringify({
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -34,7 +34,7 @@ describe("Sync Command - Symlink Support", () => {
 
   describe("syncWithSymlinks", () => {
     it("should setup symlinks when use_symlinks_for_skills is true", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -66,7 +66,7 @@ describe("Sync Command - Symlink Support", () => {
     });
 
     it("should skip symlink setup when use_symlinks_for_skills is false", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -98,7 +98,7 @@ describe("Sync Command - Symlink Support", () => {
     });
 
     it("should skip symlink setup when use_symlinks_for_skills is undefined", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -137,7 +137,7 @@ describe("Sync Command - Symlink Support", () => {
         "/project/.opencode": {},
       });
 
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -179,7 +179,7 @@ describe("Sync Command - Symlink Support", () => {
     });
 
     it("should handle symlink creation errors gracefully", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",

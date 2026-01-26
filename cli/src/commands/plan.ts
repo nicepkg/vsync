@@ -1,5 +1,5 @@
 /**
- * vibe-sync plan command
+ * vsync plan command
  * Show sync plan without executing
  */
 

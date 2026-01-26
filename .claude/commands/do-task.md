@@ -1,11 +1,11 @@
 ---
-description: Execute tasks from TASKS.md following vibe-sync specifications
+description: Execute tasks from TASKS.md following vsync specifications
 argument-hint: [phase-task or "next"]
 ---
 
-# Do Task - vibe-sync
+# Do Task - vsync
 
-Execute development tasks from `TASKS.md` following vibe-sync project specifications and TDD workflow.
+Execute development tasks from `TASKS.md` following vsync project specifications and TDD workflow.
 
 ## Current Context
 
@@ -175,7 +175,7 @@ spinner.succeed("Done");
 
 - MCP servers require user confirmation on first sync
 - Show command, env vars, URL before approval
-- Update whitelist in .vibe-sync.json
+- Update whitelist in .vsync.json
 
 **Phase 6 (Testing)**:
 
@@ -189,15 +189,15 @@ spinner.succeed("Done");
 src/
 ├── cli/              # CLI commands (Phase 4)
 │   ├── commands/
-│   │   ├── init.ts       # vibe-sync init
-│   │   ├── sync.ts       # vibe-sync sync
-│   │   ├── plan.ts       # vibe-sync plan
-│   │   ├── status.ts     # vibe-sync status
-│   │   ├── list.ts       # vibe-sync list
-│   │   └── clean.ts      # vibe-sync clean
+│   │   ├── init.ts       # vsync init
+│   │   ├── sync.ts       # vsync sync
+│   │   ├── plan.ts       # vsync plan
+│   │   ├── status.ts     # vsync status
+│   │   ├── list.ts       # vsync list
+│   │   └── clean.ts      # vsync clean
 │   └── index.ts      # Commander setup
 ├── core/             # Core logic (Phase 1, 3, 5)
-│   ├── config-manager.ts   # Load/save .vibe-sync.json
+│   ├── config-manager.ts   # Load/save .vsync.json
 │   ├── manifest-manager.ts # Manifest CRUD
 │   ├── diff.ts             # Diff calculator
 │   ├── planner.ts          # Plan generator
@@ -210,7 +210,7 @@ src/
 │   ├── opencode.ts       # Target adapter
 │   └── registry.ts       # Adapter factory
 ├── types/            # TypeScript types (Phase 1)
-│   ├── config.ts     # VibeConfig, SyncMode, etc.
+│   ├── config.ts     # VSyncConfig, SyncMode, etc.
 │   ├── models.ts     # Skill, MCPServer, etc.
 │   ├── manifest.ts   # Manifest types
 │   └── plan.ts       # SyncPlan, DiffResult, etc.
@@ -352,4 +352,4 @@ pnpm build             # Build project
 
 ---
 
-**Let's build vibe-sync with TDD and precision! 🚀**
+**Let's build vsync with TDD and precision! 🚀**

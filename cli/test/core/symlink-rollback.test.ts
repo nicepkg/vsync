@@ -40,7 +40,7 @@ describe("Symlink Rollback Support", () => {
       const backup = await createDirectoryBackup("/target/skills");
 
       expect(isSamePath(backup.originalPath, "/target/skills")).toBe(true);
-      expect(backup.backupPath).toMatch(/\.vibe-sync-backup-\d+-skills$/);
+      expect(backup.backupPath).toMatch(/\.vsync-backup-\d+-skills$/);
       expect(backup.existed).toBe(true);
       expect(backup.timestamp).toBeTruthy();
 
@@ -158,7 +158,7 @@ describe("Symlink Rollback Support", () => {
     it("should handle missing backup gracefully", async () => {
       const backup: DirectoryBackupInfo = {
         originalPath: "/target/skills",
-        backupPath: "/target/.vibe-sync-backup-123-skills",
+        backupPath: "/target/.vsync-backup-123-skills",
         existed: true,
         timestamp: new Date().toISOString(),
       };
@@ -202,7 +202,7 @@ describe("Symlink Rollback Support", () => {
     it("should handle already deleted backup gracefully", async () => {
       const backup: DirectoryBackupInfo = {
         originalPath: "/target/skills",
-        backupPath: "/target/.vibe-sync-backup-123-skills",
+        backupPath: "/target/.vsync-backup-123-skills",
         existed: true,
         timestamp: new Date().toISOString(),
       };

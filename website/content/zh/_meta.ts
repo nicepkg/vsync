@@ -35,11 +35,11 @@ export default {
       },
       changelog: {
         title: "更新日志",
-        href: "https://github.com/nicepkg/vibe-sync/blob/main/CHANGELOG.md",
+        href: "https://github.com/nicepkg/vsync/blob/main/CHANGELOG.md",
       },
       release: {
         title: "发布",
-        href: `https://github.com/nicepkg/vibe-sync/releases`,
+        href: `https://github.com/nicepkg/vsync/releases`,
       },
     },
   },

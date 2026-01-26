@@ -1,6 +1,6 @@
 /**
- * Configuration type definitions for vibe-sync
- * Defines the structure of .vibe-sync.json
+ * Configuration type definitions for vsync
+ * Defines the structure of .vsync.json
  */
 
 import { z } from "zod";
@@ -14,7 +14,7 @@ export type SyncMode = "safe" | "prune";
 
 /**
  * Supported AI coding tools
- * These are the core adapters included with vibe-sync.
+ * These are the core adapters included with vsync.
  * Third-party adapters can register dynamically via registerAdapter()
  *
  * Note: This list must be kept in sync with registered core adapters.
@@ -24,8 +24,8 @@ export type ToolName = "claude-code" | "cursor" | "opencode" | "codex";
 
 /**
  * Configuration level
- * - project: Project-specific config (.vibe-sync.json)
- * - user: Global user config (~/.vibe-sync.json)
+ * - project: Project-specific config (.vsync.json)
+ * - user: Global user config (~/.vsync.json)
  */
 export type ConfigLevel = "project" | "user";
 
@@ -44,10 +44,10 @@ export interface SyncConfig {
 }
 
 /**
- * Main vibe-sync configuration
- * Stored in .vibe-sync.json (project) or ~/.vibe-sync.json (user)
+ * Main vsync configuration
+ * Stored in .vsync.json (project) or ~/.vsync.json (user)
  */
-export interface VibeConfig {
+export interface VSyncConfig {
   /** JSON schema URL (optional) */
   $schema?: string;
   /** Config version */
@@ -71,7 +71,7 @@ export interface VibeConfig {
   use_symlinks_for_skills?: boolean;
   /**
    * User interface language preference
-   * Only applicable for user-level config (~/.vibe-sync.json)
+   * Only applicable for user-level config (~/.vsync.json)
    * Defaults to system language if not set
    * @since v1.2
    */
@@ -178,7 +178,7 @@ export function createUserConfigSchema(validTools: string[]) {
  * Create complete config schema
  * Uses union to support both project-level and user-level configs
  */
-export function createVibeConfigSchema(validTools: string[]) {
+export function createVSyncConfigSchema(validTools: string[]) {
   return z.union([
     createProjectConfigSchema(validTools),
     createUserConfigSchema(validTools),

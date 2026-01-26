@@ -1,6 +1,6 @@
-# vibe-sync Performance Benchmarks
+# vsync Performance Benchmarks
 
-This document contains performance measurement results for vibe-sync optimization features.
+This document contains performance measurement results for vsync optimization features.
 
 ## Methodology
 
@@ -23,13 +23,14 @@ Benchmarks were conducted using the `scripts/benchmark-performance.ts` script, w
 
 **Test Scenario**: Syncing 50 skills to 2 target tools
 
-| Metric | Sequential (Baseline) | Parallel (Optimized) | Improvement |
-|--------|----------------------|----------------------|-------------|
-| Duration | 337.50ms | 264.75ms | **21.6% faster** |
-| Throughput | 296 items/sec | 378 items/sec | **1.27x speedup** |
-| Time Saved | - | 72.75ms | - |
+| Metric     | Sequential (Baseline) | Parallel (Optimized) | Improvement       |
+| ---------- | --------------------- | -------------------- | ----------------- |
+| Duration   | 337.50ms              | 264.75ms             | **21.6% faster**  |
+| Throughput | 296 items/sec         | 378 items/sec        | **1.27x speedup** |
+| Time Saved | -                     | 72.75ms              | -                 |
 
 **Analysis**:
+
 - Parallel sync achieves a **1.27x speedup** by executing target writes concurrently
 - With 2 targets, we get ~28% of theoretical 2x maximum (limited by I/O bottlenecks)
 - For larger projects with more targets, speedup scales proportionally
@@ -39,12 +40,13 @@ Benchmarks were conducted using the `scripts/benchmark-performance.ts` script, w
 
 **Test Scenario**: Reading 50 skills twice
 
-| Metric | First Read | Second Read | Result |
-|--------|-----------|-------------|--------|
-| Duration | 5.30ms | 6.10ms | Similar |
-| Memory Delta | -1.45MB | -1.43MB | Similar |
+| Metric       | First Read | Second Read | Result  |
+| ------------ | ---------- | ----------- | ------- |
+| Duration     | 5.30ms     | 6.10ms      | Similar |
+| Memory Delta | -1.45MB    | -1.43MB     | Similar |
 
 **Analysis**:
+
 - OS file system caching provides baseline performance
 - Both reads are fast (~5-6ms for 50 skills)
 - Memory usage shows GC effects rather than caching overhead
@@ -57,13 +59,14 @@ Benchmarks were conducted using the `scripts/benchmark-performance.ts` script, w
 Based on the parallel sync results, expected performance for different configurations:
 
 | Skills | Targets | Sequential Time | Parallel Time | Speedup |
-|--------|---------|----------------|---------------|---------|
-| 50 | 2 | 338ms | 265ms | 1.27x |
-| 100 | 2 | ~676ms | ~530ms | 1.27x |
-| 50 | 3 | ~507ms | ~338ms | 1.50x |
-| 100 | 3 | ~1014ms | ~676ms | 1.50x |
+| ------ | ------- | --------------- | ------------- | ------- |
+| 50     | 2       | 338ms           | 265ms         | 1.27x   |
+| 100    | 2       | ~676ms          | ~530ms        | 1.27x   |
+| 50     | 3       | ~507ms          | ~338ms        | 1.50x   |
+| 100    | 3       | ~1014ms         | ~676ms        | 1.50x   |
 
 **Note**: Actual results may vary based on:
+
 - File system performance
 - Skill sizes and complexity
 - System resources and load
@@ -91,11 +94,13 @@ Based on the parallel sync results, expected performance for different configura
 **Location**: `src/core/parallel-sync.ts`
 
 **Mechanism**:
+
 - Uses `Promise.allSettled()` for concurrent execution
 - Independent writes to each target tool
 - Fail-safe: Continues other syncs if one fails
 
 **Benefits**:
+
 - **21.6% faster** for 2 targets
 - Scales with number of targets
 - No code changes required (automatic)
@@ -105,11 +110,13 @@ Based on the parallel sync results, expected performance for different configura
 **Location**: `src/core/incremental-reader.ts`, `src/core/file-cache.ts`
 
 **Mechanism**:
+
 - Tracks file metadata (mtime, size)
 - Skips unchanged files on subsequent syncs
-- Persists cache to `.vibe-sync/cache/file-cache.json`
+- Persists cache to `.vsync/cache/file-cache.json`
 
 **Benefits**:
+
 - Useful for large projects with frequent syncs
 - Reduces I/O on unchanged files
 - Cross-session optimization
@@ -121,15 +128,18 @@ Based on the parallel sync results, expected performance for different configura
 **Location**: `src/core/symlink-manager.ts`
 
 **Mechanism**:
+
 - Creates symlinks instead of copying skill files
 - Single source of truth for skills directory
 
 **Benefits**:
+
 - **Instant sync** for skills (symlink creation is ~1ms)
 - Saves disk space
 - Real-time updates across all tools
 
 **Trade-offs**:
+
 - Requires `use_symlinks_for_skills: true` in config
 - Not supported by all systems/tools
 - MCP servers still copied (cannot be symlinked)
@@ -137,16 +147,19 @@ Based on the parallel sync results, expected performance for different configura
 ## Recommendations
 
 ### For Small Projects (< 20 skills)
+
 - Default configuration works well
 - Parallel sync provides minor improvement
 - Consider symlinks if frequently editing skills
 
 ### For Medium Projects (20-100 skills)
+
 - Parallel sync provides noticeable improvement
 - Incremental sync reduces repeated work
 - Symlinks recommended if supported
 
 ### For Large Projects (> 100 skills)
+
 - **Enable symlinks** for maximum performance
 - Parallel sync essential for multi-target setups
 - Incremental reader reduces I/O significantly
@@ -161,6 +174,7 @@ pnpm tsx scripts/benchmark-performance.ts
 ```
 
 The script will:
+
 1. Create temporary test fixtures
 2. Measure parallel sync performance
 3. Measure file cache performance
@@ -181,9 +195,10 @@ Potential areas for further improvement:
 
 ## Conclusion
 
-vibe-sync achieves **21.6% performance improvement** through parallel sync optimization. Combined with symlink support and incremental reading, the tool provides excellent performance for projects of all sizes.
+vsync achieves **21.6% performance improvement** through parallel sync optimization. Combined with symlink support and incremental reading, the tool provides excellent performance for projects of all sizes.
 
 For maximum performance:
+
 - Use symlinks for skills
 - Sync to multiple targets in parallel (automatic)
 - Run frequent small syncs instead of infrequent large ones

@@ -1,15 +1,15 @@
 ---
 title: Advanced Features
-description: Master advanced vibe-sync features - symlink support for Skills, performance optimization (hash-based detection, parallel ops), multi-language CLI (en/zh), rollback safety, and CI/CD integration.
+description: Master advanced vsync features - symlink support for Skills, performance optimization (hash-based detection, parallel ops), multi-language CLI (en/zh), rollback safety, and CI/CD integration.
 ---
 
 # Advanced Features
 
-Explore advanced features and optimization techniques in vibe-sync.
+Explore advanced features and optimization techniques in vsync.
 
 ## Symlink Support (v1.2+)
 
-vibe-sync can use symbolic links for Skills directories instead of copying files, providing instant updates and significant disk space savings.
+vsync can use symbolic links for Skills directories instead of copying files, providing instant updates and significant disk space savings.
 
 ### How Symlinks Work
 
@@ -32,7 +32,7 @@ When symlinks are enabled:
 
 #### During First Sync
 
-On your first `vibe-sync sync`, you'll be prompted:
+On your first `vsync sync`, you'll be prompted:
 
 ```
 ? How would you like to sync Skills?
@@ -40,11 +40,11 @@ On your first `vibe-sync sync`, you'll be prompted:
     Copy files (traditional - independent copies)
 ```
 
-Your choice is saved in `.vibe-sync.json`.
+Your choice is saved in `.vsync.json`.
 
 #### Manual Configuration
 
-Edit `.vibe-sync.json`:
+Edit `.vsync.json`:
 
 ```json
 {
@@ -71,20 +71,20 @@ You can change the setting anytime:
 
 ```bash
 # 1. Edit config
-vim .vibe-sync.json
+vim .vsync.json
 # Change "use_symlinks_for_skills" to true/false
 
 # 2. Re-sync to apply
-vibe-sync sync
+vsync sync
 ```
 
-vibe-sync will handle the conversion automatically, replacing symlinks with copies or vice versa.
+vsync will handle the conversion automatically, replacing symlinks with copies or vice versa.
 
 ---
 
 ## Performance Optimization
 
-vibe-sync is optimized for speed and efficiency.
+vsync is optimized for speed and efficiency.
 
 ### Hash-Based Change Detection
 
@@ -146,13 +146,13 @@ All writes use atomic operations:
 
 ## Multi-Language CLI (v1.2+)
 
-vibe-sync supports English and Chinese (中文) interfaces.
+vsync supports English and Chinese (中文) interfaces.
 
 ### Setting Language
 
 #### User-Level (Global)
 
-Edit `~/.vibe-sync.json`:
+Edit `~/.vsync.json`:
 
 ```json
 {
@@ -164,7 +164,7 @@ Edit `~/.vibe-sync.json`:
 
 ```bash
 export VIBE_SYNC_LANG=zh
-vibe-sync sync
+vsync sync
 ```
 
 ### Supported Languages
@@ -214,10 +214,10 @@ For complex setups, use multiple configs:
 ```bash
 # Project has its own config
 cd ~/my-project
-vibe-sync sync
+vsync sync
 
 # User has global config
-vibe-sync sync --user
+vsync sync --user
 ```
 
 Both layers can coexist—project configs don't override user configs.
@@ -228,10 +228,10 @@ Need to import from a different tool temporarily?
 
 ```bash
 # 1. Import from Cursor to current source
-vibe-sync import /path/to/cursor/project
+vsync import /path/to/cursor/project
 
 # 2. Sync to targets
-vibe-sync sync
+vsync sync
 ```
 
 Your source tool remains unchanged; you're just importing new items.
@@ -268,7 +268,7 @@ Your source tool remains unchanged; you're just importing new items.
 
 ### Cross-Tool Variable Syntax
 
-vibe-sync automatically converts between tools:
+vsync automatically converts between tools:
 
 | Source (Claude Code) | Target (Cursor) | Target (OpenCode) |
 |:--------------------|:----------------|:------------------|
@@ -318,7 +318,7 @@ on:
   push:
     paths:
       - '.claude/**'
-      - '.vibe-sync.json'
+      - '.vsync.json'
 
 jobs:
   sync:
@@ -332,7 +332,7 @@ jobs:
           node-version: '18'
 
       - name: Sync configs
-        run: npx vibe-sync sync --yes
+        run: npx vsync sync --yes
         env:
           # Add any required environment variables
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -346,10 +346,10 @@ Automatically sync before commits:
 #!/bin/bash
 # .git/hooks/pre-commit
 
-# Check if .vibe-sync.json exists
-if [ -f .vibe-sync.json ]; then
-  echo "Running vibe-sync..."
-  npx vibe-sync sync --yes
+# Check if .vsync.json exists
+if [ -f .vsync.json ]; then
+  echo "Running vsync..."
+  npx vsync sync --yes
 
   # Add synced files to commit
   git add .cursor/ .opencode/ .codex/
@@ -364,7 +364,7 @@ Planned feature for automatic syncing on file changes:
 
 ```bash
 # Auto-sync when source configs change
-vibe-sync watch
+vsync watch
 ```
 
 This will monitor source directories and trigger syncs automatically.
@@ -379,13 +379,13 @@ Set environment variable:
 
 ```bash
 export VIBE_SYNC_DEBUG=1
-vibe-sync sync
+vsync sync
 ```
 
 ### Verbose Output
 
 ```bash
-vibe-sync sync --verbose
+vsync sync --verbose
 ```
 
 ### Check Manifest
@@ -393,7 +393,7 @@ vibe-sync sync --verbose
 Inspect the manifest to see sync state:
 
 ```bash
-cat .vibe-sync-cache/manifest.json | jq
+cat .vsync-cache/manifest.json | jq
 ```
 
 ---
@@ -428,7 +428,7 @@ cat .vibe-sync-cache/manifest.json | jq
 ```bash
 # Project uses Claude Code + Cursor
 cd ~/project-a
-cat .vibe-sync.json
+cat .vsync.json
 {
   "source_tool": "claude-code",
   "target_tools": ["cursor"]
@@ -436,7 +436,7 @@ cat .vibe-sync.json
 
 # Another project uses Cursor + OpenCode
 cd ~/project-b
-cat .vibe-sync.json
+cat .vsync.json
 {
   "source_tool": "cursor",
   "target_tools": ["opencode"]
@@ -448,5 +448,5 @@ cat .vibe-sync.json
 ## Next Steps
 
 - Check the [FAQ](../faq) for common questions
-- Read about [Contributing](../../contributing) to vibe-sync
+- Read about [Contributing](../../contributing) to vsync
 - Explore [Configuration](../configuration) details

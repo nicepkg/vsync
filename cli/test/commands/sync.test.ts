@@ -10,7 +10,7 @@ import {
   syncCommand,
   updateManifestAfterSync,
 } from "@src/commands/sync.js";
-import type { VibeConfig, ToolName } from "@src/types/config.js";
+import type { VSyncConfig, ToolName } from "@src/types/config.js";
 import { ensureConfig } from "@src/utils/config-initializer.js";
 
 // Cross-platform test paths
@@ -50,7 +50,7 @@ vi.mock("@src/utils/config-initializer.js", async () => {
 });
 
 describe("Sync Command", () => {
-  const sampleConfig: VibeConfig = {
+  const sampleConfig: VSyncConfig = {
     version: "1.0.0",
     level: "project",
     source_tool: "claude-code",
@@ -65,12 +65,12 @@ describe("Sync Command", () => {
     const mockFsConfig: any = {
       [TEST_HOME]: {
         // Add user-level config with language to avoid prompts
-        ".vibe-sync.json": JSON.stringify({
+        ".vsync.json": JSON.stringify({
           version: "1.0.0",
           level: "user",
           language: "en",
         }),
-        ".vibe-sync": {
+        ".vsync": {
           cache: {
             [PROJECT_HASH]: {
               "manifest.json": JSON.stringify({
@@ -83,7 +83,7 @@ describe("Sync Command", () => {
         },
       },
       [TEST_PROJECT]: {
-        ".vibe-sync.json": JSON.stringify(sampleConfig),
+        ".vsync.json": JSON.stringify(sampleConfig),
         ".claude": {
           skills: {
             "test-skill": {
@@ -297,7 +297,7 @@ describe("Sync Command", () => {
 
       const manifestPath = join(
         TEST_HOME,
-        ".vibe-sync",
+        ".vsync",
         "cache",
         PROJECT_HASH,
         "manifest.json",
@@ -311,7 +311,7 @@ describe("Sync Command", () => {
 
   describe("Error Handling", () => {
     it("should handle missing source directory gracefully", async () => {
-      const invalidConfig: VibeConfig = {
+      const invalidConfig: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -324,7 +324,7 @@ describe("Sync Command", () => {
 
       mockFs({
         "/invalid": {
-          ".vibe-sync.json": JSON.stringify(invalidConfig),
+          ".vsync.json": JSON.stringify(invalidConfig),
           // No .claude directory - adapters should return empty arrays
         },
       });
@@ -344,12 +344,12 @@ describe("Sync Command", () => {
       const mockFsConfig: any = {
         [TEST_HOME]: {
           // Add user-level config with language to avoid prompts
-          ".vibe-sync.json": JSON.stringify({
+          ".vsync.json": JSON.stringify({
             version: "1.0.0",
             level: "user",
             language: "en",
           }),
-          ".vibe-sync": {
+          ".vsync": {
             cache: {
               [PROJECT_HASH]: {
                 "manifest.json": "{ invalid json",
@@ -358,7 +358,7 @@ describe("Sync Command", () => {
           },
         },
         [TEST_PROJECT]: {
-          ".vibe-sync.json": JSON.stringify(sampleConfig),
+          ".vsync.json": JSON.stringify(sampleConfig),
           ".claude": {
             skills: {},
           },

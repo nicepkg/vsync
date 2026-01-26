@@ -1,6 +1,6 @@
 /**
- * vibe-sync init command
- * Initialize vibe-sync configuration
+ * vsync init command
+ * Initialize vsync configuration
  */
 
 import { access } from "node:fs/promises";
@@ -12,7 +12,7 @@ import inquirer from "inquirer";
 import ora from "ora";
 import { getAllConfigDirs, getToolChoices } from "@src/adapters/registry.js";
 import { saveConfig as saveConfigToFile } from "@src/core/config-manager.js";
-import type { ToolName, VibeConfig, ConfigLevel } from "@src/types/config.js";
+import type { ToolName, VSyncConfig, ConfigLevel } from "@src/types/config.js";
 import { t } from "@src/utils/i18n.js";
 
 /**
@@ -50,14 +50,14 @@ export async function detectTools(projectDir: string): Promise<ToolName[]> {
 }
 
 /**
- * Generate vibe-sync configuration from user selections
+ * Generate vsync configuration from user selections
  *
  * @param options - User selections
  * @returns Generated config
  */
 export async function generateConfig(
   options: ConfigOptions,
-): Promise<VibeConfig> {
+): Promise<VSyncConfig> {
   // Validate inputs
   if (options.tools.length === 0) {
     throw new Error("At least one tool must be selected");
@@ -74,7 +74,7 @@ export async function generateConfig(
   // Build config
   const level: ConfigLevel = options.isUserLevel ? "user" : "project";
 
-  const config: VibeConfig = {
+  const config: VSyncConfig = {
     version: "1.0.0",
     level,
     source_tool: options.source,
@@ -98,7 +98,7 @@ export async function generateConfig(
  * @param dir - Directory to save config in (project dir or user home dir based on config.level)
  */
 export async function saveConfig(
-  config: VibeConfig,
+  config: VSyncConfig,
   dir: string,
 ): Promise<void> {
   // Pass dir as both projectDir and userDir since this function doesn't
@@ -209,7 +209,7 @@ async function initCommand(options: { user?: boolean }): Promise<void> {
 
     console.log(
       chalk.green(
-        `\n✅ ${t("commands.init.complete", { command: chalk.bold("vibe-sync sync") })}\n`,
+        `\n✅ ${t("commands.init.complete", { command: chalk.bold("vsync sync") })}\n`,
       ),
     );
   } catch (error) {

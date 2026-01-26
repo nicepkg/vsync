@@ -213,7 +213,7 @@ registerCoreAdapters();
  * @example
  * ```typescript
  * // In a plugin package
- * import { registerAdapter } from 'vibe-sync';
+ * import { registerAdapter } from 'vsync';
  *
  * class MyCustomAdapter extends BaseAdapter {
  *   static readonly TOOL_NAME = "my-tool";

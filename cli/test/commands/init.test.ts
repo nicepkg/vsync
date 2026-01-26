@@ -4,9 +4,9 @@ import mockFs from "mock-fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 // Import for module side-effects (needed for dynamic imports in tests)
 import "@src/commands/init.js";
-import type { VibeConfig, ToolName } from "@src/types/config.js";
+import type { VSyncConfig, ToolName } from "@src/types/config.js";
 
-const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const testRoot = path.join(path.parse(process.cwd()).root, "vsync-test");
 const homeDir = path.join(testRoot, "home", "user");
 
 describe("Init Command", () => {
@@ -124,8 +124,8 @@ describe("Init Command", () => {
   });
 
   describe("File Creation", () => {
-    it("should create .vibe-sync.json with correct content", async () => {
-      const config: VibeConfig = {
+    it("should create .vsync.json with correct content", async () => {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -140,7 +140,7 @@ describe("Init Command", () => {
         m.saveConfig(config, "/project"),
       );
 
-      const content = await readFile("/project/.vibe-sync.json", "utf-8");
+      const content = await readFile("/project/.vsync.json", "utf-8");
       const parsed = JSON.parse(content);
 
       expect(parsed.source_tool).toBe("claude-code");
@@ -148,7 +148,7 @@ describe("Init Command", () => {
     });
 
     it("should format JSON with indentation", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -163,7 +163,7 @@ describe("Init Command", () => {
         m.saveConfig(config, "/project"),
       );
 
-      const content = await readFile("/project/.vibe-sync.json", "utf-8");
+      const content = await readFile("/project/.vsync.json", "utf-8");
       expect(content).toContain("\n");
       expect(content).toContain("  ");
     });
@@ -171,7 +171,7 @@ describe("Init Command", () => {
 
   describe("User-level Config", () => {
     it("should save to user config directory when --user flag", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -187,7 +187,7 @@ describe("Init Command", () => {
       );
 
       const content = await readFile(
-        path.join(homeDir, ".vibe-sync.json"),
+        path.join(homeDir, ".vsync.json"),
         "utf-8",
       );
       const parsed = JSON.parse(content);

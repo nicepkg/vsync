@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 
-const testRoot = path.join(path.parse(process.cwd()).root, "vibe-sync-test");
+const testRoot = path.join(path.parse(process.cwd()).root, "vsync-test");
 const homeDir = path.join(testRoot, "home", "user");
 
 describe("OpenCodeAdapter", () => {

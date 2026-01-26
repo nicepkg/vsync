@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type {
-  VibeConfig,
+  VSyncConfig,
   SyncMode,
   ToolName,
   ConfigLevel,
@@ -28,9 +28,9 @@ describe("Config Types", () => {
     });
   });
 
-  describe("VibeConfig", () => {
+  describe("VSyncConfig", () => {
     it("should create a valid minimal config", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -48,7 +48,7 @@ describe("Config Types", () => {
     });
 
     it("should create a config with last_sync timestamp", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "cursor",
@@ -64,8 +64,8 @@ describe("Config Types", () => {
     });
 
     it("should allow optional schema field", () => {
-      const config: VibeConfig = {
-        $schema: "https://vibe-sync.dev/schema.json",
+      const config: VSyncConfig = {
+        $schema: "https://vsync.dev/schema.json",
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -76,11 +76,11 @@ describe("Config Types", () => {
         },
       };
 
-      expect(config.$schema).toBe("https://vibe-sync.dev/schema.json");
+      expect(config.$schema).toBe("https://vsync.dev/schema.json");
     });
 
     it("should support symlink configuration for skills", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -96,7 +96,7 @@ describe("Config Types", () => {
     });
 
     it("should allow config without symlink flag (backwards compatible)", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -111,7 +111,7 @@ describe("Config Types", () => {
     });
 
     it("should support language preference in user-level config", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -127,7 +127,7 @@ describe("Config Types", () => {
     });
 
     it("should support English language preference", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -143,7 +143,7 @@ describe("Config Types", () => {
     });
 
     it("should allow config without language preference (backwards compatible)", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",

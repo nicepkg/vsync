@@ -4,16 +4,16 @@
 
 ## Basic Info
 
-- **Project Name**: vibe-sync
-- **Repo Name**: vibe-sync
+- **Project Name**: vsync
+- **Repo Name**: vsync
 - **Slogan (EN)**: One config. Many AI tools. Zero pain.
 - **Slogan (ZH)**: 一处配置，多个 AI 工具同步，不再折腾。
-- **Domain**: vibe-sync.xiaominglab.com
+- **Domain**: vsync.xiaominglab.com
 
 ## GitHub
 
 - **Username**: nicepkg
-- **Repo**: https://github.com/nicepkg/vibe-sync
+- **Repo**: https://github.com/nicepkg/vsync
 
 ## Author
 
@@ -35,7 +35,7 @@
 
 ## Notes
 
-vibe-sync syncs AI coding tool configs using a single source of truth.
+vsync syncs AI coding tool configs using a single source of truth.
 
 Core objects:
 
