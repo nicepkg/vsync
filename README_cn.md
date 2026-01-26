@@ -113,6 +113,8 @@ flowchart TD
 
 ## ⚡ 快速开始
 
+完整文档：https://vsync.xiaominglab.com
+
 ### 安装
 
 ```bash

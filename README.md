@@ -113,6 +113,8 @@ flowchart TD
 
 ## ⚡ Quick Start
 
+Full documentation: https://vsync.xiaominglab.com
+
 ### Installation
 
 ```bash
