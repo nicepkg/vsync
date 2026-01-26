@@ -47,6 +47,11 @@ import type {
 } from "@src/types/models.js";
 import type { SyncPlan } from "@src/types/plan.js";
 import { ensureConfig } from "@src/utils/config-initializer.js";
+import {
+  PruneModeReadError,
+  FileOperationError,
+  ErrorSeverity,
+} from "@src/utils/errors.js";
 import { t } from "@src/utils/i18n.js";
 import {
   debug,
@@ -186,6 +191,7 @@ interface TargetConfig {
 /**
  * Read items with fallback to empty array on error
  * Single responsibility: handle one type of read operation
+ * Uses unified error handling strategy
  */
 async function readItemsWithFallback<T>(
   reader: () => Promise<T[]>,
@@ -205,20 +211,29 @@ async function readItemsWithFallback<T>(
       return [];
     }
 
+    // Convert to proper error type
+    const originalError =
+      error instanceof Error ? error : new Error(String(error));
+
     // ⚠️ CRITICAL: Non-ENOENT errors in prune mode could cause data loss!
     // If we can't read the target config (permission, corruption, etc.),
     // returning [] would make prune think "user deleted everything" → delete all
     if (mode === "prune") {
-      throw new Error(
-        `Cannot read ${itemType} from ${tool} in prune mode: ${error instanceof Error ? error.message : String(error)}. ` +
-          `Prune mode requires reliable target reads to prevent accidental deletion.`,
-      );
+      throw new PruneModeReadError(tool, itemType, originalError);
     }
 
-    // Safe mode: Warn but continue (user can fix and re-sync)
-    console.warn(
-      `⚠️  Warning: Failed to read ${itemType} from ${tool}: ${error instanceof Error ? error.message : String(error)}`,
+    // Safe mode: Create warning-level error and log
+    const readError = new FileOperationError(
+      "read",
+      `${tool}/${itemType}`,
+      originalError,
+      ErrorSeverity.WARNING,
     );
+
+    // Log warning with consistent format
+    console.warn(`⚠️  ${readError.message}`);
+    debug("Read error context:", readError.context);
+
     return [];
   }
 }

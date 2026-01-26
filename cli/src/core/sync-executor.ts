@@ -17,7 +17,12 @@ import type { ToolAdapter, WriteResult } from "@src/adapters/base.js";
 import type { ItemType } from "@src/types/manifest.js";
 import type { Skill, MCPServer, Agent, Command } from "@src/types/models.js";
 import type { DiffResult } from "@src/types/plan.js";
-import { isUnsupportedFeature } from "@src/utils/errors.js";
+import {
+  isUnsupportedFeature,
+  SyncError,
+  FileOperationError,
+  ErrorSeverity,
+} from "@src/utils/errors.js";
 
 /**
  * Type mapping for ItemType to concrete types
@@ -274,7 +279,7 @@ export class SyncExecutor {
 
   /**
    * Generic write handler - DRY principle
-   * Handles write operation with consistent error handling
+   * Handles write operation with unified error handling strategy
    */
   private async writeItems(
     itemTypeName: string,
@@ -293,28 +298,41 @@ export class SyncExecutor {
           result.updated += updateCount;
         }
       } else {
-        // Skip gracefully if the tool doesn't support this feature
+        // Skip gracefully if the tool doesn't support this feature (WARNING level)
         if (isUnsupportedFeature(writeResult)) {
           // Tool doesn't support this feature - skip silently
           return;
         }
 
+        // Write failed - create FATAL error for rollback
         const errorMsg = writeResult.error || `Failed to write ${itemTypeName}`;
-        result.errors.push(errorMsg);
+        const writeError = SyncError.fatal(errorMsg, {
+          itemType: itemTypeName,
+          tool: result.tool,
+        });
+
+        result.errors.push(writeError.message);
         result.success = false;
-        throw new Error(`${itemTypeName} write failed - initiating rollback`);
+        throw writeError;
       }
     } catch (error) {
-      const errorMsg = `Failed to write ${itemTypeName}: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
+      // Convert to SyncError if not already
+      const syncError =
+        error instanceof SyncError
+          ? error
+          : new FileOperationError(
+              "write",
+              itemTypeName,
+              error instanceof Error ? error : new Error(String(error)),
+              ErrorSeverity.FATAL,
+            );
 
       // Avoid duplicate error messages
-      if (!result.errors.includes(errorMsg)) {
-        result.errors.push(errorMsg);
+      if (!result.errors.includes(syncError.message)) {
+        result.errors.push(syncError.message);
       }
       result.success = false;
-      throw error;
+      throw syncError;
     }
   }
 
@@ -334,6 +352,7 @@ export class SyncExecutor {
   /**
    * Delete items of a specific type (Strategy pattern - config-driven)
    * Eliminates switch statement duplication
+   * Uses unified error handling strategy
    */
   private async deleteItems(
     diff: DiffResult,
@@ -355,15 +374,22 @@ export class SyncExecutor {
       // All deletes successful
       result.deleted += names.length;
     } catch (error) {
-      const errorMsg = `Failed to delete ${itemType}(s): ${
-        error instanceof Error ? error.message : String(error)
-      }`;
+      // Convert to SyncError if not already
+      const syncError =
+        error instanceof SyncError
+          ? error
+          : new FileOperationError(
+              "delete",
+              `${itemType}/${names.join(", ")}`,
+              error instanceof Error ? error : new Error(String(error)),
+              ErrorSeverity.FATAL,
+            );
 
-      if (!result.errors.includes(errorMsg)) {
-        result.errors.push(errorMsg);
+      if (!result.errors.includes(syncError.message)) {
+        result.errors.push(syncError.message);
       }
       result.success = false;
-      throw error;
+      throw syncError;
     }
   }
 }
