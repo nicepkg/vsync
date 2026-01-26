@@ -8,7 +8,7 @@ import {
   detectFirstTimeSkillsSync,
   shouldPromptForSymlinks,
 } from "@src/commands/sync.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 
 describe("Symlink Detection & Prompt", () => {
@@ -113,7 +113,7 @@ describe("Symlink Detection & Prompt", () => {
     });
 
     it("should return false when use_symlinks_for_skills is already set to true", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         source_tool: "claude-code",
         target_tools: ["cursor"],
@@ -127,7 +127,7 @@ describe("Symlink Detection & Prompt", () => {
     });
 
     it("should return false when use_symlinks_for_skills is already set to false", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         source_tool: "claude-code",
         target_tools: ["cursor"],
@@ -141,7 +141,7 @@ describe("Symlink Detection & Prompt", () => {
     });
 
     it("should return true when use_symlinks_for_skills is undefined and this is first sync", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         source_tool: "claude-code",
         target_tools: ["cursor"],
@@ -155,7 +155,7 @@ describe("Symlink Detection & Prompt", () => {
     });
 
     it("should return false when use_symlinks_for_skills is undefined but not first sync", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         source_tool: "claude-code",
         target_tools: ["cursor"],
@@ -185,7 +185,7 @@ describe("Symlink Detection & Prompt", () => {
     });
 
     it("should return false when skills are not in sync config", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         source_tool: "claude-code",
         target_tools: ["cursor"],
@@ -199,7 +199,7 @@ describe("Symlink Detection & Prompt", () => {
     });
 
     it("should return false when no target tools specified", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         source_tool: "claude-code",
         target_tools: [],
@@ -213,7 +213,7 @@ describe("Symlink Detection & Prompt", () => {
     });
 
     it("should return true for multiple target tools on first sync", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         source_tool: "claude-code",
         target_tools: ["cursor", "opencode"],

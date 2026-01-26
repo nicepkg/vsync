@@ -5,7 +5,7 @@ import {
   shouldUseSymlinks,
   validateSymlinkSetup,
 } from "@src/core/symlink-sync.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 
 describe("Symlink Sync", () => {
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe("Symlink Sync", () => {
 
   describe("shouldUseSymlinks", () => {
     it("should return true when use_symlinks_for_skills is enabled", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -44,7 +44,7 @@ describe("Symlink Sync", () => {
     });
 
     it("should return false when use_symlinks_for_skills is disabled", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -58,7 +58,7 @@ describe("Symlink Sync", () => {
     });
 
     it("should return false when use_symlinks_for_skills is undefined", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",

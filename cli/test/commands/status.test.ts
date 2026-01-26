@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { formatStatus } from "@src/commands/status.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import type { Manifest } from "@src/types/manifest.js";
 
 // Cross-platform test home
@@ -13,7 +13,7 @@ vi.mock("node:os", () => ({
 }));
 
 describe("Status Command", () => {
-  const sampleConfig: VibeConfig = {
+  const sampleConfig: VSyncConfig = {
     version: "1.0.0",
     level: "project",
     source_tool: "claude-code",
@@ -198,7 +198,7 @@ describe("Status Command", () => {
 
       expect(projectOutput).toContain("(Project)");
 
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         ...sampleConfig,
         level: "user",
       };
@@ -215,7 +215,7 @@ describe("Status Command", () => {
     });
 
     it("should display multiple target tools correctly", () => {
-      const multiTargetConfig: VibeConfig = {
+      const multiTargetConfig: VSyncConfig = {
         ...sampleConfig,
         target_tools: ["cursor", "opencode"],
       };

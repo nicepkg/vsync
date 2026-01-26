@@ -180,7 +180,7 @@ type Translation = {
 export function LandingPage({ lang }: { lang: "en" | "zh" }) {
   const t: Translation = {
     hero: {
-      title: lang === "en" ? "Vibe-Sync" : "Vibe-Sync",
+      title: lang === "en" ? "Vsync" : "Vsync",
       subtitle:
         lang === "en"
           ? "One config. Many AI tools. Zero pain."

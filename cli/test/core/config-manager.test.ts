@@ -10,7 +10,7 @@ import {
   mergeConfigs,
   loadMergedConfig,
 } from "@src/core/config-manager.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import { isSamePath } from "../utils/path.js";
 
 const testRoot = path.join(path.parse(process.cwd()).root, "vsync-test");
@@ -101,7 +101,7 @@ describe("Config Manager", () => {
 
   describe("saveConfig", () => {
     it("should save project-level config", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -122,7 +122,7 @@ describe("Config Manager", () => {
     });
 
     it("should save user-level config", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "cursor",
@@ -142,7 +142,7 @@ describe("Config Manager", () => {
     });
 
     it("should format JSON with indentation", async () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -163,7 +163,7 @@ describe("Config Manager", () => {
 
   describe("validateConfig", () => {
     it("should validate correct config", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -185,7 +185,7 @@ describe("Config Manager", () => {
         source_tool: "claude-code",
         target_tools: ["cursor"],
         sync_config: { skills: true, mcp: true },
-      } as VibeConfig;
+      } as VSyncConfig;
 
       const result = validateConfig(config);
       expect(result.valid).toBe(false);
@@ -193,7 +193,7 @@ describe("Config Manager", () => {
     });
 
     it("should reject invalid tool names", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,7 +207,7 @@ describe("Config Manager", () => {
     });
 
     it("should reject empty target_tools", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -220,7 +220,7 @@ describe("Config Manager", () => {
     });
 
     it("should reject source_tool in target_tools", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -233,7 +233,7 @@ describe("Config Manager", () => {
     });
 
     it("should require at least one sync type enabled", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -246,7 +246,7 @@ describe("Config Manager", () => {
     });
 
     it("should accept valid symlink configuration", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -260,7 +260,7 @@ describe("Config Manager", () => {
     });
 
     it("should accept config without symlink fields (backwards compatible)", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -290,7 +290,7 @@ describe("Config Manager", () => {
     });
 
     it("should accept valid language preference", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -304,7 +304,7 @@ describe("Config Manager", () => {
     });
 
     it("should accept config without language (backwards compatible)", () => {
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -349,7 +349,7 @@ describe("Config Manager", () => {
 
   describe("mergeConfigs", () => {
     it("should merge user and project configs with project taking precedence", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "cursor",
@@ -360,7 +360,7 @@ describe("Config Manager", () => {
         },
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -382,7 +382,7 @@ describe("Config Manager", () => {
     });
 
     it("should use user config when project config is undefined", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "cursor",
@@ -403,7 +403,7 @@ describe("Config Manager", () => {
     });
 
     it("should use project config when user config is undefined", () => {
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -422,7 +422,7 @@ describe("Config Manager", () => {
     });
 
     it("should preserve last_sync from most recent config", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "cursor",
@@ -431,7 +431,7 @@ describe("Config Manager", () => {
         last_sync: "2026-01-20T10:00:00Z",
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -447,7 +447,7 @@ describe("Config Manager", () => {
     });
 
     it("should merge target_tools arrays from both configs", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -455,7 +455,7 @@ describe("Config Manager", () => {
         sync_config: { skills: true, mcp: true },
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -476,7 +476,7 @@ describe("Config Manager", () => {
     });
 
     it("should merge symlink configuration with project taking precedence", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -485,7 +485,7 @@ describe("Config Manager", () => {
         use_symlinks_for_skills: true,
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -501,7 +501,7 @@ describe("Config Manager", () => {
     });
 
     it("should inherit symlink configuration from user config if project doesn't have it", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -510,7 +510,7 @@ describe("Config Manager", () => {
         use_symlinks_for_skills: true,
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -525,7 +525,7 @@ describe("Config Manager", () => {
     });
 
     it("should preserve language preference from user config", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -534,7 +534,7 @@ describe("Config Manager", () => {
         language: "zh",
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -549,7 +549,7 @@ describe("Config Manager", () => {
     });
 
     it("should not have language if neither config has it", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -557,7 +557,7 @@ describe("Config Manager", () => {
         sync_config: { skills: true, mcp: true },
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -571,7 +571,7 @@ describe("Config Manager", () => {
     });
 
     it("should merge agents and commands config fields (not drop them)", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -584,7 +584,7 @@ describe("Config Manager", () => {
         },
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -607,7 +607,7 @@ describe("Config Manager", () => {
     });
 
     it("should default agents and commands to true if not specified", () => {
-      const userConfig: VibeConfig = {
+      const userConfig: VSyncConfig = {
         version: "3.0.0",
         level: "user",
         source_tool: "claude-code",
@@ -619,7 +619,7 @@ describe("Config Manager", () => {
         },
       };
 
-      const projectConfig: VibeConfig = {
+      const projectConfig: VSyncConfig = {
         version: "3.0.0",
         level: "project",
         source_tool: "claude-code",

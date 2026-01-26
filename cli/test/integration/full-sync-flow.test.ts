@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { syncCommand } from "@src/commands/sync.js";
 import { saveConfig } from "@src/core/config-manager.js";
 import { getProjectCacheDir } from "@src/core/manifest-manager.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 
 // Mock config-initializer to skip prompts
 vi.mock("@src/utils/config-initializer.js", async (importOriginal) => {
@@ -126,7 +126,7 @@ This is a test skill content.`;
       );
 
       // Setup config
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -191,7 +191,7 @@ This is a test skill content.`;
       );
 
       // Setup config
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -250,7 +250,7 @@ This is a test agent.`;
       );
 
       // Setup config
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -305,7 +305,7 @@ This is a test command.`;
       );
 
       // Setup config
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -374,7 +374,7 @@ This is a test command.`;
       );
 
       // Setup config
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -471,7 +471,7 @@ Content 2`,
       );
 
       // Setup config (safe mode)
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -586,7 +586,7 @@ Content 2`,
       );
 
       // Setup config (prune mode)
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -641,7 +641,7 @@ Content for multiple targets.`;
       );
 
       // Setup config with multiple targets
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",
@@ -699,7 +699,7 @@ Content`,
       );
 
       // Setup config
-      const config: VibeConfig = {
+      const config: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",

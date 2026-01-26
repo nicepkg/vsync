@@ -16,7 +16,7 @@ import {
   saveConfig,
   type RequiredConfigField,
 } from "@src/core/config-manager.js";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import {
   detectSystemLanguage,
   setLanguage,
@@ -64,7 +64,7 @@ export async function ensureLanguageConfig(): Promise<Language> {
     existingConfig.language = language;
     await saveConfig(existingConfig, "user", homedir());
   } catch {
-    const minimalConfig: VibeConfig = {
+    const minimalConfig: VSyncConfig = {
       version: "1.0.0",
       level: "user",
       language,
@@ -89,7 +89,7 @@ export async function ensureConfig(
   projectDir: string,
   isUserLevel: boolean,
   options?: EnsureConfigOptions,
-): Promise<VibeConfig> {
+): Promise<VSyncConfig> {
   await ensureLanguageConfig();
 
   const level = isUserLevel ? "user" : "project";
@@ -166,7 +166,7 @@ export async function ensureConfig(
 async function runInitFlow(
   projectDir: string,
   isUserLevel: boolean,
-): Promise<VibeConfig> {
+): Promise<VSyncConfig> {
   console.log(chalk.bold("\n🚀 Let's set up vsync!\n"));
 
   const {

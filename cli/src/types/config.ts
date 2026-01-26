@@ -47,7 +47,7 @@ export interface SyncConfig {
  * Main vsync configuration
  * Stored in .vsync.json (project) or ~/.vsync.json (user)
  */
-export interface VibeConfig {
+export interface VSyncConfig {
   /** JSON schema URL (optional) */
   $schema?: string;
   /** Config version */
@@ -178,7 +178,7 @@ export function createUserConfigSchema(validTools: string[]) {
  * Create complete config schema
  * Uses union to support both project-level and user-level configs
  */
-export function createVibeConfigSchema(validTools: string[]) {
+export function createVSyncConfigSchema(validTools: string[]) {
   return z.union([
     createProjectConfigSchema(validTools),
     createUserConfigSchema(validTools),

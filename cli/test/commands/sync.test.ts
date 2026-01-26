@@ -10,7 +10,7 @@ import {
   syncCommand,
   updateManifestAfterSync,
 } from "@src/commands/sync.js";
-import type { VibeConfig, ToolName } from "@src/types/config.js";
+import type { VSyncConfig, ToolName } from "@src/types/config.js";
 import { ensureConfig } from "@src/utils/config-initializer.js";
 
 // Cross-platform test paths
@@ -50,7 +50,7 @@ vi.mock("@src/utils/config-initializer.js", async () => {
 });
 
 describe("Sync Command", () => {
-  const sampleConfig: VibeConfig = {
+  const sampleConfig: VSyncConfig = {
     version: "1.0.0",
     level: "project",
     source_tool: "claude-code",
@@ -311,7 +311,7 @@ describe("Sync Command", () => {
 
   describe("Error Handling", () => {
     it("should handle missing source directory gracefully", async () => {
-      const invalidConfig: VibeConfig = {
+      const invalidConfig: VSyncConfig = {
         version: "1.0.0",
         level: "project",
         source_tool: "claude-code",

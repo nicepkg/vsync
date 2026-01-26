@@ -210,7 +210,7 @@ src/
 │   ├── opencode.ts       # Target adapter
 │   └── registry.ts       # Adapter factory
 ├── types/            # TypeScript types (Phase 1)
-│   ├── config.ts     # VibeConfig, SyncMode, etc.
+│   ├── config.ts     # VSyncConfig, SyncMode, etc.
 │   ├── models.ts     # Skill, MCPServer, etc.
 │   ├── manifest.ts   # Manifest types
 │   └── plan.ts       # SyncPlan, DiffResult, etc.

@@ -36,7 +36,7 @@ import type {
   ConfigLevel,
   SyncMode,
   ToolName,
-  VibeConfig,
+  VSyncConfig,
 } from "@src/types/config.js";
 import type { Manifest, ItemType } from "@src/types/manifest.js";
 import type {
@@ -154,7 +154,7 @@ export function detectFirstTimeSkillsSync(manifest: Manifest): boolean {
  * @returns True if should prompt for symlink preference
  */
 export function shouldPromptForSymlinks(
-  config: VibeConfig,
+  config: VSyncConfig,
   manifest: Manifest,
   targetTools: ToolName[],
 ): boolean {
@@ -325,7 +325,7 @@ export async function calculateSyncDiff(
   targetTools: ToolName[],
   manifest: Manifest,
   mode: SyncMode,
-  syncConfig: VibeConfig["sync_config"],
+  syncConfig: VSyncConfig["sync_config"],
   projectDir: string,
   level: ConfigLevel,
 ): Promise<SyncPlan> {
@@ -529,7 +529,7 @@ export async function updateManifestAfterSync(
  * @param projectDir - Project directory
  */
 export async function syncWithSymlinks(
-  config: VibeConfig,
+  config: VSyncConfig,
   plan: SyncPlan,
   projectDir: string,
 ): Promise<void> {
@@ -598,7 +598,7 @@ export async function syncWithSymlinks(
  * Updates config with user's choice and saves
  */
 async function promptForSymlinkUsage(
-  config: VibeConfig,
+  config: VSyncConfig,
   projectDir: string,
 ): Promise<void> {
   const useSymlinks = await SyncUI.promptForSymlinkUsage(config);
@@ -617,7 +617,7 @@ async function promptForSymlinkUsage(
 interface SyncContext {
   projectDir: string;
   mode: SyncMode;
-  config: VibeConfig;
+  config: VSyncConfig;
   sourceData: SourceData;
   manifest: Manifest;
 }

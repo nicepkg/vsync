@@ -13,8 +13,8 @@ import { join } from "node:path";
 import { cwd } from "node:process";
 import { ZodError, type ZodIssue } from "zod";
 import { getAvailableTools } from "@src/adapters/registry.js";
-import type { VibeConfig, ConfigLevel } from "@src/types/config.js";
-import { createVibeConfigSchema } from "@src/types/config.js";
+import type { VSyncConfig, ConfigLevel } from "@src/types/config.js";
+import { createVSyncConfigSchema } from "@src/types/config.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
 
 /**
@@ -60,12 +60,12 @@ export async function loadConfig(
   level: ConfigLevel,
   projectDir?: string,
   userDir?: string,
-): Promise<VibeConfig> {
+): Promise<VSyncConfig> {
   const configPath = getConfigPath(level, projectDir, userDir);
 
   try {
     const content = await readFile(configPath, "utf-8");
-    const config = JSON.parse(content) as VibeConfig;
+    const config = JSON.parse(content) as VSyncConfig;
 
     // Validate loaded config
     const validation = validateConfig(config);
@@ -97,7 +97,7 @@ export async function loadConfig(
  * @param userDir - User home directory (optional)
  */
 export async function saveConfig(
-  config: VibeConfig,
+  config: VSyncConfig,
   level: ConfigLevel,
   projectDir?: string,
   userDir?: string,
@@ -128,9 +128,9 @@ export async function saveConfig(
  * @throws Error if both configs are undefined
  */
 export function mergeConfigs(
-  userConfig?: VibeConfig,
-  projectConfig?: VibeConfig,
-): VibeConfig {
+  userConfig?: VSyncConfig,
+  projectConfig?: VSyncConfig,
+): VSyncConfig {
   if (!userConfig && !projectConfig) {
     throw new Error("At least one config must be provided");
   }
@@ -140,7 +140,7 @@ export function mergeConfigs(
   if (!projectConfig) return userConfig;
 
   // Merge with project taking precedence
-  const merged: VibeConfig = {
+  const merged: VSyncConfig = {
     version: projectConfig.version || userConfig.version,
     level: projectConfig.level, // Always use project level when merging
   };
@@ -209,9 +209,9 @@ export function mergeConfigs(
 export async function loadMergedConfig(
   projectDir: string,
   userDir?: string,
-): Promise<VibeConfig> {
-  let userConfig: VibeConfig | undefined;
-  let projectConfig: VibeConfig | undefined;
+): Promise<VSyncConfig> {
+  let userConfig: VSyncConfig | undefined;
+  let projectConfig: VSyncConfig | undefined;
 
   // Try to load user config
   try {
@@ -296,13 +296,13 @@ function extractZodErrors(issues: ZodIssue[]): string[] {
  * @param config - Configuration to validate
  * @returns Validation result with errors if any
  */
-export function validateConfig(config: VibeConfig): ValidationResult {
+export function validateConfig(config: VSyncConfig): ValidationResult {
   try {
     // Get valid tools from registry (dynamic validation)
     const validTools = getAvailableTools();
 
     // Create schema with current valid tools
-    const schema = createVibeConfigSchema(validTools);
+    const schema = createVSyncConfigSchema(validTools);
 
     // Validate config
     schema.parse(config);

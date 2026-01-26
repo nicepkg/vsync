@@ -191,7 +191,7 @@ class E2ETestFixture {
   /**
    * Initialize vsync configuration
    */
-  async initVibeSync(
+  async initVSync(
     source: ToolName,
     targets: ToolName[],
     options?: {
@@ -351,7 +351,7 @@ describe("Basic E2E Workflows", () => {
     it("should sync from Claude Code to Cursor", async () => {
       // Arrange
       await fixture.createSkill("demo", "---\nname: demo\n---\n# Demo Skill\n");
-      await fixture.initVibeSync("claude-code", ["cursor"]);
+      await fixture.initVSync("claude-code", ["cursor"]);
 
       // Act
       await syncCommand({ yes: true });
@@ -365,7 +365,7 @@ describe("Basic E2E Workflows", () => {
     it("should sync to multiple targets in parallel", async () => {
       // Arrange
       await fixture.createSkill("demo");
-      await fixture.initVibeSync("claude-code", ["cursor", "opencode"]);
+      await fixture.initVSync("claude-code", ["cursor", "opencode"]);
 
       // Act
       await syncCommand({ yes: true });
@@ -384,7 +384,7 @@ describe("Basic E2E Workflows", () => {
     it("should delete orphaned items", async () => {
       // Arrange - setup and first sync
       await fixture.createSkill("demo");
-      await fixture.initVibeSync("claude-code", ["cursor"]);
+      await fixture.initVSync("claude-code", ["cursor"]);
       await syncCommand({ yes: true });
 
       const skillPath = E2ETestHelper.getSkillPath(testDir, "cursor", "demo");
@@ -405,7 +405,7 @@ describe("Basic E2E Workflows", () => {
     it("should create symlinks when enabled", async () => {
       // Arrange
       await fixture.createSkill("demo");
-      await fixture.initVibeSync("claude-code", ["cursor"], {
+      await fixture.initVSync("claude-code", ["cursor"], {
         useSymlinks: true,
       });
 
@@ -421,7 +421,7 @@ describe("Basic E2E Workflows", () => {
     it("should point to source skills directory", async () => {
       // Arrange
       await fixture.createSkill("demo");
-      await fixture.initVibeSync("claude-code", ["cursor"], {
+      await fixture.initVSync("claude-code", ["cursor"], {
         useSymlinks: true,
       });
 
@@ -450,7 +450,7 @@ describe("Basic E2E Workflows", () => {
     it("should allow accessing files through symlink", async () => {
       // Arrange
       await fixture.createSkill("demo", "---\nname: demo\n---\n# Symlinked!");
-      await fixture.initVibeSync("claude-code", ["cursor"], {
+      await fixture.initVSync("claude-code", ["cursor"], {
         useSymlinks: true,
       });
 
@@ -470,7 +470,7 @@ describe("Basic E2E Workflows", () => {
     it("should reflect source changes immediately", async () => {
       // Arrange - setup symlink
       await fixture.createSkill("demo", "---\nname: demo\n---\n# Original");
-      await fixture.initVibeSync("claude-code", ["cursor"], {
+      await fixture.initVSync("claude-code", ["cursor"], {
         useSymlinks: true,
       });
       await syncCommand({ yes: true });
@@ -501,7 +501,7 @@ describe("Basic E2E Workflows", () => {
     it("should work with multiple targets", async () => {
       // Arrange
       await fixture.createSkill("demo");
-      await fixture.initVibeSync("claude-code", ["cursor", "opencode"], {
+      await fixture.initVSync("claude-code", ["cursor", "opencode"], {
         useSymlinks: true,
       });
 
@@ -541,7 +541,7 @@ describe("Basic E2E Workflows", () => {
         command: "npx",
         args: ["-y", "@modelcontextprotocol/server-memory"],
       });
-      await fixture.initVibeSync("claude-code", ["cursor"], {
+      await fixture.initVSync("claude-code", ["cursor"], {
         syncItems: ["mcp"],
       });
 
@@ -571,7 +571,7 @@ describe("Basic E2E Workflows", () => {
           GITHUB_TOKEN: "${env:GITHUB_TOKEN}",
         },
       });
-      await fixture.initVibeSync("claude-code", ["cursor"], {
+      await fixture.initVSync("claude-code", ["cursor"], {
         syncItems: ["mcp"],
       });
 
@@ -598,7 +598,7 @@ describe("Basic E2E Workflows", () => {
           API_KEY: "${env:API_KEY}",
         },
       });
-      await fixture.initVibeSync("claude-code", ["opencode"], {
+      await fixture.initVSync("claude-code", ["opencode"], {
         syncItems: ["mcp"],
       });
 
@@ -632,7 +632,7 @@ describe("Basic E2E Workflows", () => {
         "test-agent",
         "---\nname: test-agent\n---\n# Test Agent\n",
       );
-      await fixture.initVibeSync("claude-code", ["cursor"], {
+      await fixture.initVSync("claude-code", ["cursor"], {
         syncItems: ["skills", "agents"], // Need skills or mcp for validation
       });
 
@@ -652,7 +652,7 @@ describe("Basic E2E Workflows", () => {
     it("should sync agents to multiple targets", async () => {
       // Arrange
       await fixture.createAgent("code-reviewer");
-      await fixture.initVibeSync("claude-code", ["cursor", "opencode"], {
+      await fixture.initVSync("claude-code", ["cursor", "opencode"], {
         syncItems: ["skills", "agents"], // Need skills or mcp for validation
       });
 
@@ -680,7 +680,7 @@ describe("Basic E2E Workflows", () => {
         "test-cmd",
         "---\nname: test-cmd\n---\n# Test Command\n",
       );
-      await fixture.initVibeSync("claude-code", ["cursor"], {
+      await fixture.initVSync("claude-code", ["cursor"], {
         syncItems: ["skills", "commands"], // Need skills or mcp for validation
       });
 
@@ -700,7 +700,7 @@ describe("Basic E2E Workflows", () => {
     it("should sync commands to multiple targets", async () => {
       // Arrange
       await fixture.createCommand("deploy");
-      await fixture.initVibeSync("claude-code", ["cursor", "opencode"], {
+      await fixture.initVSync("claude-code", ["cursor", "opencode"], {
         syncItems: ["skills", "commands"], // Need skills or mcp for validation
       });
 

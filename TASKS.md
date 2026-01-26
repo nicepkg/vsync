@@ -65,7 +65,7 @@ This document tracks all implementation tasks for vsync MVP. Each phase must be 
 ### 1.2 Core Type Definitions
 
 - [x] Define `cli/src/types/config.ts`
-  - [x] `VibeConfig` interface (`.vsync.json` structure)
+  - [x] `VSyncConfig` interface (`.vsync.json` structure)
   - [x] `SyncMode` type (`"safe" | "prune"`)
   - [x] `ToolName` type (`"claude-code" | "cursor" | "opencode"`)
   - [x] `ConfigLevel` type (`"project" | "user"`)
@@ -660,7 +660,7 @@ This document tracks all implementation tasks for vsync MVP. Each phase must be 
 ### 9.1 Configuration Extension ✅
 
 - [x] Extend `cli/src/types/config.ts`
-  - [x] Add `use_symlinks_for_skills?: boolean` to `VibeConfig`
+  - [x] Add `use_symlinks_for_skills?: boolean` to `VSyncConfig`
   - [x] ~~Add `symlink_source?: ToolName`~~ (Not needed - use `source_tool` instead)
   - [x] Update schema validation in `cli/src/core/config-manager.ts`
   - [x] Update `mergeConfigs()` to handle symlink configuration
@@ -810,7 +810,7 @@ This document tracks all implementation tasks for vsync MVP. Each phase must be 
 ### 10.2 Configuration Extension ✅
 
 - [x] Extend user-level config
-  - [x] Add `language?: 'en' | 'zh'` to user-level `VibeConfig`
+  - [x] Add `language?: 'en' | 'zh'` to user-level `VSyncConfig`
   - [x] Update `cli/src/core/config-manager.ts`
     - [x] Validate language field in `validateConfig()`
     - [x] Merge language preference in `mergeConfigs()` (from user config only)

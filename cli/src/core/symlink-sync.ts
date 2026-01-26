@@ -19,7 +19,7 @@ import {
   access,
 } from "node:fs/promises";
 import { join, dirname, basename } from "node:path";
-import type { VibeConfig } from "@src/types/config.js";
+import type { VSyncConfig } from "@src/types/config.js";
 import {
   isSymlink,
   createSymlink,
@@ -55,7 +55,7 @@ export interface DirectoryBackupInfo {
  * @param config - vsync configuration
  * @returns True if symlinks should be used
  */
-export function shouldUseSymlinks(config: VibeConfig): boolean {
+export function shouldUseSymlinks(config: VSyncConfig): boolean {
   return config.use_symlinks_for_skills === true;
 }
 
