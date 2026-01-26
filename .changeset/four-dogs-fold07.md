@@ -2,4 +2,4 @@
 "vibe-sync": patch
 ---
 
-release first version 06
+release first version 07
