@@ -1,5 +1,11 @@
 # vsync
 
+## 1.0.8
+
+### Patch Changes
+
+- [#7](https://github.com/nicepkg/vsync/pull/7) [`9b07770`](https://github.com/nicepkg/vsync/commit/9b07770d51b9e3229bc69167af24ade3fa031f89) Thanks [@2214962083](https://github.com/2214962083)! - fix cli not working
+
 ## 1.0.7
 
 ### Patch Changes
