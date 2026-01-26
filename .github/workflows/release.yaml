@@ -46,7 +46,8 @@ jobs:
           # build before publish (to avoid empty dist)
           # then publish (you currently use pnpm publish -r)
           # then tag (to allow action to push tags + create GitHub Releases)
-          publish: pnpm --filter vibe-sync run build && pnpm ci:publish && pnpm changeset tag
+          publish: >-
+            bash -lc 'pnpm --filter vibe-sync run build && pnpm ci:publish && pnpm changeset tag'
   
           # explicitly enable GitHub Releases
           createGithubReleases: true
