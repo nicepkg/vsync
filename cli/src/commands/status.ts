@@ -17,6 +17,16 @@ import { t } from "@src/utils/i18n.js";
 import { readSourceConfig, calculateSyncDiff } from "./sync.js";
 
 /**
+ * Time constants for relative time formatting
+ */
+const TIME_THRESHOLDS = {
+  /** Minutes in an hour */
+  MINUTES_PER_HOUR: 60,
+  /** Hours in a day */
+  HOURS_PER_DAY: 24,
+} as const;
+
+/**
  * Status display data
  */
 export interface StatusData {
@@ -46,12 +56,12 @@ function formatRelativeTime(timestamp: string): string {
   let relative = "";
   if (diffMins < 1) {
     relative = t("commands.status.timeJustNow");
-  } else if (diffMins < 60) {
+  } else if (diffMins < TIME_THRESHOLDS.MINUTES_PER_HOUR) {
     relative = t("commands.status.timeMinutesAgo", {
       minutes: diffMins,
       plural: diffMins === 1 ? "" : "s",
     });
-  } else if (diffHours < 24) {
+  } else if (diffHours < TIME_THRESHOLDS.HOURS_PER_DAY) {
     relative = t("commands.status.timeHoursAgo", {
       hours: diffHours,
       plural: diffHours === 1 ? "" : "s",

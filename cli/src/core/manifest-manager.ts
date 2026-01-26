@@ -12,6 +12,7 @@ import { cwd } from "node:process";
 import type { ToolName } from "@src/types/config.js";
 import type { Manifest, ItemType } from "@src/types/manifest.js";
 import { atomicWrite } from "@src/utils/atomic-write.js";
+import { debug } from "@src/utils/logger.js";
 
 /**
  * Get project cache directory path
@@ -73,7 +74,7 @@ export async function loadManifest(projectDir?: string): Promise<Manifest> {
 
     // Validate manifest structure
     if (!manifest.version || !manifest.items) {
-      console.warn("Invalid manifest structure, creating new one");
+      debug("Invalid manifest structure, creating new one");
       return createEmptyManifest();
     }
 
@@ -86,7 +87,7 @@ export async function loadManifest(projectDir?: string): Promise<Manifest> {
         return createEmptyManifest();
       }
       // File is corrupted, warn and return empty
-      console.warn(`Corrupted manifest, creating new one: ${error.message}`);
+      debug(`Corrupted manifest, creating new one: ${error.message}`);
     }
     return createEmptyManifest();
   }

@@ -15,6 +15,16 @@ import { t } from "@src/utils/i18n.js";
 import { readSourceConfig } from "./sync.js";
 
 /**
+ * Display configuration constants
+ */
+const DISPLAY_LIMITS = {
+  /** Maximum number of targets to show before truncating */
+  MAX_TARGETS_DISPLAYED: 3,
+  /** Number of targets to show when truncated */
+  TRUNCATED_TARGETS_SHOWN: 2,
+} as const;
+
+/**
  * Extract description from skill content
  *
  * @param content - Skill markdown content
@@ -65,8 +75,12 @@ function getSyncedTargets(itemKey: string, manifest: Manifest): string {
   }
 
   // Truncate if too many
-  if (syncedTargets.length > 3) {
-    return syncedTargets.slice(0, 2).join(", ") + ", ...";
+  if (syncedTargets.length > DISPLAY_LIMITS.MAX_TARGETS_DISPLAYED) {
+    return (
+      syncedTargets
+        .slice(0, DISPLAY_LIMITS.TRUNCATED_TARGETS_SHOWN)
+        .join(", ") + ", ..."
+    );
   }
 
   return syncedTargets.join(", ");

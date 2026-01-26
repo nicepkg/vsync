@@ -14,6 +14,7 @@
 
 import { promises as fs } from "node:fs";
 import { hashContent } from "@src/utils/hash.js";
+import { debug } from "@src/utils/logger.js";
 import { type FileCache } from "./file-cache.js";
 
 /**
@@ -122,7 +123,7 @@ export class IncrementalReader {
         results.push(result);
       } catch (error) {
         // Skip files that can't be read
-        console.warn(
+        debug(
           `Failed to read ${filePath}: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }

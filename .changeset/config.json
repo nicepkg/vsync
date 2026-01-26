@@ -8,5 +8,9 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["website"]
+  "ignore": ["website"],
+  "privatePackages": {
+    "version": true,
+    "tag": false
+  }
 }
