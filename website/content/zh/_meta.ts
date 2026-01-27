@@ -23,7 +23,7 @@ export default {
   commands: {
     title: "CLI 命令",
     type: "page",
-    href: "./docs/cli-commands",
+    href: "/zh/docs/cli-commands",
   },
   [packageJson.version]: {
     title: `v${packageJson.version}`,
@@ -31,7 +31,7 @@ export default {
     items: {
       contributing: {
         title: "贡献指南",
-        href: "./contributing",
+        href: "/zh/contributing",
       },
       changelog: {
         title: "更新日志",
