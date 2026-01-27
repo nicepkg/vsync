@@ -99,7 +99,7 @@
   "[mdx]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["MCPO", "opencode", "vsync"],
+  "cSpell.words": ["MCPO", "nicepkg", "opencode", "SEMREL", "vsync"],
 
   // i18n-ally Configuration for CLI workspace
   "i18n-ally.localesPaths": ["cli/src/locales"],

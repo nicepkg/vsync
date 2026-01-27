@@ -3,12 +3,6 @@ name: Release
 on:
   push:
     branches: [main]
-    paths:
-      - '.changeset/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      # optional: include package manifests if you want release to run when versions are bumped
-      - 'cli/package.json'
   workflow_dispatch:
 
 concurrency:
@@ -23,6 +17,18 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        package:
+          - name: "@nicepkg/vsync"
+            dir: "cli"
+            copyReadme: "true"
+          # add new packages here
+          # - name: "@nicepkg/vsync-core"
+          #   dir: "core"
+          #   copyReadme: "false"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -31,27 +37,33 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
 
-      - name: Create Release PR or Publish
-        uses: changesets/action@v1
-        with:
-          # use git-cli so symlinks in the repo don't break GitHub API commits
-          commitMode: git-cli
-          setupGitUser: true
-          commit: "chore: version packages"
-          title: "chore: version packages"
-  
-          # calculate version + generate changelog + update lockfile (very important)
-          version: pnpm version-packages
-  
-          # build before publish (to avoid empty dist)
-          # then publish (you currently use pnpm publish -r)
-          # then tag (to allow action to push tags + create GitHub Releases)
-          publish: bash ./scripts/release-publish.sh
-  
-          # explicitly enable GitHub Releases
-          createGithubReleases: true
-  
+      - name: Check package exists
+        id: package-check
+        shell: bash
+        run: |
+          if [ -f "${{ matrix.package.dir }}/package.json" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Copy README files into package
+        if: steps.package-check.outputs.exists == 'true' && matrix.package.copyReadme == 'true'
+        shell: bash
+        run: |
+          cp README.md "${{ matrix.package.dir }}/README.md"
+          cp README_cn.md "${{ matrix.package.dir }}/README_cn.md"
+
+      - name: Build package
+        if: steps.package-check.outputs.exists == 'true'
+        run: pnpm --filter ${{ matrix.package.name }} build
+
+      - name: Run semantic-release
+        if: steps.package-check.outputs.exists == 'true'
+        run: pnpm run semantic-release
         env:
+          SEMREL_PKG_ROOT: ${{ matrix.package.dir }}
+          SEMREL_PKG_NAME: ${{ matrix.package.name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

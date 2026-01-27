@@ -1,8 +1,14 @@
 # =============================================================================
 # PR Title Validation
 # =============================================================================
-# Validates that PR titles follow Angular commit convention.
-# This ensures consistent and meaningful PR titles for changelog generation.
+# Validates PR titles using Conventional Commits (semantic-release friendly).
+# This repo uses **Squash and merge**, so the PR title becomes the release commit.
+# Keeping titles compliant ensures correct version bumps and clean changelogs.
+#
+# Title requirements:
+# - Format: <type>(<scope>): <subject>
+# - Subject: lowercase, no trailing period, <= 100 chars total header
+# - Scope: optional; if present must be one of the allowed scopes below
 #
 # Format: <type>(<scope>): <subject>
 # Example: feat(website): add dark mode toggle
@@ -50,6 +56,7 @@ jobs:
             website
             docs
             deps
+            cli
           # Ensure subject doesn't start with uppercase
           subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: |
