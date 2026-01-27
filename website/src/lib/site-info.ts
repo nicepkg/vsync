@@ -29,9 +29,29 @@
 // ---------- Basic Site Config ----------
 export const siteConfig = {
   name: "vsync",
-  description: "One config. Many AI tools. Zero pain.",
+  description:
+    "One config. Many AI tools. Zero pain. Sync Skills, MCP servers, Agents & Commands across Claude Code, Cursor, OpenCode, and Codex with a single command.",
+  shortDescription: "One config. Many AI tools. Zero pain.",
   url: "https://vsync.xiaominglab.com",
   locale: "en_US",
+  keywords: [
+    "vsync",
+    "AI coding tools",
+    "Claude Code",
+    "Cursor",
+    "OpenCode",
+    "Codex",
+    "MCP server sync",
+    "AI Skills sync",
+    "config synchronization",
+    "developer tools",
+    "CLI tool",
+    "vibe coding",
+    "AI development",
+    "configuration management",
+  ],
+  ogImage: "/og-image.png",
+  twitterHandle: "@jinmingyang666",
 };
 
 // ---------- GitHub Config ----------

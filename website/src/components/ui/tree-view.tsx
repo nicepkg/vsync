@@ -112,7 +112,6 @@ const TreeView = React.forwardRef<HTMLDivElement, TreeProps>(
         targetId: string,
       ) {
         if (Array.isArray(items)) {
-          // eslint-disable-next-line @typescript-eslint/prefer-for-of
           for (let i = 0; i < items.length; i++) {
             ids.push(items[i]!.id);
             if (walkTreeItems(items[i]!, targetId) && !expandAll) {

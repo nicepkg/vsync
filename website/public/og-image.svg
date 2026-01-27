@@ -1,0 +1,98 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="50%" stop-color="#0f0f1a"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </linearGradient>
+
+    <!-- Primary theme gradient (Fuchsia to Cyan) -->
+    <linearGradient id="themeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="50%" stop-color="#D946EF"/>
+      <stop offset="100%" stop-color="#D946EF"/>
+    </linearGradient>
+
+    <!-- Logo gradient (original) -->
+    <linearGradient id="vibeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+
+    <!-- Glow effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Subtle glow for decorations -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="200" fill="#D946EF" opacity="0.05" filter="url(#softGlow)"/>
+  <circle cx="1100" cy="530" r="250" fill="#22D3EE" opacity="0.05" filter="url(#softGlow)"/>
+
+  <!-- Grid pattern overlay -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Logo (centered, scaled up) -->
+  <g transform="translate(480, 120) scale(0.7)" filter="url(#glow)">
+    <!-- Left Arm -->
+    <path d="M 56 56 L 128 216" stroke="url(#vibeGradient)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Right Arm Segment 1 -->
+    <path d="M 128 216 L 146 176" stroke="url(#vibeGradient)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Right Arm Segment 2 -->
+    <path d="M 155 156 L 173 116" stroke="url(#vibeGradient)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Right Arm Segment 3 -->
+    <path d="M 182 96 L 200 56" stroke="url(#vibeGradient)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Title: vsync -->
+  <text x="600" y="380" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="72" font-weight="700" fill="white">vsync</text>
+
+  <!-- Tagline -->
+  <text x="600" y="440" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="400" fill="rgba(255,255,255,0.8)">One config. Many AI tools. Zero pain.</text>
+
+  <!-- Tool badges (total width: 130+20+90+20+110+20+85 = 475px, centered) -->
+  <g transform="translate(600, 500)" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500">
+    <!-- Claude Code (width: 130) -->
+    <rect x="-237" y="-15" width="130" height="30" rx="15" fill="rgba(139, 92, 246, 0.3)" stroke="rgba(139, 92, 246, 0.5)" stroke-width="1"/>
+    <text x="-172" y="6" text-anchor="middle" fill="rgba(255,255,255,0.9)">Claude Code</text>
+
+    <!-- Cursor (width: 90) -->
+    <rect x="-87" y="-15" width="90" height="30" rx="15" fill="rgba(59, 130, 246, 0.3)" stroke="rgba(59, 130, 246, 0.5)" stroke-width="1"/>
+    <text x="-42" y="6" text-anchor="middle" fill="rgba(255,255,255,0.9)">Cursor</text>
+
+    <!-- OpenCode (width: 110) -->
+    <rect x="23" y="-15" width="110" height="30" rx="15" fill="rgba(34, 197, 94, 0.3)" stroke="rgba(34, 197, 94, 0.5)" stroke-width="1"/>
+    <text x="78" y="6" text-anchor="middle" fill="rgba(255,255,255,0.9)">OpenCode</text>
+
+    <!-- Codex (width: 85) -->
+    <rect x="153" y="-15" width="85" height="30" rx="15" fill="rgba(249, 115, 22, 0.3)" stroke="rgba(249, 115, 22, 0.5)" stroke-width="1"/>
+    <text x="195" y="6" text-anchor="middle" fill="rgba(255,255,255,0.9)">Codex</text>
+  </g>
+
+  <!-- Bottom accent line -->
+  <rect x="400" y="570" width="400" height="3" rx="1.5" fill="url(#themeGradient)" opacity="0.6"/>
+
+  <!-- Domain -->
+  <text x="600" y="605" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="400" fill="rgba(255,255,255,0.4)">vsync.xiaominglab.com</text>
+</svg>

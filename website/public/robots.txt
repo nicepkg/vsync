@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
+Disallow: /_next/
+Disallow: /api/
 
-Sitemap: https://[project-domain]/sitemap.xml
+# Sitemaps
+Sitemap: https://vsync.xiaominglab.com/sitemap.xml
+Sitemap: https://vsync.xiaominglab.com/sitemap-en.xml
+Sitemap: https://vsync.xiaominglab.com/sitemap-zh.xml
+
+# Crawl-delay for politeness (optional)
+Crawl-delay: 1
+
+# Host
+Host: https://vsync.xiaominglab.com
