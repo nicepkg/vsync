@@ -33,7 +33,7 @@ vsync init --user
 vsync sync --user
 ```
 
-**[了解更多 →](../getting-started)**
+**[了解更多 →](/zh/docs/getting-started)**
 
 ### 日常同步
 
@@ -68,7 +68,7 @@ vsync clean skill/old-skill
 vsync sync --prune
 ```
 
-**[了解更多 →](../cli-commands#clean)**
+**[了解更多 →](/zh/docs/cli-commands#clean)**
 
 ## 同步模式
 
@@ -82,7 +82,7 @@ vsync sync
 - ✅ 更新现有项
 - ❌ 从不删除
 
-**[了解更多 →](../core-concepts#safe-mode-default)**
+**[了解更多 →](/zh/docs/core-concepts#safe-mode-default)**
 
 ### Prune 模式
 
@@ -94,7 +94,7 @@ vsync sync --prune
 - ✅ 更新现有项
 - ⚠️ 删除源中不存在的项
 
-**[了解更多 →](../core-concepts#prune-mode)**
+**[了解更多 →](/zh/docs/core-concepts#prune-mode)**
 
 ## 配置层级
 
@@ -118,7 +118,7 @@ vsync sync --user    # 同步全局配置
 
 **用于**: 个人偏好、全局技能
 
-**[了解更多 →](../core-concepts#configuration-layers)**
+**[了解更多 →](/zh/docs/core-concepts#configuration-layers)**
 
 ## 命令示例
 
@@ -206,7 +206,7 @@ vsync clean --user
 vsync clean skill/old-skill -y
 ```
 
-**[了解更多 →](../cli-commands#clean)**
+**[了解更多 →](/zh/docs/cli-commands#clean)**
 
 ### import
 
@@ -237,7 +237,7 @@ vsync import ../other-project --user
 }
 ```
 
-**[了解更多 →](../configuration)**
+**[了解更多 →](/zh/docs/configuration)**
 
 ### 关键设置
 
@@ -261,7 +261,7 @@ vsync import ../other-project --user
 | OpenCode | `{env:VAR}` | `{env:API_KEY}` |
 | Codex | 无插值 | 直接值 |
 
-**[了解更多 →](../configuration#mcp-configuration-differences)**
+**[了解更多 →](/zh/docs/configuration#mcp-configuration-differences)**
 
 ### 配置文件位置
 
@@ -272,7 +272,7 @@ vsync import ../other-project --user
 | OpenCode | `opencode.json(c)` | `~/.opencode/opencode.json` |
 | Codex | `config.toml` | `~/.codex/config.toml` |
 
-**[了解更多 →](../configuration#supported-tools)**
+**[了解更多 →](/zh/docs/configuration#supported-tools)**
 
 ## 常用模式
 
@@ -297,7 +297,7 @@ vsync sync
   run: npx @nicepkg/vsync sync --yes
 ```
 
-**[了解更多 →](../advanced-features#cicd-integration)**
+**[了解更多 →](/zh/docs/advanced-features#cicd-integration)**
 
 ### 迁移工作流
 
@@ -312,7 +312,7 @@ vsync plan
 vsync sync
 ```
 
-**[了解更多 →](../faq#migration-questions)**
+**[了解更多 →](/zh/docs/faq#migration-questions)**
 
 ## 退出代码
 
@@ -360,14 +360,14 @@ mkdir -p ~/.cursor
 vsync init
 ```
 
-**[更多故障排除 →](../faq#troubleshooting)**
+**[更多故障排除 →](/zh/docs/faq#troubleshooting)**
 
 ## 相关资源
 
-- **[快速开始](../getting-started)** - 详细安装指南
-- **[核心概念](../core-concepts)** - 理解 vsync
-- **[CLI 命令](../cli-commands)** - 完整命令参考
-- **[配置指南](../configuration)** - 配置文件详情
-- **[高级功能](../advanced-features)** - Symlinks、性能
-- **[常见问题](../faq)** - 常见问题
-- **[贡献指南](../../contributing)** - 开发指南
+- **[快速开始](/zh/docs/getting-started)** - 详细安装指南
+- **[核心概念](/zh/docs/core-concepts)** - 理解 vsync
+- **[CLI 命令](/zh/docs/cli-commands)** - 完整命令参考
+- **[配置指南](/zh/docs/configuration)** - 配置文件详情
+- **[高级功能](/zh/docs/advanced-features)** - Symlinks、性能
+- **[常见问题](/zh/docs/faq)** - 常见问题
+- **[贡献指南](/zh/contributing)** - 开发指南
