@@ -1,3 +1,9 @@
+## <small>1.0.10 (2026-01-27)</small>
+
+* fix: update release workflow and documentation (#13) ([5787a19](https://github.com/nicepkg/vsync/commit/5787a19)), closes [#13](https://github.com/nicepkg/vsync/issues/13)
+* build: migrate from changesets to semantic-release (#12) ([1f39e61](https://github.com/nicepkg/vsync/commit/1f39e61)), closes [#12](https://github.com/nicepkg/vsync/issues/12)
+* docs: update website (#11) ([4b5145b](https://github.com/nicepkg/vsync/commit/4b5145b)), closes [#11](https://github.com/nicepkg/vsync/issues/11)
+
 # Changelog
 
 ## @nicepkg/vsync@1.0.9 - 2026-01-26
