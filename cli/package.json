@@ -1,6 +1,6 @@
 {
   "name": "@nicepkg/vsync",
-  "version": "1.0.10",
+  "version": "1.1.0",
   "description": "Sync MCP servers, Skills, Agents & Commands across Claude Code, Cursor, OpenCode, Codex. One config, all tools.",
   "type": "module",
   "repository": {

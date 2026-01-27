@@ -1,3 +1,8 @@
+## 1.1.0 (2026-01-27)
+
+* feat(website): add seo enhancements with sitemap and structured data (#15) ([682c726](https://github.com/nicepkg/vsync/commit/682c726)), closes [#15](https://github.com/nicepkg/vsync/issues/15)
+* chore: fix eslint warnings and format changelog (#14) ([93d9ea0](https://github.com/nicepkg/vsync/commit/93d9ea0)), closes [#14](https://github.com/nicepkg/vsync/issues/14)
+
 ## <small>1.0.10 (2026-01-27)</small>
 
 - fix: update release workflow and documentation (#13) ([5787a19](https://github.com/nicepkg/vsync/commit/5787a19)), closes [#13](https://github.com/nicepkg/vsync/issues/13)
