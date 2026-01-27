@@ -272,7 +272,9 @@ export function LandingPage({ lang }: { lang: "en" | "zh" }) {
                   <div className="bg-card/80 border-primary/10 rounded-xl border p-6 shadow-2xl backdrop-blur-md">
                     <div className="flex items-center overflow-x-auto text-left font-mono text-sm whitespace-nowrap md:text-base">
                       <span className="text-primary mr-3 select-none">$</span>
-                      <span className="text-foreground">npx @nicepkg/vsync sync</span>
+                      <span className="text-foreground">
+                        npx @nicepkg/vsync sync
+                      </span>
                     </div>
                   </div>
                 </div>
