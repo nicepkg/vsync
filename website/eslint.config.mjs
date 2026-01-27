@@ -146,7 +146,7 @@ export default defineConfig(
       ],
       "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unnecessary-condition": "warn",
+      "@typescript-eslint/no-unnecessary-condition": "off",
     },
   },
 

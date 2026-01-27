@@ -4,6 +4,7 @@ import { CodexAdapter } from "@src/adapters/codex.js";
 import { CursorAdapter } from "@src/adapters/cursor.js";
 import { OpenCodeAdapter } from "@src/adapters/opencode.js";
 import { getAdapter, getAvailableTools } from "@src/adapters/registry.js";
+import type { ToolName } from "@src/types/config.js";
 import { isSamePath } from "../utils/path.js";
 
 describe("Adapter Registry", () => {
@@ -69,7 +70,7 @@ describe("Adapter Registry", () => {
     it("should throw error for unsupported tool", () => {
       expect(() =>
         getAdapter({
-          tool: "invalid-tool" as any, // Testing invalid tool name
+          tool: "invalid-tool" as ToolName, // Testing invalid tool name
           baseDir: "/test",
           level: "project",
         }),

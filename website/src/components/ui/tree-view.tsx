@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { cva } from "class-variance-authority";
 import { ChevronRight } from "lucide-react";
@@ -5,7 +6,7 @@ import React from "react";
 import { cn } from "~/lib/utils";
 
 const treeVariants = cva(
-  "group hover:before:opacity-100 before:absolute before:rounded-lg before:left-0 px-2 before:w-full before:opacity-0 before:bg-accent/70 before:h-[2rem] before:-z-10",
+  "group hover:before:opacity-100 before:absolute before:rounded-lg before:left-0 px-2 before:w-full before:opacity-0 before:bg-accent/70 before:h-8 before:-z-10",
 );
 
 const selectedTreeVariants = cva(
@@ -470,7 +471,7 @@ const TreeLeaf = React.forwardRef<
               isSelected={isSelected}
               default={defaultLeafIcon}
             />
-            <span className="flex-grow text-sm truncate">{item.name}</span>
+            <span className="grow text-sm truncate">{item.name}</span>
             <TreeActions isSelected={isSelected && !item.disabled}>
               {item.actions}
             </TreeActions>

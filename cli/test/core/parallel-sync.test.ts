@@ -9,6 +9,7 @@ import {
   type TargetSyncConfig,
 } from "@src/core/parallel-sync.js";
 import { SourceData } from "@src/core/sync-executor.js";
+import type { ToolName } from "@src/types/config.js";
 import type { DiffResult } from "@src/types/plan.js";
 
 describe("ParallelSyncOrchestrator", () => {
@@ -18,17 +19,17 @@ describe("ParallelSyncOrchestrator", () => {
 
   beforeEach(() => {
     sourceData = new SourceData(
-      [{ name: "skill1", content: "content1", hash: "hash1" }] as any,
-      [{ name: "mcp1", type: "stdio", command: "cmd1", hash: "hash2" }] as any,
+      [{ name: "skill1", content: "content1", hash: "hash1" }],
+      [{ name: "mcp1", type: "stdio", command: "cmd1", hash: "hash2" }],
       [],
       [],
     );
 
     // Create mock adapters
-    const createMockAdapter = (toolName: string): ToolAdapter => ({
+    const createMockAdapter = (toolName: ToolName): ToolAdapter => ({
       toolName,
       displayName: toolName,
-      config: { tool: toolName as any, baseDir: "/test", level: "project" },
+      config: { tool: toolName, baseDir: "/test", level: "project" },
       getConfigDir: vi.fn(() => `.${toolName}`),
       getConfigPaths: vi.fn(() => []),
       getMCPConfigPaths: vi.fn(() => []),

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import mockFs from "mock-fs";
+import type FileSystem from "mock-fs/lib/filesystem.js";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   loadManifest,
@@ -65,7 +66,7 @@ describe("Manifest Manager", () => {
   };
 
   beforeEach(() => {
-    const mockFsConfig: any = {
+    const mockFsConfig: FileSystem.DirectoryItems = {
       [TEST_HOME]: {
         ".vsync": {
           cache: {

@@ -105,15 +105,15 @@ export function getCurrentLanguage(): Language {
  * @param path - Dot-separated path (e.g., "common.yes")
  * @returns Value at path or undefined
  */
-function getNestedValue(obj: any, path: string): string | undefined {
+function getNestedValue(obj: Translations, path: string): string | undefined {
   const keys = path.split(".");
-  let current = obj;
+  let current: Translations | Record<string, string> | string | undefined = obj;
 
   for (const key of keys) {
     if (current === undefined || current === null) {
       return undefined;
     }
-    current = current[key];
+    current = current[key as keyof Translations] as Record<string, string>;
   }
 
   return typeof current === "string" ? current : undefined;

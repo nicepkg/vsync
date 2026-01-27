@@ -5,6 +5,7 @@ import {
   t,
   setLanguage,
   getCurrentLanguage,
+  type Language,
 } from "@src/utils/i18n.js";
 
 describe("i18n Utilities", () => {
@@ -71,7 +72,7 @@ describe("i18n Utilities", () => {
     });
 
     it("should throw error for unsupported language", async () => {
-      await expect(loadLanguage("fr" as any)).rejects.toThrow(
+      await expect(loadLanguage("fr" as Language)).rejects.toThrow(
         "Unsupported language",
       );
     });

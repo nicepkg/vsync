@@ -280,7 +280,7 @@ describe("Config Manager", () => {
         target_tools: ["cursor"],
         sync_config: { skills: true, mcp: true },
         use_symlinks_for_skills: "yes", // Should be boolean
-      } as any;
+      } as Omit<VSyncConfig, "use_symlinks_for_skills">;
 
       const result = validateConfig(config);
       expect(result.valid).toBe(false);
@@ -324,7 +324,7 @@ describe("Config Manager", () => {
         target_tools: ["cursor"],
         sync_config: { skills: true, mcp: true },
         language: "fr", // Should be 'en' or 'zh'
-      } as any;
+      } as Omit<VSyncConfig, "language">;
 
       const result = validateConfig(config);
       expect(result.valid).toBe(false);
@@ -339,7 +339,7 @@ describe("Config Manager", () => {
         target_tools: ["cursor"],
         sync_config: { skills: true, mcp: true },
         language: 123, // Should be string
-      } as any;
+      } as Omit<VSyncConfig, "language">;
 
       const result = validateConfig(config);
       expect(result.valid).toBe(false);

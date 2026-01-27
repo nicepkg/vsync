@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import mockFs from "mock-fs";
+import type FileSystem from "mock-fs/lib/filesystem.js";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   readSourceConfig,
@@ -62,7 +63,7 @@ describe("Sync Command", () => {
   };
 
   beforeEach(() => {
-    const mockFsConfig: any = {
+    const mockFsConfig: FileSystem.DirectoryItems = {
       [TEST_HOME]: {
         // Add user-level config with language to avoid prompts
         ".vsync.json": JSON.stringify({
@@ -121,7 +122,7 @@ describe("Sync Command", () => {
 
     it("should throw error if config not found", async () => {
       const TEST_EMPTY = process.platform === "win32" ? "C:\\empty" : "/empty";
-      const mockFsConfig: any = {
+      const mockFsConfig: FileSystem.DirectoryItems = {
         [TEST_EMPTY]: {},
       };
       mockFs(mockFsConfig);
@@ -341,7 +342,7 @@ describe("Sync Command", () => {
     });
 
     it("should handle manifest load errors gracefully", async () => {
-      const mockFsConfig: any = {
+      const mockFsConfig: FileSystem.DirectoryItems = {
         [TEST_HOME]: {
           // Add user-level config with language to avoid prompts
           ".vsync.json": JSON.stringify({
