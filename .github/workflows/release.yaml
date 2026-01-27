@@ -60,7 +60,7 @@ jobs:
 
       - name: Run semantic-release
         if: steps.package-check.outputs.exists == 'true'
-        run: pnpm run semantic-release
+        run: pnpm run release
         env:
           SEMREL_PKG_ROOT: ${{ matrix.package.dir }}
           SEMREL_PKG_NAME: ${{ matrix.package.name }}
