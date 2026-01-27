@@ -17,7 +17,7 @@ describe("SyncExecutor", () => {
     mockAdapter = {
       toolName: "test-tool",
       displayName: "Test Tool",
-      config: { tool: "cursor" as any, baseDir: "/test", level: "project" },
+      config: { tool: "cursor", baseDir: "/test", level: "project" },
       getConfigDir: vi.fn(() => ".test"),
       getConfigPaths: vi.fn(() => []),
       getMCPConfigPaths: vi.fn(() => []),

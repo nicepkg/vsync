@@ -120,13 +120,7 @@ export default defineConfig(
       // TypeScript rules
       "@typescript-eslint/no-unused-vars": "off", // Use unused-imports instead
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/consistent-type-imports": [
-        "warn",
-        {
-          prefer: "type-imports",
-          fixStyle: "inline-type-imports",
-        },
-      ],
+      "@typescript-eslint/consistent-type-imports": "off",
 
       // Unused imports plugin
       "unused-imports/no-unused-imports": "error",
