@@ -3,9 +3,22 @@ description: Create GitHub Pull Request following Angular commit convention
 argument-hint: [optional description]
 ---
 
-# Create Pull Request
+# Create Pull Request (Semantic-release Friendly)
 
-Create a GitHub Pull Request following the project's Angular commit convention.
+Create a GitHub Pull Request that works with semantic-release.
+This repo defaults to **Squash and merge**, so the **PR title becomes the release commit**.
+Therefore the PR title MUST follow Conventional Commits _exactly_:
+
+```
+<type>(<scope>): <subject>
+```
+
+**Hard rules (must pass CI):**
+
+- Subject must be lowercase
+- Subject must NOT end with a period
+- Header length must be <= 100 characters
+- Scope is optional, but if used must be one of: `website`, `docs`, `deps`, `cli`
 
 ## Context
 
@@ -18,19 +31,21 @@ Create a GitHub Pull Request following the project's Angular commit convention.
 
 ## Prerequisites
 
-1. Check if `gh` CLI is available and authenticated:
+1. Ensure `gh` CLI is available and authenticated:
+
    ```bash
    gh auth status
    ```
 
-2. Ensure all changes are committed:
+2. Ensure all changes are committed and branch is pushed:
    ```bash
    git status
+   git push -u origin HEAD
    ```
 
 ## PR Title Format (Angular Convention)
 
-**IMPORTANT**: PR titles MUST follow Angular commit convention. This is enforced by GitHub Action.
+**IMPORTANT**: PR title MUST follow Angular/Conventional Commit format because squash uses it as the release commit.
 
 ```
 <type>(<scope>): <subject>
@@ -38,19 +53,19 @@ Create a GitHub Pull Request following the project's Angular commit convention.
 
 ### Types
 
-| Type | Description |
-|------|-------------|
-| `feat` | A new feature |
-| `fix` | A bug fix |
-| `docs` | Documentation only changes |
-| `style` | Changes that do not affect the meaning of the code |
-| `refactor` | A code change that neither fixes a bug nor adds a feature |
-| `perf` | A code change that improves performance |
-| `test` | Adding missing tests or correcting existing tests |
-| `build` | Changes that affect the build system or external dependencies |
-| `ci` | Changes to CI configuration files and scripts |
-| `chore` | Other changes that don't modify src or test files |
-| `revert` | Reverts a previous commit |
+| Type       | Description                                                   |
+| ---------- | ------------------------------------------------------------- |
+| `feat`     | A new feature                                                 |
+| `fix`      | A bug fix                                                     |
+| `docs`     | Documentation only changes                                    |
+| `style`    | Changes that do not affect the meaning of the code            |
+| `refactor` | A code change that neither fixes a bug nor adds a feature     |
+| `perf`     | A code change that improves performance                       |
+| `test`     | Adding missing tests or correcting existing tests             |
+| `build`    | Changes that affect the build system or external dependencies |
+| `ci`       | Changes to CI configuration files and scripts                 |
+| `chore`    | Other changes that don't modify src or test files             |
+| `revert`   | Reverts a previous commit                                     |
 
 ### Scopes (optional)
 
@@ -77,66 +92,50 @@ refactor: simplify authentication logic
 
 ## Creating a Pull Request
 
-### Basic Command
+### Fill the PR Template
+
+Use `.github/PULL_REQUEST_TEMPLATE.md` as the base. Fill in the summary, fixes, and type.
+
+### Recommended Command (template-based)
 
 ```bash
 gh pr create \
-  --title "feat(website): your descriptive title" \
-  --body "## Description
-
-Brief summary of changes.
-
-Fixes #123
-
-## Type of Change
-
-- [x] New feature
-
-## Checklist
-
-- [x] Code follows style guidelines
-- [x] Self-review completed
-- [x] No new warnings" \
-  --base main
-```
-
-### Using HEREDOC for Complex Descriptions
-
-```bash
-gh pr create --title "feat(website): add new feature" --body "$(cat <<'EOF'
+  --title "feat(scope): short, lowercase summary" \
+  --body "$(cat <<'EOF'
 ## Description
 
-Brief summary of the changes and the motivation behind them.
+Brief summary of the change and why it matters.
 
 Fixes #123
 
 ## Type of Change
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
-- [x] New feature (non-breaking change which adds functionality)
+- [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
 
 ## Checklist
 
-- [x] My code follows the style guidelines of this project
-- [x] I have performed a self-review of my code
-- [x] I have made corresponding changes to the documentation
-- [x] My changes generate no new warnings
+- [ ] My code follows the style guidelines of this project
+- [ ] I have performed a self-review of my code
+- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings
+- [ ] Any dependent changes have been merged and published
 
 ## Screenshots (if applicable)
 
 N/A
 EOF
-)" --base main
+)" \
+  --base main
 ```
 
-### Create as Draft
-
-Add `--draft` flag for work in progress:
+### Draft PR (WIP)
 
 ```bash
-gh pr create --title "feat: wip feature" --body "..." --base main --draft
+gh pr create --title "feat(scope): wip summary" --body "WIP" --base main --draft
 ```
 
 ## Useful Commands

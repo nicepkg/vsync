@@ -6,6 +6,7 @@ argument-hint: [optional message]
 # Create Git Commit
 
 Create a git commit following Angular/Conventional Commits format.
+This repo uses semantic-release, so commit messages directly drive versioning.
 
 ## Context
 
@@ -27,10 +28,14 @@ type(scope): subject
 
 **Rules:**
 
-- Subject must be max 100 characters
-- Use lowercase for type and scope
+- Header must be <= 100 characters
+- Type and scope must be lowercase
+- Subject must be lowercase
 - No period at the end of subject
 - Use imperative mood: "add feature" not "added feature"
+- Scope is optional, but if used must be one of: `website`, `docs`, `deps`
+  - Use `docs` for README/markdown only changes
+  - Use `website` for `website/` changes
 
 ### Commit Types
 
@@ -53,13 +58,16 @@ type(scope): subject
 Common scopes in this project:
 
 - `website` - website folder changes
+- `docs` - documentation only changes
 - `deps` - Dependencies
+- `cli` - cli folder vsync package changes
 
 ### Examples
 
 ```
 feat(website): add hotel card component
 chore(deps): update React to v19
+docs(docs): update README with new setup instructions
 docs: update README with new setup instructions
 style: format code with prettier
 ```
@@ -67,7 +75,7 @@ style: format code with prettier
 ## Task
 
 1. If $ARGUMENTS provided, use as commit message hint
-2. Analyze the staged/unstaged changes
-3. Stage relevant files with `git add`
+2. Analyze staged/unstaged changes and choose a single coherent scope
+3. Stage relevant files with `git add` (avoid unrelated files)
 4. Create commit with appropriate type, scope (if applicable), and subject
-5. Keep subject concise (max 100 chars), focus on "what" changed
+5. Keep subject concise (<= 100 chars), focus on "what" changed
