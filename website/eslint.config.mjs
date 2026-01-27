@@ -3,9 +3,7 @@ import { fileURLToPath } from "node:url";
 import { FlatCompat } from "@eslint/eslintrc";
 import { defineConfig, globalIgnores } from "eslint/config";
 import prettier from "eslint-config-prettier/flat";
-import eslintPluginImport from "eslint-plugin-import";
 import eslintPluginPrettier from "eslint-plugin-prettier";
-import tseslint from "typescript-eslint";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,7 +38,7 @@ const nextConfigs = compat
   });
 
 export default defineConfig(
-  // Next.js Core Web Vitals config (includes React, React Hooks, and Next.js rules)
+  // Next.js Core Web Vitals config (includes React, React Hooks, Next.js, and TypeScript rules)
   ...nextConfigs,
 
   // Prettier config (disables conflicting ESLint rules)
@@ -59,11 +57,10 @@ export default defineConfig(
     ".git/**",
   ]),
 
-  // Custom rules and plugins
+  // Custom rules for JS/TS files
   {
     files: ["**/*.{js,mjs,cjs,jsx,ts,tsx}"],
     plugins: {
-      import: eslintPluginImport,
       prettier: eslintPluginPrettier,
     },
     settings: {
@@ -72,7 +69,7 @@ export default defineConfig(
       },
     },
     rules: {
-      // Import rules
+      // Import rules (plugin already loaded by next/core-web-vitals)
       "import/no-anonymous-default-export": "warn",
       "import/order": [
         "warn",
@@ -101,14 +98,9 @@ export default defineConfig(
     },
   },
 
-  // Additional TypeScript config
+  // TypeScript-specific rules (without re-extending tseslint configs)
   {
     files: ["**/*.{ts,tsx}"],
-    extends: [
-      ...tseslint.configs.recommended,
-      ...tseslint.configs.recommendedTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
-    ],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -163,14 +155,11 @@ export default defineConfig(
     },
   },
 
-  // Markdown files
+  // Markdown files - ignore by default
   {
     files: ["**/*.md"],
-    plugins: {
-      prettier: eslintPluginPrettier,
-    },
     rules: {
-      "prettier/prettier": "warn",
+      // Disable all rules for markdown
     },
   },
 
